@@ -1,5 +1,9 @@
 # Janis - Example Pipelines
 
-Note: This repository is a _currently broken_ place for worfklows written with [Janis](https://github.com/PMCC-BioinformaticsCore/janis). It will be fixed once the pip mechanism (and relative imports) for the Bioinformatics tools repository is fixed.
+Note: This repository is a place for workflows written with [Janis](https://github.com/PMCC-BioinformaticsCore/janis). 
+
+There are a few working pipelines within this repository that have the appropriate tool definitions
+built within the [Janis-bioinformatics](https://github.com/PMCC-BioinformaticsCore/janis-bioinformatics/) repository.
+
 
 Contact Michael Franklin for any issues.

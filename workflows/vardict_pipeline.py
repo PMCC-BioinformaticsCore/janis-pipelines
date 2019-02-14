@@ -1,14 +1,10 @@
 from janis import File, Array, String, Float
-from bioinformatics import BamPair
-from bioinformatics import Bed
-from bioinformatics import FastaWithDict
-from bioinformatics import VcfIdx
-from bioinformatics import BcfToolsAnnotateLatest
-from bioinformatics import SplitMultiAllele
-from bioinformatics import VarDict
-from bioinformatics import Gatk4GenotypeConcordanceLatest
-from bioinformatics import BGZipLatest
-from bioinformatics import TabixLatest
+from janis_bioinformatics.data_types import BamBai, Bed, FastaWithDict, VcfIdx
+from janis_bioinformatics.tools.bcftools import BcfToolsAnnotateLatest
+from janis_bioinformatics.tools.common import SplitMultiAllele
+from janis_bioinformatics.tools.common import VarDict
+import janis_bioinformatics.tools.gatk4 as GATK4
+from janis_bioinformatics.tools.htslib import BGZipLatest, TabixLatest
 
 
 def create():
@@ -16,7 +12,7 @@ def create():
     w = p.Workflow("vardict_pipeline")
 
     input_bed = p.Input("input_bed", Bed())
-    indexed_bam = p.Input("indexed_bam", BamPair())
+    indexed_bam = p.Input("indexed_bam", BamBai())
     reference = p.Input("reference", FastaWithDict())
     header_lines = p.Input("headerLines", File())
     truth_vcf = p.Input("truthVcf", VcfIdx())
@@ -29,7 +25,7 @@ def create():
     step3 = p.Step("split", SplitMultiAllele())
     step4 = p.Step("zip", BGZipLatest())
     step5 = p.Step("tabix", TabixLatest())
-    step6 = p.Step("concord", Gatk4GenotypeConcordanceLatest())
+    step6 = p.Step("concord", GATK4.Gatk4GenotypeConcordanceLatest())
 
     # Step1
     w.add_edges([
@@ -85,9 +81,9 @@ def create():
         (step6.contingencyMetrics, p.Output("contingencyMetrics"))
     ])
 
-
-    w.dump_cwl(to_disk=True, with_docker=False)
-    w.dump_wdl(to_disk=True, with_docker=False)
+    w.dump_translation("cwl")
+    # w.dump_cwl(to_disk=True, with_docker=False)
+    # w.dump_wdl(to_disk=True, with_docker=False)
 
 
 VardictPipeline = create

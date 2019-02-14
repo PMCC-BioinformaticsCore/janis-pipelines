@@ -1,16 +1,15 @@
 import janis as p
-from bioinformatics import BamPair
-from bioinformatics import FastaWithDict
-from bioinformatics import BcfToolsViewLatest
-from bioinformatics import SplitMultiAllele
-from bioinformatics import Strelka_2_9_9
+from janis_bioinformatics.data_types import BamBai, FastaWithDict
+from janis_bioinformatics.tools.bcftools import BcfToolsViewLatest
+from janis_bioinformatics.tools.common import SplitMultiAllele
+from janis_bioinformatics.tools.illumina import Strelka_2_9_9
 
 
 def strelka_pipeline():
     w = p.Workflow("strelka_pipeline")
 
     ref = p.Input("reference", FastaWithDict())
-    bam = p.Input("bam", BamPair())
+    bam = p.Input("bam", BamBai())
 
     s1_strelka = p.Step("strelka", Strelka_2_9_9())
     s2_bcf = p.Step("bcf", BcfToolsViewLatest())
@@ -40,4 +39,4 @@ def strelka_pipeline():
 
 
 w = strelka_pipeline()
-w.dump_cwl(to_disk=True, with_docker=True)
+w.dump_translation("cwl", to_disk=True, with_docker=True)

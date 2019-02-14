@@ -1,16 +1,9 @@
 import unittest
 
 from janis import Input, String, Step, Directory, Workflow, Array, Output
-from bioinformatics import FastaWithDict
-from bioinformatics import Fastq
-from bioinformatics import VcfIdx, TabixIdx
-from bioinformatics import AlignSortedBam
-from bioinformatics import Gatk4ApplyBqsrLatest as Gatk4ApplyBqsr
-from bioinformatics import \
-    Gatk4BaseRecalibratorLatest as Gatk4BaseRecalibrator
-from bioinformatics import Gatk4MarkDuplicatesLatest as Gatk4MarkDuplicates
-from bioinformatics import Gatk4MergeSamFilesLatest as Gatk4MergeSamFiles
-from bioinformatics import Gatk4Mutect2Latest
+from janis_bioinformatics.data_types import FastaWithDict, Fastq, VcfIdx, VcfTabix
+from janis_bioinformatics.tools.common import AlignSortedBam
+import janis_bioinformatics.tools.gatk4 as GATK4
 
 
 class TestSomaticPipeline(unittest.TestCase):
@@ -18,7 +11,7 @@ class TestSomaticPipeline(unittest.TestCase):
 
     def subpipeline(self):
 
-        w = Workflow("somatic-subpipeline")
+        w = Workflow("somatic_subpipeline")
 
         # Declare inputs  Input("inputIdentifier", InputType())
         reference = Input('reference', FastaWithDict())
@@ -30,10 +23,10 @@ class TestSomaticPipeline(unittest.TestCase):
         tmpdir = Input('tmpdir', Directory())
 
         s1_align_sortedbam = Step('align_sortedbam', AlignSortedBam())
-        s2_mergeSam = Step('mergeSam', Gatk4MergeSamFiles())
-        s3_markDup = Step('makrDup', Gatk4MarkDuplicates())
-        s4_baseRecal = Step('baseRecal', Gatk4BaseRecalibrator())
-        s5_applyBQSR = Step('applyBQSR', Gatk4ApplyBqsr())
+        s2_mergeSam = Step('mergeSam', GATK4.Gatk4MergeSamFiles_4_0())
+        s3_markDup = Step('makrDup', GATK4.Gatk4MarkDuplicates_4_0())
+        s4_baseRecal = Step('baseRecal', GATK4.Gatk4BaseRecalibrator_4_0())
+        s5_applyBQSR = Step('applyBQSR', GATK4.Gatk4ApplyBqsr_4_0())
 
 
         # Join steps like w.add_edge(start.out, step.in)
@@ -87,7 +80,7 @@ class TestSomaticPipeline(unittest.TestCase):
 
     def test_pipeline(self):
 
-        w = Workflow("somatic-pipeline")
+        w = Workflow("somatic_pipeline")
 
         normalInputs = Input('normalInputs', Array(Fastq()))
         tumorInputs = Input('tumorInputs', Array(Fastq()))
@@ -99,16 +92,16 @@ class TestSomaticPipeline(unittest.TestCase):
         # Declare inputs  Input("inputIdentifier", InputType())
         reference = Input('reference', FastaWithDict())
         knownSites_dbSNP = Input('dbSNP', VcfIdx())
-        knownSites_1000GP = Input('1000GP', TabixIdx())
-        knownSites_OMNI = Input('OMNI', TabixIdx())
-        knownSites_HAPMAP = Input('HAPMAP', TabixIdx())
+        knownSites_1000GP = Input('1000GP', VcfTabix())
+        knownSites_OMNI = Input('OMNI', VcfTabix())
+        knownSites_HAPMAP = Input('HAPMAP', VcfTabix())
 
         # Declare steps   Step("stepIdentifier", Tool())
         tmpdir = Input('tmpdir', Directory())
 
         s_tum = Step("tumor", self.subpipeline())
         s_norm = Step("normal", self.subpipeline())
-        s_mutect = Step("mutect", Gatk4Mutect2Latest())
+        s_mutect = Step("mutect", GATK4.GatkMutect2_4_0())
 
 
         for s,i,h in [(s_tum, tumorInputs, tumor_read_group_header_line),
@@ -141,5 +134,5 @@ class TestSomaticPipeline(unittest.TestCase):
 
         # w.draw_graph()
 
-        w.dump_cwl(to_disk=True, with_docker=False)
+        w.dump_translation("cwl", to_disk=True, with_docker=False)
 

@@ -1,76 +1,67 @@
 import unittest
 
 from janis import Input, String, Step, Directory, Workflow, Array, Output
-from bioinformatics import FastaWithDict
-from bioinformatics import Fastq
-from bioinformatics import VcfIdx, TabixIdx
-from bioinformatics import BcfToolsNormLatest as BcfToolsNorm
-from bioinformatics import AlignSortedBam
-from bioinformatics import Gatk4ApplyBqsrLatest as Gatk4ApplyBqsr
-from bioinformatics import \
-    Gatk4BaseRecalibratorLatest as Gatk4BaseRecalibrator
-from bioinformatics import \
-    Gatk4HaplotypeCallerLatest as Gatk4HaplotypeCaller
-from bioinformatics import Gatk4MarkDuplicatesLatest as Gatk4MarkDuplicates
-from bioinformatics import Gatk4MergeSamFilesLatest as Gatk4MergeSamFiles
-from bioinformatics import PerformanceValidator_1_2_1
+import janis.bioinformatics as jb
+
+from janis_bioinformatics.data_types import FastaWithDict, Fastq, VcfIdx, VcfTabix, Fastq, VcfIdx
+from janis_bioinformatics.tools.common import AlignSortedBam
+from janis_bioinformatics.tools.validation import PerformanceValidator_1_2_1
+import janis_bioinformatics.tools.gatk4 as GATK4
+
+BcfToolsNorm = jb.tools.bcftools.BcfToolsNormLatest
 
 
-class TestGermlinePipeline(unittest.TestCase):
-
-    def test_workflow(self):
-
-        w = Workflow("whole_genome_germline")
+class WholeGenomeGermlineWorkflow(Workflow):
+    def __init__(self):
+        Workflow.__init__(self, "whole_genome_germline")
 
         reference = Input("reference", FastaWithDict())
         fastqInputs = Input("inputs", Array(Fastq()))
 
         s1_inp_header = Input("read_group_header_line", String())
         s4_inp_SNPS_dbSNP = Input("SNPS_dbSNP", VcfIdx())
-        s4_inp_SNPS_1000GP = Input("SNPS_1000GP", TabixIdx())
-        s4_inp_OMNI = Input("OMNI", TabixIdx())
-        s4_inp_HAPMAP = Input("HAPMAP", TabixIdx())
+        s4_inp_SNPS_1000GP = Input("SNPS_1000GP", VcfTabix())
+        s4_inp_OMNI = Input("OMNI", VcfTabix())
+        s4_inp_HAPMAP = Input("HAPMAP", VcfTabix())
         validator_truth = Input("TRUTH_VCF", VcfIdx())
         validator_intervals = Input("INTERVALS", Array(VcfIdx()))
 
         inp_tmpdir = Input("tmpdir", Directory())
 
         s1_sw = Step("sw_bwa_st_sort", AlignSortedBam())
-        s2_mergeSamFiles = Step("s2_mergeSamFiles", Gatk4MergeSamFiles())
-        s3_markDuplicates = Step("s3_markDuplicates", Gatk4MarkDuplicates())
-        s4_baseRecal = Step("s4_baseRecal", Gatk4BaseRecalibrator())
-        s5_applyBqsr = Step("s5_applyBqsr", Gatk4ApplyBqsr())
-        s6_haploy = Step("s6_haploy", Gatk4HaplotypeCaller())
+        s2_mergeSamFiles = Step("s2_mergeSamFiles", GATK4.Gatk4MergeSamFiles_4_0())
+        s3_markDuplicates = Step("s3_markDuplicates", GATK4.Gatk4MarkDuplicates_4_0())
+        s4_baseRecal = Step("s4_baseRecal", GATK4.Gatk4BaseRecalibrator_4_0())
+        s5_applyBqsr = Step("s5_applyBqsr", GATK4.Gatk4ApplyBqsr_4_0())
+        s6_haploy = Step("s6_haploy", GATK4.Gatk4HaplotypeCaller_4_0())
         s7_bcfNorm = Step("s7_bcfNorm", BcfToolsNorm())
         s8_validator = Step("s8_validator", PerformanceValidator_1_2_1())
 
         # step1
-        w.add_edge(fastqInputs, s1_sw.fastq)
-        w.add_edges([
+        self.add_edge(fastqInputs, s1_sw.fastq)
+        self.add_edges([
             (reference, s1_sw.reference),
             (s1_inp_header, s1_sw.read_group_header_line),
             (inp_tmpdir, s1_sw.tmpdir)
         ])
 
         #step2
-        w.add_edge(s1_sw.o3_sortsam, s2_mergeSamFiles.input)
-        w.add_edge(inp_tmpdir, s2_mergeSamFiles.tmpDir)
-        w.add_default_value(s2_mergeSamFiles.useThreading, True)
-        w.add_default_value(s2_mergeSamFiles.createIndex, True)
-        w.add_default_value(s2_mergeSamFiles.maxRecordsInRam, 5000000)
-        w.add_default_value(s2_mergeSamFiles.validationStringency, "SILENT")
-
-
+        self.add_edge(s1_sw.o3_sortsam, s2_mergeSamFiles.input)
+        self.add_edge(inp_tmpdir, s2_mergeSamFiles.tmpDir)
+        self.add_default_value(s2_mergeSamFiles.useThreading, True)
+        self.add_default_value(s2_mergeSamFiles.createIndex, True)
+        self.add_default_value(s2_mergeSamFiles.maxRecordsInRam, 5000000)
+        self.add_default_value(s2_mergeSamFiles.validationStringency, "SILENT")
 
 
         # step3
-        w.add_edge(s2_mergeSamFiles, s3_markDuplicates)
-        w.add_edge(inp_tmpdir, s3_markDuplicates.tmpDir)
-        w.add_default_value(s3_markDuplicates.createIndex, True)
-        w.add_default_value(s3_markDuplicates.maxRecordsInRam, 5000000)
+        self.add_edge(s2_mergeSamFiles, s3_markDuplicates)
+        self.add_edge(inp_tmpdir, s3_markDuplicates.tmpDir)
+        self.add_default_value(s3_markDuplicates.createIndex, True)
+        self.add_default_value(s3_markDuplicates.maxRecordsInRam, 5000000)
 
         #step4 - baserecal
-        w.add_edges([
+        self.add_edges([
             (s3_markDuplicates, s4_baseRecal),
             (reference, s4_baseRecal.reference),
             (s4_inp_SNPS_dbSNP, s4_baseRecal.knownSites),
@@ -81,39 +72,38 @@ class TestGermlinePipeline(unittest.TestCase):
         ])
 
         # step5 - apply bqsr
-        w.add_edges([
+        self.add_edges([
             (s3_markDuplicates.output, s5_applyBqsr),
-            (s4_baseRecal, s5_applyBqsr),
+            (s4_baseRecal, s5_applyBqsr.recalFile),
             (reference, s5_applyBqsr.reference),
             (inp_tmpdir, s5_applyBqsr.tmpDir)
         ])
 
         # step6 - haplotype caller
-        w.add_edges([
+        self.add_edges([
             (s5_applyBqsr, s6_haploy),
             (reference, s6_haploy),
             (s4_inp_SNPS_dbSNP, s6_haploy)
         ])
 
         # step7 - BcfToolsNorm
-        w.add_edges([
-            (reference, s7_bcfNorm),
+        self.add_edges([
+            (reference, s7_bcfNorm.reference),
             (s6_haploy, s7_bcfNorm.input)
             # (s7_cheat_inp, s7_bcfNorm.input)
         ])
 
         # step8 - validator
 
-        w.add_edges([
+        self.add_edges([
             (s7_bcfNorm, s8_validator),
             (validator_truth, s8_validator.truth),
             (validator_intervals, s8_validator.intervals)
         ])
 
-
         # Outputs
 
-        w.add_edges([
+        self.add_edges([
             (s1_sw.o1_bwa, Output("sw_bwa")),
             (s1_sw.o2_samtools, Output("sw_samtools")),
             (s1_sw.o3_sortsam, Output("sw_sortsam")),
@@ -130,9 +120,12 @@ class TestGermlinePipeline(unittest.TestCase):
         ])
 
         # w.draw_graph()
-        w.dump_cwl(to_disk=True, with_docker=True)
-        w.dump_wdl(to_disk=True, with_docker=False)
+        self.dump_translation("cwl")
+        # w.dump_cwl(to_disk=True, with_docker=True)
+        # w.dump_wdl(to_disk=True, with_docker=False)
 
+if __name__ == "__main__":
+    WholeGenomeGermlineWorkflow().dump_translation("cwl")
 
 
 original_bash = """
