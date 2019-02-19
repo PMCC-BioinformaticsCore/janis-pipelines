@@ -5,6 +5,7 @@ import janis.bioinformatics as jb
 
 from janis_bioinformatics.data_types import FastaWithDict, Fastq, VcfIdx, VcfTabix, Fastq, VcfIdx
 from janis_bioinformatics.tools.common import AlignSortedBam
+from janis_bioinformatics.tools.common.processbam import ProcessBamFiles_4_0
 from janis_bioinformatics.tools.validation import PerformanceValidator_1_2_1
 import janis_bioinformatics.tools.gatk4 as GATK4
 
@@ -12,6 +13,11 @@ BcfToolsNorm = jb.tools.bcftools.BcfToolsNormLatest
 
 
 class WholeGenomeGermlineWorkflow(Workflow):
+
+    @staticmethod
+    def version():
+        return "1.0.0"
+
     def __init__(self):
         Workflow.__init__(self, "whole_genome_germline")
 
@@ -19,20 +25,18 @@ class WholeGenomeGermlineWorkflow(Workflow):
         fastqInputs = Input("inputs", Array(Fastq()))
 
         s1_inp_header = Input("read_group_header_line", String())
-        s4_inp_SNPS_dbSNP = Input("SNPS_dbSNP", VcfIdx())
-        s4_inp_SNPS_1000GP = Input("SNPS_1000GP", VcfTabix())
-        s4_inp_OMNI = Input("OMNI", VcfTabix())
-        s4_inp_HAPMAP = Input("HAPMAP", VcfTabix())
+        snps_dbsnp = Input("snps_dbsnp", VcfIdx())
+        snps_1000gp = Input("snps_1000gp", VcfTabix())
+        omni = Input("omni", VcfTabix())
+        hapmap = Input("hapmap", VcfTabix())
         validator_truth = Input("TRUTH_VCF", VcfIdx())
         validator_intervals = Input("INTERVALS", Array(VcfIdx()))
 
         inp_tmpdir = Input("tmpdir", Directory())
 
         s1_sw = Step("sw_bwa_st_sort", AlignSortedBam())
-        s2_mergeSamFiles = Step("s2_mergeSamFiles", GATK4.Gatk4MergeSamFiles_4_0())
-        s3_markDuplicates = Step("s3_markDuplicates", GATK4.Gatk4MarkDuplicates_4_0())
-        s4_baseRecal = Step("s4_baseRecal", GATK4.Gatk4BaseRecalibrator_4_0())
-        s5_applyBqsr = Step("s5_applyBqsr", GATK4.Gatk4ApplyBqsr_4_0())
+        s2_process = Step("processBamFiles", ProcessBamFiles_4_0())
+
         s6_haploy = Step("s6_haploy", GATK4.Gatk4HaplotypeCaller_4_0())
         s7_bcfNorm = Step("s7_bcfNorm", BcfToolsNorm())
         s8_validator = Step("s8_validator", PerformanceValidator_1_2_1())
@@ -45,45 +49,22 @@ class WholeGenomeGermlineWorkflow(Workflow):
             (inp_tmpdir, s1_sw.tmpdir)
         ])
 
-        #step2
-        self.add_edge(s1_sw.o3_sortsam, s2_mergeSamFiles.input)
-        self.add_edge(inp_tmpdir, s2_mergeSamFiles.tmpDir)
-        self.add_default_value(s2_mergeSamFiles.useThreading, True)
-        self.add_default_value(s2_mergeSamFiles.createIndex, True)
-        self.add_default_value(s2_mergeSamFiles.maxRecordsInRam, 5000000)
-        self.add_default_value(s2_mergeSamFiles.validationStringency, "SILENT")
-
-
-        # step3
-        self.add_edge(s2_mergeSamFiles, s3_markDuplicates)
-        self.add_edge(inp_tmpdir, s3_markDuplicates.tmpDir)
-        self.add_default_value(s3_markDuplicates.createIndex, True)
-        self.add_default_value(s3_markDuplicates.maxRecordsInRam, 5000000)
-
-        #step4 - baserecal
+        # step2 - process bam files
         self.add_edges([
-            (s3_markDuplicates, s4_baseRecal),
-            (reference, s4_baseRecal.reference),
-            (s4_inp_SNPS_dbSNP, s4_baseRecal.knownSites),
-            (s4_inp_SNPS_1000GP, s4_baseRecal.knownSites),
-            (s4_inp_OMNI, s4_baseRecal.knownSites),
-            (s4_inp_HAPMAP, s4_baseRecal.knownSites),
-            (inp_tmpdir, s4_baseRecal.tmpDir)
-        ])
-
-        # step5 - apply bqsr
-        self.add_edges([
-            (s3_markDuplicates.output, s5_applyBqsr),
-            (s4_baseRecal, s5_applyBqsr.recalFile),
-            (reference, s5_applyBqsr.reference),
-            (inp_tmpdir, s5_applyBqsr.tmpDir)
+            (s1_sw.o3_sortsam, s2_process.input),
+            (reference, s2_process),
+            (inp_tmpdir, s2_process.tmpDir),
+            (snps_dbsnp, s2_process.snps_dbsnp),
+            (snps_1000gp, s2_process.snps_1000gp),
+            (omni, s2_process.omni),
+            (hapmap, s2_process.hapmap)
         ])
 
         # step6 - haplotype caller
         self.add_edges([
-            (s5_applyBqsr, s6_haploy),
+            (s2_process, s6_haploy),
             (reference, s6_haploy),
-            (s4_inp_SNPS_dbSNP, s6_haploy)
+            (snps_dbsnp, s6_haploy)
         ])
 
         # step7 - BcfToolsNorm
@@ -107,11 +88,6 @@ class WholeGenomeGermlineWorkflow(Workflow):
             (s1_sw.o1_bwa, Output("sw_bwa")),
             (s1_sw.o2_samtools, Output("sw_samtools")),
             (s1_sw.o3_sortsam, Output("sw_sortsam")),
-            (s2_mergeSamFiles, Output("o4_merged")),
-            (s3_markDuplicates.output, Output("o5_marked_output")),
-            (s3_markDuplicates.metrics, Output("o5_marked_metrics")),
-            (s4_baseRecal, Output("o6_recal")),
-            (s5_applyBqsr, Output("o7_bqsr")),
             (s6_haploy.output, Output("o8_halpo")),
             (s7_bcfNorm, Output("o9_bcfnorm")),
             (s8_validator.summaryMetrics, Output("o12_concord_summary")),
@@ -119,10 +95,6 @@ class WholeGenomeGermlineWorkflow(Workflow):
             (s8_validator.contingencyMetrics, Output("o12_concord_contig"))
         ])
 
-        # w.draw_graph()
-        self.dump_translation("cwl")
-        # w.dump_cwl(to_disk=True, with_docker=True)
-        # w.dump_wdl(to_disk=True, with_docker=False)
 
 if __name__ == "__main__":
     WholeGenomeGermlineWorkflow().dump_translation("cwl")
@@ -242,7 +214,7 @@ bcftools norm -m -both -f $REFERENCE ${SAM/sam/hap.vcf} -o ${SAM/sam/hap.norm.vc
 
 # The compressed and indexed vcf for the sake for the validation
 bgzip -c ${SAM/sam/hap.norm.vcf} > ${SAM/sam/hap.norm.vcf.gz}
-tabix -p vcf ${SAM/sam/hap.norm.vcf.gz}
+tabix -j vcf ${SAM/sam/hap.norm.vcf.gz}
 gatk GenotypeConcordance \
  --TRUTH_VCF $TRUTH_VCF \
  --CALL_VCF ${SAM/sam/hap.norm.vcf.gz} \
