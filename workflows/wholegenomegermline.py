@@ -24,18 +24,18 @@ class WholeGenomeGermlineWorkflow(Workflow):
         reference = Input("reference", FastaWithDict())
         fastqInputs = Input("inputs", Array(Fastq()))
 
-        s1_inp_header = Input("read_group_header_line", String())
+        s1_inp_header = Input("readGroupHeaderLine", String())
         snps_dbsnp = Input("snps_dbsnp", VcfIdx())
         snps_1000gp = Input("snps_1000gp", VcfTabix())
         omni = Input("omni", VcfTabix())
         hapmap = Input("hapmap", VcfTabix())
-        validator_truth = Input("TRUTH_VCF", VcfIdx())
-        validator_intervals = Input("INTERVALS", Array(VcfIdx()))
+        validator_truth = Input("truthVCF", VcfIdx())
+        validator_intervals = Input("intervals", Array(VcfIdx()))
 
         inp_tmpdir = Input("tmpdir", Directory())
 
-        s1_sw = Step("sw_bwa_st_sort", AlignSortedBam())
-        s2_process = Step("processBamFiles", ProcessBamFiles_4_0())
+        s1_sw = Step("s1_alignSortedBam", AlignSortedBam())
+        s2_process = Step("s2_processBamFiles", ProcessBamFiles_4_0())
 
         s6_haploy = Step("s6_haploy", GATK4.Gatk4HaplotypeCaller_4_0())
         s7_bcfNorm = Step("s7_bcfNorm", BcfToolsNorm())
@@ -97,7 +97,7 @@ class WholeGenomeGermlineWorkflow(Workflow):
 
 
 if __name__ == "__main__":
-    WholeGenomeGermlineWorkflow().dump_translation("cwl")
+    WholeGenomeGermlineWorkflow().dump_translation("cwl", to_disk=True)
 
 
 original_bash = """
