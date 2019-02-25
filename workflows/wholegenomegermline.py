@@ -3,7 +3,7 @@ import unittest
 from janis import Input, String, Step, Directory, Workflow, Array, Output
 import janis.bioinformatics as jb
 
-from janis_bioinformatics.data_types import FastaWithDict, Fastq, VcfIdx, VcfTabix, Fastq, VcfIdx
+from janis_bioinformatics.data_types import FastaWithDict, Fastq, VcfIdx, VcfTabix, Fastq, VcfIdx, Vcf
 from janis_bioinformatics.tools.common import AlignSortedBam
 from janis_bioinformatics.tools.common.processbam import ProcessBamFiles_4_0
 from janis_bioinformatics.tools.validation import PerformanceValidator_1_2_1
@@ -22,15 +22,16 @@ class WholeGenomeGermlineWorkflow(Workflow):
         Workflow.__init__(self, "whole_genome_germline")
 
         reference = Input("reference", FastaWithDict())
-        fastqInputs = Input("inputs", Array(Fastq()))
+        fastqInputs = Input("fastqs", Array(Fastq()))
 
         s1_inp_header = Input("readGroupHeaderLine", String())
         snps_dbsnp = Input("snps_dbsnp", VcfIdx())
+        snps_dbsnp_gz = Input("snps_dbsnp_gz", VcfTabix())
         snps_1000gp = Input("snps_1000gp", VcfTabix())
         omni = Input("omni", VcfTabix())
         hapmap = Input("hapmap", VcfTabix())
         validator_truth = Input("truthVCF", VcfIdx())
-        validator_intervals = Input("intervals", Array(VcfIdx()))
+        validator_intervals = Input("intervals", Array(Vcf()))
 
         inp_tmpdir = Input("tmpdir", Directory())
 
@@ -51,10 +52,10 @@ class WholeGenomeGermlineWorkflow(Workflow):
 
         # step2 - process bam files
         self.add_edges([
-            (s1_sw.o3_sortsam, s2_process.input),
-            (reference, s2_process),
+            (s1_sw.out, s2_process.bams),
+            (reference, s2_process.reference),
             (inp_tmpdir, s2_process.tmpDir),
-            (snps_dbsnp, s2_process.snps_dbsnp),
+            (snps_dbsnp_gz, s2_process.snps_dbsnp),
             (snps_1000gp, s2_process.snps_1000gp),
             (omni, s2_process.omni),
             (hapmap, s2_process.hapmap)
@@ -62,22 +63,22 @@ class WholeGenomeGermlineWorkflow(Workflow):
 
         # step6 - haplotype caller
         self.add_edges([
-            (s2_process, s6_haploy),
-            (reference, s6_haploy),
-            (snps_dbsnp, s6_haploy)
+            (s2_process.out, s6_haploy.inputRead),
+            (reference, s6_haploy.reference),
+            (snps_dbsnp, s6_haploy.dbsnp)
         ])
 
         # step7 - BcfToolsNorm
         self.add_edges([
             (reference, s7_bcfNorm.reference),
-            (s6_haploy, s7_bcfNorm.input)
+            (s6_haploy.out, s7_bcfNorm.vcf)
             # (s7_cheat_inp, s7_bcfNorm.input)
         ])
 
         # step8 - validator
 
         self.add_edges([
-            (s7_bcfNorm, s8_validator),
+            (s7_bcfNorm.out, s8_validator.vcf),
             (validator_truth, s8_validator.truth),
             (validator_intervals, s8_validator.intervals)
         ])
@@ -85,11 +86,11 @@ class WholeGenomeGermlineWorkflow(Workflow):
         # Outputs
 
         self.add_edges([
-            (s1_sw.o1_bwa, Output("sw_bwa")),
-            (s1_sw.o2_samtools, Output("sw_samtools")),
-            (s1_sw.o3_sortsam, Output("sw_sortsam")),
-            (s6_haploy.output, Output("o8_halpo")),
-            (s7_bcfNorm, Output("o9_bcfnorm")),
+            # (s1_sw.o1_bwa, Output("sw_bwa")),
+            # (s1_sw.o2_samtools, Output("sw_samtools")),
+            # (s1_sw.o3_sortsam, Output("sw_sortsam")),
+            (s6_haploy.out, Output("o8_halpo")),
+            (s7_bcfNorm.out, Output("o9_bcfnorm")),
             (s8_validator.summaryMetrics, Output("o12_concord_summary")),
             (s8_validator.detailMetrics, Output("o12_concord_detail")),
             (s8_validator.contingencyMetrics, Output("o12_concord_contig"))
@@ -97,7 +98,7 @@ class WholeGenomeGermlineWorkflow(Workflow):
 
 
 if __name__ == "__main__":
-    WholeGenomeGermlineWorkflow().dump_translation("cwl", to_disk=True)
+    WholeGenomeGermlineWorkflow().dump_translation("wdl", to_disk=True, write_inputs_file=True)
 
 
 original_bash = """
