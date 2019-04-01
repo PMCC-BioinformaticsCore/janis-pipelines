@@ -3,11 +3,13 @@ import unittest
 from janis import Input, String, Step, Directory, Workflow, Array, Output
 import janis.bioinformatics as jb
 
-from janis_bioinformatics.data_types import FastaWithDict, Fastq, VcfIdx, VcfTabix, Fastq, VcfIdx, Vcf
+from janis_bioinformatics.data_types import FastaWithDict, Fastq, VcfIdx, VcfTabix, Fastq, VcfIdx, Vcf, Bed
+from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
 from janis_bioinformatics.tools.common import AlignSortedBam
-from janis_bioinformatics.tools.common.processbam import ProcessBamFiles_4_0
-from janis_bioinformatics.tools.validation import PerformanceValidator_1_2_1
-import janis_bioinformatics.tools.gatk4 as GATK4
+from janis_bioinformatics.tools.common.processbam import MergeAndMarkBams_4_0
+from janis_bioinformatics.tools.pmac import CombineVariants_0_1_0
+
+from janis_bioinformatics.tools.variantcallers import GatkVariantCaller, StrelkaVariantCaller, VardictVariantCaller
 
 BcfToolsNorm = jb.tools.bcftools.BcfToolsNormLatest
 
@@ -21,210 +23,195 @@ class WholeGenomeGermlineWorkflow(Workflow):
     def __init__(self):
         Workflow.__init__(self, "whole_genome_germline")
 
-        reference = Input("reference", FastaWithDict())
-        fastqInputs = Input("fastqs", Array(Fastq()))
 
-        s1_inp_header = Input("readGroupHeaderLine", String())
-        snps_dbsnp = Input("snps_dbsnp", VcfIdx())
-        snps_dbsnp_gz = Input("snps_dbsnp_gz", VcfTabix())
-        snps_1000gp = Input("snps_1000gp", VcfTabix())
-        omni = Input("omni", VcfTabix())
-        hapmap = Input("hapmap", VcfTabix())
-        validator_truth = Input("truthVCF", VcfIdx())
-        validator_intervals = Input("intervals", Array(Vcf()))
+        fastqInputs = Input("fastqs", Array(Fastq()), [[
+            "/Users/franklinmichael/Desktop/workflows-for-testing/wgs/inputs/BRCA1_R1.fastq.gz",
+            "/Users/franklinmichael/Desktop/workflows-for-testing/wgs/inputs/BRCA1_R2.fastq.gz"
+        ]])
+        bedIntervals = Input("bedIntervals", Bed(), "/Users/franklinmichael/Desktop/workflows-for-testing/wgs/inputs/BRCA1.bed")
 
-        inp_tmpdir = Input("tmpdir", Directory())
+        reference = Input("reference", FastaWithDict(), "/Users/franklinmichael/reference/hg38/"
+                                                        "assembly_contigs_renamed/Homo_sapiens_assembly38.fasta")
+
+        s1_inp_header = Input("readGroupHeaderLine", String(),
+                              "'@RG\\tID:NA12878\\tSM:NA12878\\tLB:NA12878\\tPL:ILLUMINA'")
+        snps_dbsnp = Input("snps_dbsnp", VcfTabix(), "/Users/franklinmichael/reference/hg38/dbsnp_contigs_renamed/Homo_sapiens_assembly38.dbsnp138.vcf.gz")
+        snps_1000gp = Input("snps_1000gp", VcfTabix(), "/Users/franklinmichael/reference/hg38/snps_1000GP/1000G_phase1.snps.high_confidence.hg38.vcf.gz")
+        known_indels = Input("known_indels", VcfTabix(), "/Users/franklinmichael/reference/hg38/known_indels_contigs_renamed/Homo_sapiens_assembly38.known_indels.vcf.gz")
+        mills_indels = Input("mills_1000gp_indels", VcfTabix(), "/Users/franklinmichael/reference/hg38/mills_indels/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz")
+        validator_truth = Input("truthVCF", VcfIdx(), "/Users/franklinmichael/Desktop/workflows-for-testing/wgs/inputs//BRCA1.vcf")
+        validator_intervals = Input("intervals", Array(Vcf()), ["/Users/franklinmichael/Desktop/workflows-for-testing/wgs/inputs//BRCA1.interval_list"])
+
 
         s1_sw = Step("s1_alignSortedBam", AlignSortedBam())
-        s2_process = Step("s2_processBamFiles", ProcessBamFiles_4_0())
+        fastqc = Step("fastqc", FastQC_0_11_5())
+        s2_process = Step("s2_processBamFiles", MergeAndMarkBams_4_0())
 
-        s6_haploy = Step("s6_haploy", GATK4.Gatk4HaplotypeCaller_4_0())
-        s7_bcfNorm = Step("s7_bcfNorm", BcfToolsNorm())
-        s8_validator = Step("s8_validator", PerformanceValidator_1_2_1())
+        vc_gatk = Step("variantCaller_GATK", GatkVariantCaller())
+        vc_strelka = Step("variantCaller_Strelka", StrelkaVariantCaller())
+        # vc_vardict = Step("variantCaller_Vardict", VardictVariantCaller())
+
+        # combine_vcs = Step("combineVariants", CombineVariants_0_1_0())
 
         # step1
         self.add_edge(fastqInputs, s1_sw.fastq)
         self.add_edges([
             (reference, s1_sw.reference),
             (s1_inp_header, s1_sw.read_group_header_line),
-            (inp_tmpdir, s1_sw.tmpdir)
         ])
+
+        # step1 sidestep
+        self.add_edge(fastqInputs, fastqc.reads)
 
         # step2 - process bam files
         self.add_edges([
-            (s1_sw.out, s2_process.bams),
-            (reference, s2_process.reference),
-            (inp_tmpdir, s2_process.tmpDir),
-            (snps_dbsnp_gz, s2_process.snps_dbsnp),
-            (snps_1000gp, s2_process.snps_1000gp),
-            (omni, s2_process.omni),
-            (hapmap, s2_process.hapmap)
+            (s1_sw.out, s2_process.bams)
         ])
 
-        # step6 - haplotype caller
+        # VARIANT CALLERS
+
+        # GATK VariantCaller
         self.add_edges([
-            (s2_process.out, s6_haploy.inputRead),
-            (reference, s6_haploy.reference),
-            (snps_dbsnp, s6_haploy.dbsnp)
+            (s2_process.out, vc_gatk.bam),
+            (bedIntervals, vc_gatk.intervals),
+            (reference, vc_gatk.reference),
+            (snps_dbsnp, vc_gatk.snps_dbsnp),
+            (snps_1000gp, vc_gatk.snps_1000gp),
+            (known_indels, vc_gatk.knownIndels),
+            (mills_indels, vc_gatk.millsIndels),
         ])
 
-        # step7 - BcfToolsNorm
+        # Strelka VariantCaller
         self.add_edges([
-            (reference, s7_bcfNorm.reference),
-            (s6_haploy.out, s7_bcfNorm.vcf)
-            # (s7_cheat_inp, s7_bcfNorm.input)
+            (s2_process.out, vc_strelka),
+            (reference, vc_strelka)
         ])
 
-        # step8 - validator
 
+        # Output the Variants
         self.add_edges([
-            (s7_bcfNorm.out, s8_validator.vcf),
-            (validator_truth, s8_validator.truth),
-            (validator_intervals, s8_validator.intervals)
+            (vc_gatk.out, Output("variants_gatk")),
+            (vc_strelka.out, Output("variants_strelka"))
+        ])
+
+        # Combine
+        self.add_edges([
+            # (vc_gatk.out, combine_vcs.vcfs)
         ])
 
         # Outputs
 
         self.add_edges([
-            # (s1_sw.o1_bwa, Output("sw_bwa")),
-            # (s1_sw.o2_samtools, Output("sw_samtools")),
-            # (s1_sw.o3_sortsam, Output("sw_sortsam")),
-            (s6_haploy.out, Output("o8_halpo")),
-            (s7_bcfNorm.out, Output("o9_bcfnorm")),
-            (s8_validator.summaryMetrics, Output("o12_concord_summary")),
-            (s8_validator.detailMetrics, Output("o12_concord_detail")),
-            (s8_validator.contingencyMetrics, Output("o12_concord_contig"))
+            (s2_process.out, Output("bam")),
+            (fastqc.out, Output("reports")),
+            (vc_gatk, Output("gatk_variants"))
         ])
 
 
 if __name__ == "__main__":
-    WholeGenomeGermlineWorkflow().dump_translation("wdl", to_disk=True, write_inputs_file=True)
+    import shepherd
+
+    wf = WholeGenomeGermlineWorkflow()
+    wdl = wf.dump_translation("wdl", to_console=False, to_disk=True, write_inputs_file=True)
+    #
+    # config = shepherd.CromwellConfiguration(
+    #     database=shepherd.CromwellConfiguration.Database.mysql("cromwelluser", "cromwell-pass")
+    # )
+    #
+    # task = shepherd.from_janis(wf, engine=shepherd.Cromwell(config=config))
+    # # task = shepherd.from_janis(wf, engine=shepherd.CWLTool())
+    #
+    # print(task.outputs)
 
 
-original_bash = """
-#!/bin/bash
-
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=8
-#SBATCH --partition=debug
-#SBATCH --mem=64G
-#SBATCH --time=10-00:00:00
-#SBATCH --mail-user=jiaan.yu@petermac.org
-#SBATCH --mail-type=ALL
-#SBATCH --output=pipeline-%j.out
-#SBATCH --job-name="WGSpipeline"
 
 
-echo "Starting at `date`"
-echo "Running on hosts: $SLURM_NODELIST"
-echo "Running on $SLURM_NNODES nodes."
-echo "Running on $SLURM_NPROCS processors."
-echo "Current working directory is `pwd`"
-
-STARTTIME=$(date +%s)
 
 
-module load bwa/0.7.17
-module load samtools/1.9
-module load gatk/4.0.10.0
-module load bcftools/1.9
-module load igvtools
-
-## Input parameters: R1 of fastq files
-
-READ_GROUP_HEADER_LINE='@RG\tID:NA12878\tSM:NA12878\tLB:NA12878\tPL:ILLUMINA'
-REFERENCE="/bioinf_core/Proj/hg38_testing/Resources/Gatk_Resource_Bundle_hg38/hg38_contigs_renamed/Homo_sapiens_assembly38.fasta"
-SNPS_dbSNP='/bioinf_core/Proj/hg38_testing/Resources/Gatk_Resource_Bundle_hg38/Homo_sapiens_assembly38.dbsnp138.vcf'
-SNPS_1000GP='/bioinf_core/Proj/hg38_testing/Resources/Gatk_Resource_Bundle_hg38/1000G_phase1.snps.high_confidence.hg38.vcf.gz'
-OMNI='/bioinf_core/Proj/hg38_testing/Resources/Gatk_Resource_Bundle_hg38/1000G_omni2.5.hg38.vcf.gz'
-HAPMAP='/bioinf_core/Proj/hg38_testing/Resources/Gatk_Resource_Bundle_hg38/hapmap_3.3.hg38.vcf.gz'
-TRUTH_VCF=${1/_R1.fastq/.vcf}
-INTERVAL_LIST=${1/_R1.fastq/.interval_list}
-
-## Fill in the output file here
-SAM='test3/test.sam'
 
 
-bwa mem -R $READ_GROUP_HEADER_LINE \
- -M \
- -t 36 \
- $REFERENCE \
- $1 ${1/R1/R2} >  $SAM
 
 
-samtools view -S -h -b $SAM > ${SAM/sam/bam}
 
 
-gatk SortSam \
- -I=$SAM \
- -O=${SAM/sam/sorted.bam} \
- --SORT_ORDER=coordinate \
- --VALIDATION_STRINGENCY=SILENT \
- --CREATE_INDEX=true \
- --MAX_RECORDS_IN_RAM=5000000 \
- --TMP_DIR='/researchers/jiaan.yu/WGS_pipeline/germline/tmp'
 
+#         # AWS INPUTS
+#         fastqInputs = Input("fastqs", Array(Fastq()), [[
+#             "s3://pmac-cromwell/wgs/BRCA1_R1.fastq",
+#             "s3://pmac-cromwell/wgs/BRCA1_R2.fastq"]])
+#
+#         s1_inp_header = Input("readGroupHeaderLine", String(),
+#                               "'@RG\\tID:NA12878\\tSM:NA12878\\tLB:NA12878\\tPL:ILLUMINA'")
+#         validator_truth = Input("truthVCF", VcfIdx(), "s3://pmac-cromwell/wgs/BRCA1.vcf")
+#         validator_intervals = Input("intervals", Array(Vcf()), ["s3://pmac-cromwell/wgs/BRCA1.interval_list"])
+#
+#         reference = Input("reference", FastaWithDict(), "s3://pmac-cromwell/reference/Homo_sapiens_assembly38.fasta")
+#
+#         snps_dbsnp = Input("snps_dbsnp", VcfIdx(), "s3://pmac-cromwell/reference/Homo_sapiens_assembly38.dbsnp138.vcf")
+#         snps_dbsnp_gz = Input("snps_dbsnp_gz", VcfTabix(),
+#                               "s3://pmac-cromwell/reference/Homo_sapiens_assembly38.dbsnp138.vcf.gz")
+#         snps_1000gp = Input("snps_1000gp", VcfTabix(),
+#                             "s3://pmac-cromwell/reference/1000G_phase1.snps.high_confidence.hg38.vcf.gz")
+#         omni = Input("omni", VcfTabix(), "s3://pmac-cromwell/reference/1000G_omni2.5.hg38.vcf.gz")
+#         hapmap = Input("hapmap", VcfTabix(), "s3://pmac-cromwell/reference/hapmap_3.3.hg38.vcf.gz")
+#
+#
+#         # GCP INPUTS
+#         # fastqInputs = Input("fastqs", Array(Fastq()), [[
+#         #     "gs://pmccromwelltests/wgs-inputs/BRCA1_R1.fastq",
+#         #     "gs://pmccromwelltests/wgs-inputs/BRCA1_R2.fastq"]])
+#         #
+#         # s1_inp_header = Input("readGroupHeaderLine", String(),
+#         #                       "'@RG\\tID:NA12878\\tSM:NA12878\\tLB:NA12878\\tPL:ILLUMINA'")
+#         # validator_truth = Input("truthVCF", VcfIdx(), "gs://pmccromwelltests/wgs-inputs/BRCA1.vcf")
+#         # validator_intervals = Input("intervals", Array(Vcf()), ["gs://pmccromwelltests/wgs-inputs/BRCA1.interval_list"])
+#         #
+#         # reference = Input("reference", FastaWithDict(), "gs://pmccromwelltests/reference/assembly/Homo_sapiens_assembly38.fasta")
+#         #
+#         # snps_dbsnp = Input("snps_dbsnp", VcfIdx(), "gs://pmccromwelltests/reference/snps_dbsnp/Homo_sapiens_assembly38.dbsnp138.vcf")
+#         # snps_dbsnp_gz = Input("snps_dbsnp_gz", VcfTabix(),
+#         #                       "gs://pmccromwelltests/reference/snps_dbsnp/Homo_sapiens_assembly38.dbsnp138.vcf.gz")
+#         # snps_1000gp = Input("snps_1000gp", VcfTabix(),
+#         #                     "gs://pmccromwelltests/reference/snps_1000GP/1000G_phase1.snps.high_confidence.hg38.vcf.gz")
+#         # omni = Input("omni", VcfTabix(), "gs://pmccromwelltests/reference/omni/1000G_omni2.5.hg38.vcf.gz")
+#         # hapmap = Input("hapmap", VcfTabix(), "gs://pmccromwelltests/reference/hapmap/hapmap_3.3.hg38.vcf.gz")
 
-gatk MergeSamFiles \
- -I=${SAM/sam/sorted.bam} \
- -O=${SAM/sam/sorted.merged.bam} \
- --USE_THREADING=true \
- --CREATE_INDEX=true \
- --MAX_RECORDS_IN_RAM=5000000 \
- --VALIDATION_STRINGENCY=SILENT \
- --TMP_DIR='/researchers/jiaan.yu/WGS_pipeline/germline/tmp'
-
-
-gatk MarkDuplicates \
- -I=${SAM/sam/sorted.merged.bam} \
- -O=${SAM/sam/sorted.merged.markdups.bam} \
- --CREATE_INDEX=true \
- --METRICS_FILE=${SAM/sam/metrics.txt} \
- --MAX_RECORDS_IN_RAM=5000000 \
- --TMP_DIR='/researchers/jiaan.yu/WGS_pipeline/germline/tmp' 
-
-
-gatk BaseRecalibrator \
- -I=${SAM/sam/sorted.merged.markdups.bam} \
- -O=${SAM/sam/recal.table} \
- -R=$REFERENCE \
- --known-sites=$SNPS_dbSNP \
- --known-sites=$SNPS_1000GP \
- --known-sites=$OMNI \
- --known-sites=$HAPMAP \
- --tmp-dir='/researchers/jiaan.yu/WGS_pipeline/germline/tmp'
-
-
-gatk ApplyBQSR \
- -R=$REFERENCE \
- -I=${SAM/sam/sorted.merged.markdups.bam} \
- --bqsr-recal-file=${SAM/sam/recal.table} \
- -O=${SAM/sam/sorted.merged.markdups.recal.bam} \
- --tmp-dir='/researchers/jiaan.yu/WGS_pipeline/germline/tmp'
-
-
-gatk HaplotypeCaller \
- -I=${SAM/sam/sorted.merged.markdups.recal.bam} \
- -R=$REFERENCE \
- -O=${SAM/sam/hap.vcf}
- -D=$SNPS_dbSNP
-
-
-# The normalised vcf for future steps
-bcftools norm -m -both -f $REFERENCE ${SAM/sam/hap.vcf} -o ${SAM/sam/hap.norm.vcf}
-
-# The compressed and indexed vcf for the sake for the validation
-bgzip -c ${SAM/sam/hap.norm.vcf} > ${SAM/sam/hap.norm.vcf.gz}
-tabix -j vcf ${SAM/sam/hap.norm.vcf.gz}
-gatk GenotypeConcordance \
- --TRUTH_VCF $TRUTH_VCF \
- --CALL_VCF ${SAM/sam/hap.norm.vcf.gz} \
- --OUTPUT ${SAM/sam/hap} \
- --MISSING_SITES_HOM_REF true \
- --INTERVALS $INTERVAL_LIST
-
-
-ENDTIME=$(date +%s)
-
-echo "Time to complete: $(($ENDTIME - $STARTTIME))"
-"""
+# GCP INPUTS
+# fastqInputs = Input("fastqs", Array(Fastq()), [[
+#     "gs://pmccromwelltests/wgs-inputs/BRCA1_R1.fastq",
+#     "gs://pmccromwelltests/wgs-inputs/BRCA1_R2.fastq"]])
+#
+# s1_inp_header = Input("readGroupHeaderLine", String(),
+#                       "'@RG\\tID:NA12878\\tSM:NA12878\\tLB:NA12878\\tPL:ILLUMINA'")
+# validator_truth = Input("truthVCF", VcfIdx(), "gs://pmccromwelltests/wgs-inputs/BRCA1.vcf")
+# validator_intervals = Input("intervals", Array(Vcf()), ["gs://pmccromwelltests/wgs-inputs/BRCA1.interval_list"])
+#
+# reference = Input("reference", FastaWithDict(), "gs://pmccromwelltests/reference/assembly/Homo_sapiens_assembly38.fasta")
+#
+# snps_dbsnp = Input("snps_dbsnp", VcfIdx(), "gs://pmccromwelltests/reference/snps_dbsnp/Homo_sapiens_assembly38.dbsnp138.vcf")
+# snps_dbsnp_gz = Input("snps_dbsnp_gz", VcfTabix(),
+#                       "gs://pmccromwelltests/reference/snps_dbsnp/Homo_sapiens_assembly38.dbsnp138.vcf.gz")
+# snps_1000gp = Input("snps_1000gp", VcfTabix(),
+#                     "gs://pmccromwelltests/reference/snps_1000GP/1000G_phase1.snps.high_confidence.hg38.vcf.gz")
+# known_indels = Input("known_indels", VcfTabix(), "gs://pmccromwelltests/reference/known_indels/1000G_omni2.5.hg38.vcf.gz")
+# mills_1000gp_indels = Input("mills_1000gp_indels", VcfTabix(), "gs://pmccromwelltests/reference/mills_1000gp_indels/hapmap_3.3.hg38.vcf.gz")
+#
+#
+#
+#
+#
+#
+#         ## DEFAULTS
+#
+#         # reference = Input("reference", FastaWithDict())
+#         # fastqInputs = Input("fastqs", Array(Fastq()))
+#         #
+#         # s1_inp_header = Input("readGroupHeaderLine", String())
+#         # snps_dbsnp = Input("snps_dbsnp", VcfIdx())
+#         # snps_dbsnp_gz = Input("snps_dbsnp_gz", VcfTabix())
+#         # snps_1000gp = Input("snps_1000gp", VcfTabix())
+#         # omni = Input("omni", VcfTabix())
+#         # hapmap = Input("hapmap", VcfTabix())
+#         # validator_truth = Input("truthVCF", VcfIdx())
+#         # validator_intervals = Input("intervals", Array(Vcf()))
+#         #
