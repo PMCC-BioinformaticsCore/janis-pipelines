@@ -1,2 +1,12 @@
 .DS_Store
 **/**/.DS_Store
+
+
+.idea/
+
+# Hide incidential running files
+*.conf
+**/**/tools/
+**/**/tools.zip
+**/**/cromwell-workflow-logs/
+**/**/cromwell-executions/
