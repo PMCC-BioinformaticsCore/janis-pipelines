@@ -10,7 +10,8 @@ from janis_bioinformatics.data_types import FastaWithDict, Fastq, VcfIdx, VcfTab
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
 from janis_bioinformatics.tools.common import AlignSortedBam
 from janis_bioinformatics.tools.common.processbam import MergeAndMarkBams_4_0
-from janis_bioinformatics.tools.pmac import CombineVariants_0_1_0
+from janis_bioinformatics.tools.pmac import CombineVariants_0_1_1
+from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_0
 
 from janis_bioinformatics.tools.variantcallers import GatkVariantCaller, StrelkaVariantCaller, VardictVariantCaller
 
@@ -27,9 +28,10 @@ class WholeGenomeGermlineWorkflow(Workflow):
         Workflow.__init__(self, "whole_genome_germline")
 
         fastqInputs = Input("fastqs", Array(Fastq()))
-        bedIntervals = Input("bedIntervals", Bed())
-
         reference = Input("reference", FastaWithDict())
+
+        gatk_intervals = Input("gatkIntervals", Array(Bed(optional=True)), default=[None])
+        vardict_intervals = Input("vardictIntervals", Bed()) # change to arrray after gathervcfs testing
 
         s1_inp_header = Input("readGroupHeaderLine", String())
         snps_dbsnp = Input("snps_dbsnp", VcfTabix())
@@ -49,13 +51,15 @@ class WholeGenomeGermlineWorkflow(Workflow):
         vc_strelka = Step("variantCaller_Strelka", StrelkaVariantCaller())
         vc_vardict = Step("variantCaller_Vardict", VardictVariantCaller())
 
-        combine_vcs = Step("combineVariants", CombineVariants_0_1_0())
+        vc_merge_gatk = Step("variantCaller_merge_GATK", Gatk4GatherVcfs_4_0())
+
+        combine_vcs = Step("combineVariants", CombineVariants_0_1_1())
 
         # step1
         self.add_edge(fastqInputs, s1_sw.fastq)
         self.add_edges([
             (reference, s1_sw.reference),
-            (s1_inp_header, s1_sw.read_group_header_line),
+            (s1_inp_header, s1_sw.readGroupHeaderLine),
         ])
 
         # step1 sidestep
@@ -68,15 +72,16 @@ class WholeGenomeGermlineWorkflow(Workflow):
 
         # VARIANT CALLERS
 
-        # GATK VariantCaller
+        # GATK VariantCaller + Merge
         self.add_edges([
             (s2_process.out, vc_gatk.bam),
-            (bedIntervals, vc_gatk.intervals),
+            (gatk_intervals, vc_gatk.intervals),
             (reference, vc_gatk.reference),
             (snps_dbsnp, vc_gatk.snps_dbsnp),
             (snps_1000gp, vc_gatk.snps_1000gp),
             (known_indels, vc_gatk.knownIndels),
             (mills_indels, vc_gatk.millsIndels),
+            (vc_gatk.out, vc_merge_gatk.vcfs)
         ])
 
         # Strelka VariantCaller
@@ -87,29 +92,32 @@ class WholeGenomeGermlineWorkflow(Workflow):
 
         # Vardict VariantCaller
         self.add_edges([
-            (bedIntervals, vc_vardict.bed),
+            (vardict_intervals, vc_vardict.bed),
             (s2_process.out, vc_vardict.bam),
             (reference, vc_vardict.reference),
             (sample_name, vc_vardict),
             (allele_freq_threshold, vc_vardict.allelFreqThreshold),
-            (header_lines, vc_vardict.headerLines)
+            (header_lines, vc_vardict.headerLines),
         ])
 
         # Output the Variants
         self.add_edges([
             (vc_gatk.out, Output("variants_gatk")),
             (vc_strelka.out, Output("variants_strelka")),
-            (vc_vardict.out, Output("variants_vardict"))
+            (vc_vardict.out, Output("variants_vardict")),
+
+            (vc_merge_gatk.out, Output("variants_gatk_merged"))
+
         ])
 
         # Combine
         self.add_edges([
             (Input("variant_type", String(), default="germline"), combine_vcs.type),
-            (Input("columns", String(), default="AC AN AF AD DP GT"), combine_vcs.columns),
+            (Input("columns", Array(String()), default=["AC", "AN", "AF", "AD", "DP", "GT"]), combine_vcs.columns),
 
-            (vc_gatk.out, combine_vcs.vcfs),
+            (vc_merge_gatk.out, combine_vcs.vcfs),
             (vc_strelka.out, combine_vcs.vcfs),
-            (vc_vardict.out, combine_vcs.vcfs)
+            (vc_vardict.out, combine_vcs.vcfs),
         ])
 
         # Outputs
