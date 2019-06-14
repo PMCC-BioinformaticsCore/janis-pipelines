@@ -204,17 +204,20 @@ class WholeGenomeSomaticWorkflow(Workflow):
 
         combine_vcs = Step("combineVariants", CombineVariants_0_0_4())
         sort_combined_vcfs = Step("sortCombined", BcfToolsSort_1_9())
+        sortsam_tmpdir = Input("sortSamTmpDir", String(optional=True), "./tmpfiles")
 
         self.add_edges([
             (normalInputs, s_norm.inputs),
             (normal_read_group_header_line, s_norm.readGroupHeaderLine),
             (reference, s_norm.reference),
+            (sortsam_tmpdir, s_norm.sortSamTmpDir)
         ])
 
         self.add_edges([
             (tumorInputs, s_tum.inputs),
             (tumor_read_group_header_line, s_tum.readGroupHeaderLine),
             (reference, s_tum.reference),
+            (sortsam_tmpdir, s_tum.sortSamTmpDir)
         ])
 
 
@@ -312,6 +315,7 @@ class WholeGenomeSomaticWorkflow(Workflow):
             (inputs, s1_alignsort.fastq),
             (reference, s1_alignsort.reference),
             (rghl, s1_alignsort.readGroupHeaderLine),
+            (Input("sortSamTmpDir", String(optional=True)), s1_alignsort.sortSamTmpDir),
         ])
 
         # step1 sidestep
@@ -329,17 +333,18 @@ class WholeGenomeSomaticWorkflow(Workflow):
 if __name__ == "__main__":
         w = WholeGenomeSomaticWorkflow()
 
-        im = inputs_map[CAPTURE_TYPE][ENVIRONMENT]
-        for inp in w._inputs:
-            if inp.id() in im:
-                inp.input.value = im[inp.id()]
-
-        hints = {CaptureType.key(): CAPTURE_TYPE}
-
-        w.translate("wdl", to_disk=True, should_validate=True, write_inputs_file=True)
-        w.generate_resources_file("wdl", hints)
-
-        if str(input(f"Run at {ENVIRONMENT} (Y/n)? ")).lower() == "y":
-            import shepherd
-            tid = shepherd.fromjanis(w, env=ENVIRONMENT, hints=hints, watch=False)
-            print(tid)
+        # im = inputs_map[CAPTURE_TYPE][ENVIRONMENT]
+        # for inp in w._inputs:
+        #     if inp.id() in im:
+        #         inp.input.value = im[inp.id()]
+        #
+        # hints = {CaptureType.key(): CAPTURE_TYPE}
+        #
+        w.translate("wdl", to_console=False, to_disk=True, should_validate=False, write_inputs_file=True)
+        w.generate_resources_table({ CaptureType.key(): CaptureType.THIRTYX }, to_disk=True)
+        # w.generate_resources_file("wdl", hints)
+        #
+        # if str(input(f"Run at {ENVIRONMENT} (Y/n)? ")).lower() == "y":
+        #     import shepherd
+        #     tid = shepherd.fromjanis(w, env=ENVIRONMENT, hints=hints, watch=False)
+        #     print(tid)
