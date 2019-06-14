@@ -12,8 +12,8 @@ from janis_bioinformatics.tools.variantcallers import GatkGermlineVariantCaller,
     VardictGermlineVariantCaller
 
 
-ENVIRONMENT = "local"
-CAPTURE_TYPE = CaptureType.TARGETED
+ENVIRONMENT = "pmac"
+CAPTURE_TYPE = CaptureType.THIRTYX
 
 # "truthVCF": "/data/cephfs/punim0755/wgs/inputs/BRCA1.vcf",
 inputs_map = {
@@ -358,7 +358,7 @@ class WholeGenomeGermlineWorkflow(Workflow):
         fastqInputs = Input("fastqs", Array(Fastq()))
         reference = Input("reference", FastaWithDict())
 
-        readgroupheaderline = Input("readGroupHeaderLine", String(), "'@RG\\tID:NA12878\\tSM:NA12878\\tLB:NA12878\\tPL:ILLUMINA'")
+        # readgroupheaderline = Input("readGroupHeaderLine", String(), "'@RG\\tID:NA12878\\tSM:NA12878\\tLB:NA12878\\tPL:ILLUMINA'")
 
         gatk_intervals = Input("gatkIntervals", Array(Bed(optional=True)), default=[None],
                                include_in_inputs_file_if_none=False)
@@ -392,7 +392,7 @@ class WholeGenomeGermlineWorkflow(Workflow):
         self.add_edge(fastqInputs, s1_sw.fastq)
         self.add_edges([
             (reference, s1_sw.reference),
-            (readgroupheaderline, s1_sw.readGroupHeaderLine),
+            (sample_name, s1_sw.sampleName),
         ])
 
         # step1 sidestep
@@ -470,13 +470,16 @@ if __name__ == "__main__":
 
     wf = WholeGenomeGermlineWorkflow()
 
+    hints = { CaptureType.key(): CAPTURE_TYPE }
+
     im = inputs_map[CAPTURE_TYPE][ENVIRONMENT]
     for inp in wf._inputs:
         if inp.id() in im:
             inp.input.value = im[inp.id()]
 
-    wf.translate("wdl", with_resource_overrides=True, merge_resources=True)
-    # wf.generate_resources_file("wdl", hints={CaptureType.key(): CaptureType.THIRTYX})
+    # wf.translate("wdl", with_resource_overrides=True, merge_resources=True)
+    # wf.generate_resources_file("wdl", hints=hints)
+    wf.generate_resources_table(hints, to_console=False, to_disk=True)
 
     # env = shepherd.Environment.get_predefined_environment_by_id("local")
     # shepherd.TaskManager.from_janis(wf, env, shepherd.ValidationRequirements(

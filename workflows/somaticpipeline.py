@@ -75,7 +75,7 @@ inputs_map = {
             ]],
 
             "vardictIntervals": [
-                "/researchers/jiaan.yu/WGS_pipeline/somatic/somatic-in-a-bottle/test_cases/test4_chr18_30X/chr18.bed"],
+                "/researchers/jiaan.yu/WGS_pipeline/somatic/somatic-in-a-bottle/test_cases/test4_chr18_30X/other_files/chr18.bed"],
             "vardictHeaderLines": "/researchers/jiaan.yu/WGS_pipeline/header_added_to_vardict.txt",
 
             "reference": "/bioinf_core/Proj/hg38_testing/Resources/Gatk_Resource_Bundle_hg38/hg38_contigs_renamed/Homo_sapiens_assembly38.fasta",
@@ -175,8 +175,8 @@ class WholeGenomeSomaticWorkflow(Workflow):
         normalName = Input("normalName", String(), "NA24385_normal")
         tumorName = Input("tumorName", String(), "NA24385_tumour")
 
-        normal_read_group_header_line = Input('normalReadGroupHeaderLine', String(), "'@RG\\tID:NA24385_normal\\tSM:NA24385_normal\\tLB:NA24385_normal\\tPL:ILLUMINA'")
-        tumor_read_group_header_line = Input('tumorReadGroupHeaderLine', String(),   "'@RG\\tID:NA24385_tumour\\tSM:NA24385_tumour\\tLB:NA24385_tumour\\tPL:ILLUMINA'")
+        # normal_read_group_header_line = Input('normalReadGroupHeaderLine', String(), "'@RG\\tID:NA24385_normal\\tSM:NA24385_normal\\tLB:NA24385_normal\\tPL:ILLUMINA'")
+        # tumor_read_group_header_line = Input('tumorReadGroupHeaderLine', String(),   "'@RG\\tID:NA24385_tumour\\tSM:NA24385_tumour\\tLB:NA24385_tumour\\tPL:ILLUMINA'")
 
         gatk_intervals = Input("gatkIntervals", Array(Bed(optional=True)), default=[None],
                                include_in_inputs_file_if_none=False)
@@ -208,14 +208,14 @@ class WholeGenomeSomaticWorkflow(Workflow):
 
         self.add_edges([
             (normalInputs, s_norm.inputs),
-            (normal_read_group_header_line, s_norm.readGroupHeaderLine),
+            (normalName, s_norm.sampleName),
             (reference, s_norm.reference),
             (sortsam_tmpdir, s_norm.sortSamTmpDir)
         ])
 
         self.add_edges([
             (tumorInputs, s_tum.inputs),
-            (tumor_read_group_header_line, s_tum.readGroupHeaderLine),
+            (tumorName, s_tum.sampleName),
             (reference, s_tum.reference),
             (sortsam_tmpdir, s_tum.sortSamTmpDir)
         ])
@@ -305,7 +305,7 @@ class WholeGenomeSomaticWorkflow(Workflow):
         inputs = Input('inputs', Array(Fastq()))
 
         # Declare steps   Step("stepIdentifier", Tool())
-        rghl = Input('readGroupHeaderLine', String())
+        name = Input('sampleName', String())
 
         s1_alignsort = Step('alignAndSort', AlignSortedBam())
         s2_process = Step('mergeAndMark', MergeAndMarkBams_4_0())
@@ -314,7 +314,7 @@ class WholeGenomeSomaticWorkflow(Workflow):
         w.add_edges([
             (inputs, s1_alignsort.fastq),
             (reference, s1_alignsort.reference),
-            (rghl, s1_alignsort.readGroupHeaderLine),
+            (name, s1_alignsort.sampleName),
             (Input("sortSamTmpDir", String(optional=True)), s1_alignsort.sortSamTmpDir),
         ])
 
