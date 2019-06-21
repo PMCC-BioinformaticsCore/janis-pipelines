@@ -3,7 +3,7 @@ from typing import List
 
 from janis import Input, String, Step, Workflow, File, Array, Output, Float, CaptureType, CommandTool, ToolOutput, \
     ToolInput, ToolArgument, Stdout
-from janis_bioinformatics.data_types import FastaWithDict, Fastq, VcfIdx, VcfTabix, Bed, Bam
+from janis_bioinformatics.data_types import FastaWithDict, Fastq, VcfIdx, VcfTabix, Bed, Bam, BedTabix
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
 from janis_bioinformatics.tools.common import AlignSortedBam
@@ -182,6 +182,8 @@ class WholeGenomeSomaticWorkflow(Workflow):
                                include_in_inputs_file_if_none=False)
 
         vardict_intervals = Input("vardictIntervals", Array(Bed()))
+        strelka_intervals = Input("strelkaIntervals", BedTabix(optional=True))
+
 
         header_lines = Input("vardictHeaderLines", File())
         allele_freq_threshold = Input("allelFreqThreshold", Float(), 0.05)
@@ -197,10 +199,10 @@ class WholeGenomeSomaticWorkflow(Workflow):
 
         vc_gatkVariantCaller = Step("GATK_VariantCaller", GatkSomaticVariantCaller())
         vc_strelkaVariantCaller = Step("Strelka_VariantCaller", IlluminaSomaticVariantCaller())
-        # vc_vardictVariantcaller = Step("VarDict_VariantCaller", VardictSomaticVariantCaller())
+        vc_vardictVariantcaller = Step("VarDict_VariantCaller", VardictSomaticVariantCaller())
 
         vc_merged_gatk = Step("variantCaller_merge_GATK", Gatk4GatherVcfs_4_0())
-        # vc_merged_vardict = Step("variantCaller_merge_Vardict", Gatk4GatherVcfs_4_0())
+        vc_merged_vardict = Step("variantCaller_merge_Vardict", Gatk4GatherVcfs_4_0())
 
         combine_vcs = Step("combineVariants", CombineVariants_0_0_4())
         sort_combined_vcfs = Step("sortCombined", BcfToolsSort_1_9())
@@ -238,30 +240,32 @@ class WholeGenomeSomaticWorkflow(Workflow):
 
             (vc_gatkVariantCaller.out, vc_merged_gatk.vcfs)
         ])
-        #
+
         # # Strelka VariantCaller
         #
         self.add_edges([
             (s_norm.out, vc_strelkaVariantCaller.normalBam),
             (s_tum.out, vc_strelkaVariantCaller.tumorBam),
+            (strelka_intervals, vc_strelkaVariantCaller.strelkaRegions),
 
             (reference, vc_strelkaVariantCaller.reference)
         ])
 
         # VarDict VariantCaller
 
-        # self.add_edges([
-        #     (s_norm.out, vc_vardictVariantcaller.normalBam),
-        #     (s_tum.out, vc_vardictVariantcaller.tumorBam),
-        #     (tumorName, vc_vardictVariantcaller.tumorName),
-        #
-        #     (header_lines, vc_vardictVariantcaller.headerLines),
-        #     (vardict_intervals, vc_vardictVariantcaller.intervals),
-        #     (reference, vc_vardictVariantcaller.reference),
-        #     (allele_freq_threshold, vc_vardictVariantcaller.alleleFreqThreshold),
-        #
-        #     (vc_vardictVariantcaller.out, vc_merged_vardict.vcfs)
-        # ])
+        self.add_edges([
+            (s_norm.out, vc_vardictVariantcaller.normalBam),
+            (s_tum.out, vc_vardictVariantcaller.tumorBam),
+            (normalName, vc_vardictVariantcaller.normalName),
+            (tumorName, vc_vardictVariantcaller.tumorName),
+
+            (header_lines, vc_vardictVariantcaller.headerLines),
+            (vardict_intervals, vc_vardictVariantcaller.intervals),
+            (reference, vc_vardictVariantcaller.reference),
+            (allele_freq_threshold, vc_vardictVariantcaller.alleleFreqThreshold),
+
+            (vc_vardictVariantcaller.out, vc_merged_vardict.vcfs)
+        ])
 
         # Combine
         self.add_edges([
@@ -274,7 +278,7 @@ class WholeGenomeSomaticWorkflow(Workflow):
 
             (vc_merged_gatk.out, combine_vcs.vcfs),
             (vc_strelkaVariantCaller.out, combine_vcs.vcfs),
-            # (vc_merged_vardict.out, combine_vcs.vcfs),
+            (vc_merged_vardict.out, combine_vcs.vcfs),
 
 
         ])
