@@ -89,7 +89,7 @@ class WholeGenomeSomaticWorkflow(Workflow):
         self.add_edges([
             (s_norm.out, vc_strelkaVariantCaller.normalBam),
             (s_tum.out, vc_strelkaVariantCaller.tumorBam),
-            (strelka_intervals, vc_strelkaVariantCaller.strelkaRegions),
+            (strelka_intervals, vc_strelkaVariantCaller.intervals),
 
             (reference, vc_strelkaVariantCaller.reference)
         ])
