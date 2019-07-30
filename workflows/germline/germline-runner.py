@@ -1,5 +1,5 @@
 from janis import CaptureType
-from .germlinepipeline import WholeGenomeGermlineWorkflow
+from workflows.germline.germlinepipeline import WholeGenomeGermlineWorkflow
 
 ENVIRONMENT = "local"
 CAPTURE_TYPE = CaptureType.TARGETED
@@ -415,26 +415,29 @@ inputs_map = {
 if __name__ == "__main__":
 
     wf = WholeGenomeGermlineWorkflow()
+    print(wf.generate_resources_file("cwl", hints={CaptureType.key(): CaptureType.THIRTYX}))
 
-    hints = {CaptureType.key(): CAPTURE_TYPE}
+    # wf.report(tabulate_tablefmt="github")
 
-    im = inputs_map[CAPTURE_TYPE][ENVIRONMENT]
-
-    for inp in wf._inputs:
-        if inp.id() in im:
-            inp.input.value = im[inp.id()]
-
-    wf.translate("wdl", to_disk=True, should_validate=True, merge_resources=True, hints=hints,
-                 with_resource_overrides=True, export_path="~/Desktop/{name}/{language}")
-
-    # jr.fromjanis(wf, env="local", hints=hints, watch=False, validation_reqs=jr.ValidationRequirements(
-    #     truthVCF="/Users/franklinmichael/Desktop/variants/Germline/gold.vcf",
-    #     intervals="/Users/franklinmichael/Desktop/variants/Germline/BRCA1.bed",
-    #     reference="/Users/franklinmichael/reference/hg38/assembly_contigs_renamed/Homo_sapiens_assembly38.fasta",
-    #     fields=[
-    #         "variants_gatk",
-    #         "variants_vardict",
-    #         "variants_strelka",
-    #         "combinedVariants",
-    #     ],
+    # hints = {CaptureType.key(): CAPTURE_TYPE}
+    #
+    # im = inputs_map[CAPTURE_TYPE][ENVIRONMENT]
+    #
+    # for inp in wf._inputs:
+    #     if inp.id() in im:
+    #         inp.input.value = im[inp.id()]
+    #
+    # wf.translate("wdl", to_disk=True, should_validate=True, merge_resources=True, hints=hints,
+    #              with_resource_overrides=True, export_path="~/Desktop/{name}/{language}")
+    #
+    # # jr.fromjanis(wf, env="local", hints=hints, watch=False, validation_reqs=jr.ValidationRequirements(
+    # #     truthVCF="/Users/franklinmichael/Desktop/variants/Germline/gold.vcf",
+    # #     intervals="/Users/franklinmichael/Desktop/variants/Germline/BRCA1.bed",
+    # #     reference="/Users/franklinmichael/reference/hg38/assembly_contigs_renamed/Homo_sapiens_assembly38.fasta",
+    # #     fields=[
+    # #         "variants_gatk",
+    # #         "variants_vardict",
+    # #         "variants_strelka",
+    # #         "combinedVariants",
+    # #     ],
     # ),)
