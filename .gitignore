@@ -6,6 +6,7 @@
 
 # Hide incidential running files
 *.conf
+**/__pycache__/
 **/**/tools/
 **/**/tools.zip
 **/**/cromwell-workflow-logs/
