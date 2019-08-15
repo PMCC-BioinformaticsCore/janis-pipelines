@@ -1,24 +1,25 @@
-from janis import Input, String, Step, Workflow, Array, Output, Float, File, Boolean, Int, CaptureType
 
+from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
 from janis_bioinformatics.data_types import FastaWithDict, VcfTabix, Fastq, Bed, BedTabix
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
-from janis_bioinformatics.tools.common import AlignSortedBam
-from janis_bioinformatics.tools.common.processbam import MergeAndMarkBams_4_0
+from janis_bioinformatics.tools.common import AlignSortedBam, MergeAndMarkBams_4_0
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_0
 from janis_bioinformatics.tools.pmac import CombineVariants_0_0_4
 from janis_bioinformatics.tools.variantcallers import GatkGermlineVariantCaller, IlluminaGermlineVariantCaller, \
     VardictGermlineVariantCaller
 
 
-class WholeGenomeGermlineWorkflow(Workflow):
+class WholeGenomeGermlineWorkflow(BioinformaticsWorkflow):
 
     @staticmethod
     def version():
         return "1.0.0"
 
     def __init__(self):
-        Workflow.__init__(self, "WgGermline", "Whole Genome Sequencing - Germline")
+        from janis_core import Input, String, Step, Array, Output, Float, File, Boolean, Int, CaptureType
+
+        BioinformaticsWorkflow.__init__(self, "WgGermline", "Whole Genome Sequencing - Germline")
 
         fastqInputs = Input("fastqs", Array(Fastq()))
         reference = Input("reference", FastaWithDict())
@@ -153,3 +154,5 @@ class WholeGenomeGermlineWorkflow(Workflow):
             (fastqc.out, Output("reports")),
             (sort_combined_vcfs.out, Output("combinedVariants"))
         ])
+
+WholeGenomeGermlineWorkflow()

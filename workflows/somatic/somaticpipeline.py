@@ -1,10 +1,10 @@
-from janis import Input, String, Step, Workflow, File, Array, Output, Float, CaptureType
+from janis_core import Input, String, Step, Workflow, File, Array, Output, Float, CaptureType
+from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
 from janis_bioinformatics.data_types import FastaWithDict, Fastq, VcfTabix, Bed, BedTabix
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
-from janis_bioinformatics.tools.common import AlignSortedBam
+from janis_bioinformatics.tools.common import AlignSortedBam, MergeAndMarkBams_4_0
 
-from janis_bioinformatics.tools.common.processbam import MergeAndMarkBams_4_0
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_0
 from janis_bioinformatics.tools.pmac import CombineVariants_0_0_4
 from janis_bioinformatics.tools.variantcallers.gatksomatic_variants import GatkSomaticVariantCaller
@@ -12,7 +12,7 @@ from janis_bioinformatics.tools.variantcallers.illuminasomatic_strelka import Il
 from janis_bioinformatics.tools.variantcallers.vardictsomatic_variants import VardictSomaticVariantCaller
 
 
-class WholeGenomeSomaticWorkflow(Workflow):
+class WholeGenomeSomaticWorkflow(BioinformaticsWorkflow):
 
     def __init__(self):
         super().__init__("WgSomatic")
