@@ -154,5 +154,3 @@ class WholeGenomeGermlineWorkflow(BioinformaticsWorkflow):
             (fastqc.out, Output("reports")),
             (sort_combined_vcfs.out, Output("combinedVariants"))
         ])
-
-WholeGenomeGermlineWorkflow()
