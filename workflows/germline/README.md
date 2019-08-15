@@ -1,6 +1,6 @@
 # Janis - Germline Whole Genome Sequencing Pipeline
 
-This workflow is a reference pipeline using the [Janis]() Python framework (pipelines assistant). 
+This workflow is a reference pipeline using the [Janis](https://github.com/PMCC-BioinformaticsCore/janis) Python framework (pipelines assistant). 
     
 1. Takes raw sequence data in the FASTQ format;
 2. align to the reference genome using BWA MEM;
@@ -10,7 +10,8 @@ This workflow is a reference pipeline using the [Janis]() Python framework (pipe
 
 ## Validation
 
-These variants were validated against the [Genome in a Bottle](#) data sets to achieve:
+These variants were validated against the [Genome in a Bottle](https://github.com/PMCC-BioinformaticsCore/janis-workshops#data)
+data sets to achieve:
 
 - Recall: 92.25%
 - Precision: 92.02%
@@ -20,16 +21,33 @@ and Google Cloud platform.
 
 ## How to use
 
-_Janis instructions are currently under construction_.
+[`janis-runner`](https://github.com/PMCC-BioinformaticsCore/janis-runner) can be used to generate an inputs template and run, or just to translate the 
+workflow for you to use. `janis-runner` has basic support for CWLTool and Cromwell.
 
-You can download the CWL or WDL representations, fill out the job (`.yml` / `.json`) file
-and run using your preferred engine. This pipeline has been run on a 30x level with
+```bash
+# View the translated workflow
+janis translate germline.py wdl
+
+# Generate an input template for a workflow
+janis inputs germline.py > germlineInp.yml
+
+# Run the workflow with Cromwell
+janis run germline.py --inputs germlineInp.yml --engine cromwell
+```
+
+This pipeline has been run on a 30x level with
 Cromwell (HPC w/ Singularity + GCP), and also run on a targeted panel (GiaB BRCA1) with
 CWLTool and Toil. 
 
 The pipeline takes approximately 27-30 hours to run at a 30x coverage,
 depending on the allocated resources. A sample `resources.json` is provided for a 30x coverage, 
 however this disk sizes **will** need to be adjusted for GCP.
+
+
+### Alternatively
+
+You can download the CWL or WDL representations, fill out the job (`.yml` / `.json`) file
+and run using your preferred engine. 
 
 
 ## Variant callers
