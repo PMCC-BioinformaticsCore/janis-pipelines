@@ -2,11 +2,11 @@ version development
 
 import "tools/alignsortedbam.wdl" as A
 import "tools/fastqc.wdl" as F
-import "tools/processbamfiles.wdl" as P
-import "tools/GATK4_VariantCaller.wdl" as G
+import "tools/mergeAndMarkBams.wdl" as M
+import "tools/GATK4_GermlineVariantCaller.wdl" as G
 import "tools/Gatk4GatherVcfs.wdl" as G2
 import "tools/strelkaGermlineVariantCaller.wdl" as S
-import "tools/vardictVariantCaller.wdl" as V
+import "tools/vardictGermlineVariantCaller.wdl" as V
 import "tools/combinevariants.wdl" as C
 import "tools/bcftoolssort.wdl" as B
 
@@ -60,13 +60,13 @@ workflow WgGermline {
         reads=f
     }
   }
-  call P.processbamfiles as processBamFiles {
+  call M.mergeAndMarkBams as processBamFiles {
     input:
       bams_bai=alignSortedBam.out_bai,
-      bams=alignSortedBam.out
+      bams=[alignSortedBam.out]
   }
   scatter (g in gatkIntervals) {
-     call G.GATK4_VariantCaller as variantCaller_GATK {
+     call G.GATK4_GermlineVariantCaller as variantCaller_GATK {
       input:
         bam_bai=processBamFiles.out_bai,
         bam=processBamFiles.out,
@@ -91,7 +91,7 @@ workflow WgGermline {
   }
   call G2.Gatk4GatherVcfs as variantCaller_merge_GATK {
     input:
-      vcfs=variantCaller_GATK.out
+      vcfs=[variantCaller_GATK.out]
   }
   call S.strelkaGermlineVariantCaller as variantCaller_Strelka {
     input:
@@ -109,7 +109,7 @@ workflow WgGermline {
       intervals=strelkaIntervals
   }
   scatter (v in vardictIntervals) {
-     call V.vardictVariantCaller as variantCaller_Vardict {
+     call V.vardictGermlineVariantCaller as variantCaller_Vardict {
       input:
         intervals=v,
         bam_bai=processBamFiles.out_bai,
@@ -129,7 +129,7 @@ workflow WgGermline {
   }
   call G2.Gatk4GatherVcfs as variantCaller_merge_Vardict {
     input:
-      vcfs=variantCaller_Vardict.out
+      vcfs=[variantCaller_Vardict.out]
   }
   call C.combinevariants as combineVariants {
     input:

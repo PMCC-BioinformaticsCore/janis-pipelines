@@ -180,10 +180,12 @@ steps:
     in:
       bams:
         id: bams
-        source: alignSortedBam/out
+        linkMerge: merge_nested
+        source:
+        - alignSortedBam/out
     out:
     - out
-    run: tools/processbamfiles.cwl
+    run: tools/mergeAndMarkBams.cwl
   sortCombined:
     in:
       vcf:
@@ -217,7 +219,7 @@ steps:
         source: snps_dbsnp
     out:
     - out
-    run: tools/GATK4_VariantCaller.cwl
+    run: tools/GATK4_GermlineVariantCaller.cwl
     scatter:
     - intervals
   variantCaller_Strelka:
@@ -259,14 +261,16 @@ steps:
     out:
     - vardictVariants
     - out
-    run: tools/vardictVariantCaller.cwl
+    run: tools/vardictGermlineVariantCaller.cwl
     scatter:
     - intervals
   variantCaller_merge_GATK:
     in:
       vcfs:
         id: vcfs
-        source: variantCaller_GATK/out
+        linkMerge: merge_nested
+        source:
+        - variantCaller_GATK/out
     out:
     - out
     run: tools/Gatk4GatherVcfs.cwl
@@ -274,7 +278,9 @@ steps:
     in:
       vcfs:
         id: vcfs
-        source: variantCaller_Vardict/out
+        linkMerge: merge_nested
+        source:
+        - variantCaller_Vardict/out
     out:
     - out
     run: tools/Gatk4GatherVcfs.cwl
