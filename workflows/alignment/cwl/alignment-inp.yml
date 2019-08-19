@@ -1,0 +1,11 @@
+createIndex: null
+fastq: null
+maxRecordsInRam: null
+minReadLength: null
+qualityCutoff: null
+reference:
+  class: File
+  path: null
+sampleName: null
+sortOrder: null
+validationStringency: null

@@ -1,0 +1,18 @@
+{
+    "alignment.createIndex": true,
+    "alignment.fastq": null,
+    "alignment.maxRecordsInRam": 5000000,
+    "alignment.minReadLength": 50,
+    "alignment.qualityCutoff": 15,
+    "alignment.reference": null,
+    "alignment.reference_amb": null,
+    "alignment.reference_ann": null,
+    "alignment.reference_bwt": null,
+    "alignment.reference_dict": null,
+    "alignment.reference_fai": null,
+    "alignment.reference_pac": null,
+    "alignment.reference_sa": null,
+    "alignment.sampleName": null,
+    "alignment.sortOrder": "coordinate",
+    "alignment.validationStringency": "SILENT"
+}
