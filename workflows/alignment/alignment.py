@@ -143,6 +143,7 @@ if __name__ == "__main__":
     w = BwaAlignment()
 
     w.translate("cwl", to_disk=True, export_path="{language}")
+    w.translate("wdl", to_disk=True, export_path="{language}")
 
     # print(build_resources_input(w, "wdl", {CaptureType.KEY: CaptureType.CHROMOSOME}))
 
