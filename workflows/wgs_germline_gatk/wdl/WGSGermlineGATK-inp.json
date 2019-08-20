@@ -1,0 +1,21 @@
+{
+    "WGSGermlineGATK.fastqs": null,
+    "WGSGermlineGATK.gatkIntervals": null,
+    "WGSGermlineGATK.known_indels": null,
+    "WGSGermlineGATK.known_indels_tbi": null,
+    "WGSGermlineGATK.mills_1000gp_indels": null,
+    "WGSGermlineGATK.mills_1000gp_indels_tbi": null,
+    "WGSGermlineGATK.reference": null,
+    "WGSGermlineGATK.reference_amb": null,
+    "WGSGermlineGATK.reference_ann": null,
+    "WGSGermlineGATK.reference_bwt": null,
+    "WGSGermlineGATK.reference_dict": null,
+    "WGSGermlineGATK.reference_fai": null,
+    "WGSGermlineGATK.reference_pac": null,
+    "WGSGermlineGATK.reference_sa": null,
+    "WGSGermlineGATK.sampleName": "NA12878",
+    "WGSGermlineGATK.snps_1000gp": null,
+    "WGSGermlineGATK.snps_1000gp_tbi": null,
+    "WGSGermlineGATK.snps_dbsnp": null,
+    "WGSGermlineGATK.snps_dbsnp_tbi": null
+}
