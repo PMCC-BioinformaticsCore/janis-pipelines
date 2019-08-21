@@ -10,7 +10,7 @@ inputs:
     position: 100
   label: file
   type: File
-- default: generated-062a6ca0-c2dd-11e9-933b-f218985ebfa7.vcf
+- default: generated-43449466-c3b0-11e9-af7e-f218985ebfa7.vcf
   doc: '[-o] see Common Options'
   id: outputFilename
   inputBinding:

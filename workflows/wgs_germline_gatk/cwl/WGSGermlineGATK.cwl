@@ -95,7 +95,7 @@ steps:
     out:
     - out_bwa
     - out
-    run: tools/alignsortedbam.cwl
+    run: tools/BwaAligner.cwl
     scatter:
     - fastq
   fastqc:

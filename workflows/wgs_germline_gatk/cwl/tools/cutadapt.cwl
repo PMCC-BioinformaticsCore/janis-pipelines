@@ -34,7 +34,7 @@ inputs:
   type:
   - string
   - 'null'
-- default: generated-60ad3e88-c2dc-11e9-be0f-f218985ebfa7-R1.fastq.gz
+- default: generated-1c8ea6fe-c3b0-11e9-917e-f218985ebfa7-R1.fastq.gz
   doc: "Write trimmed reads to FILE. FASTQ or FASTA format is chosen depending on\
     \ input. The summary report is sent to standard output. Use '{name}' in FILE to\
     \ demultiplex reads into multiple files. Default: write to standard output"
@@ -43,7 +43,7 @@ inputs:
     prefix: -o
   label: outputFilename
   type: string
-- default: generated-60ad3e88-c2dc-11e9-be0f-f218985ebfa7-R2.fastq.gz
+- default: generated-1c8ea6fe-c3b0-11e9-917e-f218985ebfa7-R2.fastq.gz
   doc: Write second read in a pair to FILE.
   id: secondReadFile
   inputBinding:

@@ -4,7 +4,7 @@ import "cutadapt.wdl" as C
 import "BwaMemSamtoolsView.wdl" as B
 import "gatk4sortsam.wdl" as G
 
-workflow alignsortedbam {
+workflow BwaAligner {
   input {
     Array[File] fastq
     String? adapter

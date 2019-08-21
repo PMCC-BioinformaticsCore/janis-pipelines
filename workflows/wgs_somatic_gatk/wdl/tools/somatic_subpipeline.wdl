@@ -1,6 +1,6 @@
 version development
 
-import "alignsortedbam.wdl" as A
+import "BwaAligner.wdl" as B
 import "fastqc.wdl" as F
 import "mergeAndMarkBams.wdl" as M
 
@@ -19,7 +19,7 @@ workflow somatic_subpipeline {
     String? sortSamTmpDir
   }
   scatter (i in inputs) {
-     call A.alignsortedbam as alignAndSort {
+     call B.BwaAligner as alignAndSort {
       input:
         fastq=i,
         sampleName=sampleName,

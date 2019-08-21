@@ -4,7 +4,7 @@ from janis_bioinformatics.data_types import FastaWithDict, VcfTabix, Fastq, Bed
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
 from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
-from janis_bioinformatics.tools.common import AlignSortedBam, MergeAndMarkBams_4_0
+from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_0
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_0
 from janis_bioinformatics.tools.variantcallers import GatkGermlineVariantCaller
 
@@ -31,7 +31,7 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
         known_indels = Input("known_indels", VcfTabix())
         mills_indels = Input("mills_1000gp_indels", VcfTabix())
 
-        s1_sw = Step("alignSortedBam", AlignSortedBam())
+        s1_sw = Step("alignSortedBam", BwaAligner())
         fastqc = Step("fastqc", FastQC_0_11_5())
         s2_process = Step("processBamFiles", MergeAndMarkBams_4_0())
 

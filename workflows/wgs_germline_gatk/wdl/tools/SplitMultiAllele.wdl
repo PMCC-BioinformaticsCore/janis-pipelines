@@ -13,7 +13,7 @@ task SplitMultiAllele {
     File reference_sa
     File reference_fai
     File reference_dict
-    String outputFilename = "generated-60d2c2e8-c2dc-11e9-be0f-f218985ebfa7.norm.vcf"
+    String outputFilename = "generated-1cb5d166-c3b0-11e9-917e-f218985ebfa7.norm.vcf"
   }
   command {
      \
@@ -26,7 +26,7 @@ task SplitMultiAllele {
       -r ${reference} \
       | \
       sed 's/ID=AD,Number=./ID=AD,Number=1/' \
-      ${"> " + if defined(outputFilename) then outputFilename else "generated-60d2c892-c2dc-11e9-be0f-f218985ebfa7.norm.vcf"}
+      ${"> " + if defined(outputFilename) then outputFilename else "generated-1cb5d6e8-c3b0-11e9-917e-f218985ebfa7.norm.vcf"}
   }
   runtime {
     docker: "heuermh/vt"
@@ -35,6 +35,6 @@ task SplitMultiAllele {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-60d2c2e8-c2dc-11e9-be0f-f218985ebfa7.norm.vcf"
+    File out = if defined(outputFilename) then outputFilename else "generated-1cb5d166-c3b0-11e9-917e-f218985ebfa7.norm.vcf"
   }
 }

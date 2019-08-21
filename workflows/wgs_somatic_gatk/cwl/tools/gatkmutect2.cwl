@@ -73,7 +73,7 @@ inputs:
   - .fai
   - ^.dict
   type: File
-- default: generated-9c0b6730-c2e5-11e9-91cd-f218985ebfa7.vcf.gz
+- default: generated-4fed3e66-c3b0-11e9-9ec0-f218985ebfa7.vcf.gz
   id: outputFilename
   inputBinding:
     position: 20

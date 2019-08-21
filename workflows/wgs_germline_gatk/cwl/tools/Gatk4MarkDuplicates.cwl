@@ -54,7 +54,7 @@ inputs:
   secondaryFiles:
   - ^.bai
   type: File
-- default: generated-60adb16a-c2dc-11e9-be0f-f218985ebfa7.bam
+- default: generated-1c8f19ea-c3b0-11e9-917e-f218985ebfa7.bam
   doc: File to write duplication metrics to
   id: outputFilename
   inputBinding:
@@ -62,7 +62,7 @@ inputs:
     prefix: -O
   label: outputFilename
   type: string
-- default: generated-60adb1ba-c2dc-11e9-be0f-f218985ebfa7.metrics.txt
+- default: generated-1c8f1a3a-c3b0-11e9-917e-f218985ebfa7.metrics.txt
   doc: The output file to write marked records to.
   id: metricsFilename
   inputBinding:

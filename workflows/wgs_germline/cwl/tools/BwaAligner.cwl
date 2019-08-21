@@ -1,7 +1,7 @@
 class: Workflow
 cwlVersion: v1.0
 doc: Align sorted bam with this subworkflow consisting of BWA Mem + SamTools + Gatk4SortSam
-id: alignsortedbam
+id: BwaAligner
 inputs:
   adapter:
     id: adapter
@@ -71,7 +71,7 @@ inputs:
     default: SILENT
     id: validationStringency
     type: string
-label: Align sorted BAM
+label: Align and sort reads
 outputs:
   out:
     id: out

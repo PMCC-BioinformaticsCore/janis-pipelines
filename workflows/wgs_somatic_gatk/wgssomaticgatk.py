@@ -2,7 +2,7 @@ from janis_bioinformatics.data_types import FastaWithDict, Fastq, VcfTabix, Bed
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
 from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
-from janis_bioinformatics.tools.common import AlignSortedBam, MergeAndMarkBams_4_0
+from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_0
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_0
 from janis_bioinformatics.tools.variantcallers.gatksomatic_variants import GatkSomaticVariantCaller
 from janis_core import Input, String, Step, Workflow, Array, Output
@@ -94,7 +94,7 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
 
         name = Input('sampleName', String())
 
-        s1_alignsort = Step('alignAndSort', AlignSortedBam())
+        s1_alignsort = Step('alignAndSort', BwaAligner())
         s2_process = Step('mergeAndMark', MergeAndMarkBams_4_0())
         fastqc = Step("fastqc", FastQC_0_11_5())
 

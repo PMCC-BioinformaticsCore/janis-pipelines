@@ -1,11 +1,11 @@
 version development
 
-import "tools/alignsortedbam.wdl" as A
+import "tools/BwaAligner.wdl" as B
 import "tools/fastqc.wdl" as F
 import "tools/mergeAndMarkBams.wdl" as M
 import "tools/GATK4_GermlineVariantCaller.wdl" as G
 import "tools/Gatk4GatherVcfs.wdl" as G2
-import "tools/bcftoolssort.wdl" as B
+import "tools/bcftoolssort.wdl" as B2
 
 workflow WGSGermlineGATK {
   input {
@@ -30,7 +30,7 @@ workflow WGSGermlineGATK {
     File mills_1000gp_indels_tbi
   }
   scatter (f in fastqs) {
-     call A.alignsortedbam as alignSortedBam {
+     call B.BwaAligner as alignSortedBam {
       input:
         fastq=f,
         sampleName=sampleName,
@@ -83,7 +83,7 @@ workflow WGSGermlineGATK {
     input:
       vcfs=[variantCaller_GATK.out]
   }
-  call B.bcftoolssort as sortCombined {
+  call B2.bcftoolssort as sortCombined {
     input:
       vcf=variantCaller_merge_GATK.out
   }

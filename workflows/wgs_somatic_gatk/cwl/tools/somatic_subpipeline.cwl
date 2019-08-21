@@ -67,7 +67,7 @@ steps:
     out:
     - out_bwa
     - out
-    run: alignsortedbam.cwl
+    run: BwaAligner.cwl
     scatter:
     - fastq
   fastqc:

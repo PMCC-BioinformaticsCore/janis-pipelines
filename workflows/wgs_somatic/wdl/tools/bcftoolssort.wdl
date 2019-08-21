@@ -5,13 +5,13 @@ task bcftoolssort {
     Int? runtime_cpu
     Int? runtime_memory
     File vcf
-    String outputFilename = "generated-0668dc38-c2dd-11e9-933b-f218985ebfa7.sorted.vcf"
+    String outputFilename = "generated-4381895c-c3b0-11e9-af7e-f218985ebfa7.sorted.vcf"
     String? outputType
     String? tempDir
   }
   command {
     bcftools sort \
-      ${"--output-file " + if defined(outputFilename) then outputFilename else "generated-0668e066-c2dd-11e9-933b-f218985ebfa7.sorted.vcf"} \
+      ${"--output-file " + if defined(outputFilename) then outputFilename else "generated-43818d30-c3b0-11e9-af7e-f218985ebfa7.sorted.vcf"} \
       ${"--output-type " + outputType} \
       ${"--temp-dir " + tempDir} \
       ${vcf}
@@ -23,6 +23,6 @@ task bcftoolssort {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-0668dc38-c2dd-11e9-933b-f218985ebfa7.sorted.vcf"
+    File out = if defined(outputFilename) then outputFilename else "generated-4381895c-c3b0-11e9-af7e-f218985ebfa7.sorted.vcf"
   }
 }

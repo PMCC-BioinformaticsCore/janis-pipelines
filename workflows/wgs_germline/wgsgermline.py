@@ -4,7 +4,7 @@ from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWork
 from janis_bioinformatics.data_types import FastaWithDict, VcfTabix, Fastq, Bed, BedTabix
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
-from janis_bioinformatics.tools.common import AlignSortedBam, MergeAndMarkBams_4_0
+from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_0
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_0
 from janis_bioinformatics.tools.pmac import CombineVariants_0_0_4
 from janis_bioinformatics.tools.variantcallers import GatkGermlineVariantCaller, IlluminaGermlineVariantCaller, \
@@ -38,7 +38,7 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
         known_indels = Input("known_indels", VcfTabix())
         mills_indels = Input("mills_1000gp_indels", VcfTabix())
 
-        s1_sw = Step("alignSortedBam", AlignSortedBam())
+        s1_sw = Step("alignSortedBam", BwaAligner())
         fastqc = Step("fastqc", FastQC_0_11_5())
         s2_process = Step("processBamFiles", MergeAndMarkBams_4_0())
 
@@ -57,6 +57,7 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
         self.add_edges([
             (reference, s1_sw.reference),
             (sample_name, s1_sw.sampleName),
+            (Input("sortSamTmpdir", String(optional=True), default="./tmp"), s1_sw.sortSamTmpDir)
         ])
 
         # step1 sidestep
