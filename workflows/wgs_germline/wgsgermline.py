@@ -1,3 +1,4 @@
+from janis_bioinformatics.tools.variantcallers.gridssgermline import GridssGermlineVariantCaller
 from janis_core import Input, String, Step, Array, Output, Float, File, Boolean, Int, CaptureType
 
 from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
@@ -33,6 +34,8 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
         sample_name = Input("sampleName", String(), "NA12878")
         allele_freq_threshold = Input("allelFreqThreshold", Float(), 0.05)
 
+        gridss_blacklist = Input("gridssBlacklist", Bed())
+
         snps_dbsnp = Input("snps_dbsnp", VcfTabix())
         snps_1000gp = Input("snps_1000gp", VcfTabix())
         known_indels = Input("known_indels", VcfTabix())
@@ -45,6 +48,7 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
         vc_gatk = Step("variantCaller_GATK", GatkGermlineVariantCaller())
         vc_strelka = Step("variantCaller_Strelka", IlluminaGermlineVariantCaller())
         vc_vardict = Step("variantCaller_Vardict", VardictGermlineVariantCaller())
+        vc_gridss = Step("variantCaller_Gridss", GridssGermlineVariantCaller())
 
         vc_merge_gatk = Step("variantCaller_merge_GATK", Gatk4GatherVcfs_4_0())
         vc_merge_vardict = Step("variantCaller_merge_Vardict", Gatk4GatherVcfs_4_0())
@@ -102,14 +106,11 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
             (vc_vardict.out, vc_merge_vardict.vcfs)
         ])
 
-        # Output the Variants
+        # Gridss VariantCaller
         self.add_edges([
-            (vc_gatk.out, Output("variants_gatk_split")),
-            (vc_vardict.out, Output("variants_vardict_split")),
-
-            (vc_strelka.out, Output("variants_strelka")),
-            (vc_merge_gatk.out, Output("variants_gatk")),
-            (vc_merge_vardict.out, Output("variants_vardict"))
+            (s2_process.out, vc_gridss.bam),
+            (reference, vc_gridss.reference),
+            (gridss_blacklist, vc_gridss.blacklist),
         ])
 
         # Combine
@@ -122,6 +123,7 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
             (vc_merge_gatk.out, combine_vcs.vcfs),
             (vc_strelka.out, combine_vcs.vcfs),
             (vc_merge_vardict.out, combine_vcs.vcfs),
+            (vc_gridss.out, combine_vcs.vcfs)
         ])
         self.add_edge(combine_vcs.vcf, sort_combined_vcfs.vcf)
 
@@ -155,8 +157,19 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
             (sort_combined_vcfs.out, Output("combinedVariants"))
         ])
 
+        # Output the Variants
+        self.add_edges([
+            (vc_gatk.out, Output("variants_gatk_split")),
+            (vc_vardict.out, Output("variants_vardict_split")),
+
+            (vc_strelka.out, Output("variants_strelka")),
+            (vc_merge_gatk.out, Output("variants_gatk")),
+            (vc_merge_vardict.out, Output("variants_vardict")),
+            (vc_gridss.out, Output("variants_gridss"))
+        ])
+
 
 if __name__ == "__main__":
     w = WGSGermlineMultiCallers()
-    w.translate("cwl", to_console=False, to_disk=True, export_path="{language}")
-    w.translate("wdl", to_console=False, to_disk=True, export_path="{language}")
+    # w.translate("cwl", to_console=False, to_disk=True, export_path="{language}")
+    w.translate("wdl", to_console=True)#, to_disk=True, export_path="{language}")
