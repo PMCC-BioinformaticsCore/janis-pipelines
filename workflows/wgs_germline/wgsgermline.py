@@ -33,17 +33,17 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
 
         super().__init__("WGSGermlineMultiCallers", "WGS Germline (Multi callers)")
 
-        self.input("fastqs", Array(Fastq()))
+        self.input("fastqs", Array(Fastq))
         self.input("reference", FastaWithDict)
 
-        self.input("gatkIntervals", Array(Bed()))
-        self.input("vardictIntervals", Array(Bed()))
+        self.input("gatkIntervals", Array(Bed))
+        self.input("vardictIntervals", Array(Bed))
         self.input("strelkaIntervals", BedTabix)
 
         self.input("vardictHeaderLines", File)
 
-        self.input("sampleName", String(), "NA12878")
-        self.input("allelFreqThreshold", Float(), 0.05)
+        self.input("sampleName", String(), default="NA12878")
+        self.input("allelFreqThreshold", Float(), default=0.05)
 
         self.input("gridssBlacklist", Bed)
 
