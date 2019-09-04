@@ -18,11 +18,11 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
 
         super().__init__("WGSGermlineGATK", name="WGS Germline (GATK only)")
 
-        self.input("fastqs", Array(Fastq()))
+        self.input("fastqs", Array(Fastq))
         self.input("reference", FastaWithDict)
-        self.input("gatkIntervals", Array(Bed()))
+        self.input("gatkIntervals", Array(Bed))
 
-        self.input("sampleName", String(), "NA12878")
+        self.input("sampleName", String(), default="NA12878")
 
         self.input("snps_dbsnp", VcfTabix)
         self.input("snps_1000gp", VcfTabix)
@@ -37,7 +37,7 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
             fastq=self.fastqs,
             reference=self.reference,
             name=self.sampleName,
-            sortsam_tmpDir="./tmp",
+            sortsam_tmpDir=None,
         )
         self.step("fastqc", FastQC_0_11_5, reads=self.fastqs)
         self.step("processBamFiles", MergeAndMarkBams_4_0, bams=self.alignSortedBam.out)
