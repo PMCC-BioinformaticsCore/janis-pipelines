@@ -1,4 +1,4 @@
-from janis_core import Input, String, Step, Array, Output
+from janis_core import String, Array
 
 from janis_bioinformatics.data_types import FastaWithDict, VcfTabix, Fastq, Bed
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
@@ -10,77 +10,68 @@ from janis_bioinformatics.tools.variantcallers import GatkGermlineVariantCaller
 
 
 class WGSGermlineGATK(BioinformaticsWorkflow):
-
     @staticmethod
     def version():
         return "1.0.0"
 
     def __init__(self):
 
-        BioinformaticsWorkflow.__init__(self, "WGSGermlineGATK", "WGS Germline (GATK only)")
+        super().__init__("WGSGermlineGATK", name="WGS Germline (GATK only)")
 
-        fastqInputs = Input("fastqs", Array(Fastq()))
-        reference = Input("reference", FastaWithDict())
+        self.input("fastqs", Array(Fastq()))
+        self.input("reference", FastaWithDict)
+        self.input("gatkIntervals", Array(Bed()))
 
-        gatk_intervals = Input("gatkIntervals", Array(Bed()))
+        self.input("sampleName", String(), "NA12878")
 
-        sample_name = Input("sampleName", String(), "NA12878")
+        self.input("snps_dbsnp", VcfTabix)
+        self.input("snps_1000gp", VcfTabix)
+        self.input("known_indels", VcfTabix)
+        self.input("mills_indels", VcfTabix)
 
-        snps_dbsnp = Input("snps_dbsnp", VcfTabix())
-        snps_1000gp = Input("snps_1000gp", VcfTabix())
-        known_indels = Input("known_indels", VcfTabix())
-        mills_indels = Input("mills_1000gp_indels", VcfTabix())
+        # STEPS
 
-        s1_sw = Step("alignSortedBam", BwaAligner())
-        fastqc = Step("fastqc", FastQC_0_11_5())
-        s2_process = Step("processBamFiles", MergeAndMarkBams_4_0())
-
-        vc_gatk = Step("variantCaller_GATK", GatkGermlineVariantCaller())
-
-        vc_merge_gatk = Step("variantCaller_merge_GATK", Gatk4GatherVcfs_4_0())
-        sort_combined_vcfs = Step("sortCombined", BcfToolsSort_1_9())
-
-        # step1
-        self.add_edge(fastqInputs, s1_sw.fastq)
-        self.add_edges([
-            (reference, s1_sw.reference),
-            (sample_name, s1_sw.sampleName),
-        ])
-
-        # step1 sidestep
-        self.add_edge(fastqInputs, fastqc.reads)
-
-        # step2 - process bam files
-        self.add_edges([
-            (s1_sw.out, s2_process.bams)
-        ])
+        self.step(
+            "alignSortedBam",
+            BwaAligner,
+            fastq=self.fastqs,
+            reference=self.reference,
+            name=self.sampleName,
+            sortsam_tmpDir="./tmp",
+        )
+        self.step("fastqc", FastQC_0_11_5, reads=self.fastqs)
+        self.step("processBamFiles", MergeAndMarkBams_4_0, bams=self.alignSortedBam.out)
 
         # VARIANT CALLERS
 
-        # GATK VariantCaller + Merge
-        self.add_edges([
-            (s2_process.out, vc_gatk.bam),
-            (gatk_intervals, vc_gatk.intervals),
-            (reference, vc_gatk.reference),
-            (snps_dbsnp, vc_gatk.snps_dbsnp),
-            (snps_1000gp, vc_gatk.snps_1000gp),
-            (known_indels, vc_gatk.knownIndels),
-            (mills_indels, vc_gatk.millsIndels),
+        # GATK
+        self.step(
+            "variantCaller_GATK",
+            GatkGermlineVariantCaller,
+            bam=self.processBamFiles.out,
+            intervals=self.gatkIntervals,
+            reference=self.reference,
+            snps_dbsnp=self.snps_dbsnp,
+            snps_1000gp=self.snps_1000gp,
+            knownIndels=self.known_indels,
+            millsIndels=self.mills_indels,
+        )
 
-            (vc_gatk.out, vc_merge_gatk.vcfs)
-        ])
+        self.step(
+            "variantCaller_merge_GATK",
+            Gatk4GatherVcfs_4_0,
+            vcfs=self.variantCaller_GATK.out,
+        )
+        # sort
 
-        # Sort variants
-        self.add_edge(vc_merge_gatk.out, sort_combined_vcfs.vcf)
+        self.step(
+            "sortCombined", BcfToolsSort_1_9, vcf=self.variantCaller_merge_GATK.out
+        )
 
-        # Outputs
-
-        self.add_edges([
-            (s2_process.out, Output("bam")),
-            (fastqc.out, Output("reports")),
-            (sort_combined_vcfs.out, Output("variants")),
-            (vc_gatk.out, Output("scattered_variants")),
-        ])
+        self.output("bam", source=self.processBamFiles.out)
+        self.output("reports", source=self.fastqc)
+        self.output("variants", source=self.sortCombined.out)
+        self.output("variants_split", source=self.variantCaller_GATK.out)
 
 
 if __name__ == "__main__":
