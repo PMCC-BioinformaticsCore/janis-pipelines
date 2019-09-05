@@ -72,15 +72,11 @@ class BwaAlignment(BioinformaticsWorkflow):
 
 if __name__ == "__main__":
     w = BwaAlignment()
-
-    w.translate("cwl", to_disk=True, export_path="{language}", validate=True)
-    w.translate("wdl", to_disk=True, export_path="{language}", validate=True)
-
-    # print(build_resources_input(w, "wdl", {CaptureType.KEY: CaptureType.CHROMOSOME}))
-
-    # print(AlignSortedBam().help())
-
-    # import shepherd
-    #
-    # task = shepherd.from_workflow(w, engine=shepherd.Cromwell(), env="pmac")
-    # print(task.outputs)
+    args = {
+        "to_console": False,
+        "to_disk": True,
+        "validate": True,
+        "export_path": "{language}",
+    }
+    w.translate("cwl", **args)
+    w.translate("wdl", **args)

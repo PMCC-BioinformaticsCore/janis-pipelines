@@ -34,12 +34,13 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
         self.step(
             "alignSortedBam",
             BwaAligner,
+            scatter="fastq",
             fastq=self.fastqs,
             reference=self.reference,
             name=self.sampleName,
             sortsam_tmpDir=None,
         )
-        self.step("fastqc", FastQC_0_11_5, reads=self.fastqs)
+        self.step("fastqc", FastQC_0_11_5, scatter="reads", reads=self.fastqs)
         self.step("processBamFiles", MergeAndMarkBams_4_0, bams=self.alignSortedBam.out)
 
         # VARIANT CALLERS
@@ -48,6 +49,7 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
         self.step(
             "variantCaller_GATK",
             GatkGermlineVariantCaller,
+            scatter="intervals",
             bam=self.processBamFiles.out,
             intervals=self.gatkIntervals,
             reference=self.reference,
@@ -76,5 +78,11 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
 
 if __name__ == "__main__":
     w = WGSGermlineGATK()
-    w.translate("cwl", to_console=False, to_disk=True, export_path="{language}")
-    w.translate("wdl", to_console=False, to_disk=True, export_path="{language}")
+    args = {
+        "to_console": False,
+        "to_disk": True,
+        "validate": True,
+        "export_path": "{language}",
+    }
+    w.translate("cwl", **args)
+    w.translate("wdl", **args)

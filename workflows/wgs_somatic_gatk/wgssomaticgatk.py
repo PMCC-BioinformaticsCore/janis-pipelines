@@ -48,6 +48,7 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
         self.step(
             "variantCaller_GATK",
             GatkSomaticVariantCaller,
+            scatter="intervals",
             normalBam=self.tumor.out,
             tumorBam=self.normal.out,
             normalName=self.normalName,
@@ -88,13 +89,14 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
         w.step(
             "alignAndSort",
             BwaAligner,
+            scatter="fastq",
             fastq=w.reads,
             reference=w.reference,
             name=w.sampleName,
             sortsam_tmpDir=None,
         )
         w.step("mergeAndMark", MergeAndMarkBams_4_0, bams=w.alignAndSort.out)
-        w.step("fastqc", FastQC_0_11_5, reads=w.reads)
+        w.step("fastqc", FastQC_0_11_5, scatter="reads", reads=w.reads)
 
         w.output("out", source=w.mergeAndMark.out)
         w.output("reports", source=w.fastqc)
@@ -104,5 +106,11 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
 
 if __name__ == "__main__":
     w = WGSSomaticGATK()
-    w.translate("cwl", to_console=False, to_disk=True, export_path="{language}")
-    w.translate("wdl", to_console=False, to_disk=True, export_path="{language}")
+    args = {
+        "to_console": False,
+        "to_disk": True,
+        "validate": True,
+        "export_path": "{language}",
+    }
+    w.translate("cwl", **args)
+    w.translate("wdl", **args)

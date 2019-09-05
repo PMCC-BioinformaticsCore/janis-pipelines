@@ -43,7 +43,7 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
         self.input("vardictHeaderLines", File)
 
         self.input("sampleName", String(), default="NA12878")
-        self.input("allelFreqThreshold", Float(), default=0.05)
+        self.input("alleleFreqThreshold", Float(), default=0.05)
 
         self.input("gridssBlacklist", Bed)
 
@@ -57,12 +57,13 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
         self.step(
             "alignSortedBam",
             BwaAligner,
+            scatter="fastq",
             fastq=self.fastqs,
             reference=self.reference,
             name=self.sampleName,
             sortsam_tmpDir="./tmp",
         )
-        self.step("fastqc", FastQC_0_11_5, reads=self.fastqs)
+        self.step("fastqc", FastQC_0_11_5, scatter="reads", reads=self.fastqs)
         self.step("processBamFiles", MergeAndMarkBams_4_0, bams=self.alignSortedBam.out)
 
         # VARIANT CALLERS
@@ -71,6 +72,7 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
         self.step(
             "variantCaller_GATK",
             GatkGermlineVariantCaller,
+            scatter="intervals",
             bam=self.processBamFiles.out,
             intervals=self.gatkIntervals,
             reference=self.reference,
@@ -99,11 +101,12 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
         self.step(
             "variantCaller_Vardict",
             VardictGermlineVariantCaller,
+            scatter="intervals",
             bam=self.processBamFiles.out,
             reference=self.reference,
             intervals=self.vardictIntervals,
             sampleName=self.sampleName,
-            allelFreqThreshold=self.allelFreqThreshold,
+            alleleFreqThreshold=self.alleleFreqThreshold,
             headerLines=self.vardictHeaderLines,
         )
         self.step(
@@ -152,5 +155,11 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
 
 if __name__ == "__main__":
     w = WGSGermlineMultiCallers()
-    # w.translate("cwl", to_console=False, to_disk=True, export_path="{language}")
-    w.translate("wdl", to_console=True)  # , to_disk=True, export_path="{language}")
+    args = {
+        "to_console": False,
+        "to_disk": True,
+        "validate": True,
+        "export_path": "{language}",
+    }
+    w.translate("cwl", **args)
+    w.translate("wdl", **args)
