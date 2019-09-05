@@ -72,7 +72,9 @@ outputs:
     id: normalReport
     outputSource: normal/reports
     type:
-      items: File
+      items:
+        items: File
+        type: array
       type: array
   tumorBam:
     id: tumorBam
@@ -84,7 +86,9 @@ outputs:
     id: tumorReport
     outputSource: tumor/reports
     type:
-      items: File
+      items:
+        items: File
+        type: array
       type: array
   variants_gatk:
     id: variants_gatk
@@ -92,9 +96,9 @@ outputs:
     type: File
 requirements:
   InlineJavascriptRequirement: {}
-  MultipleInputFeatureRequirement: {}
   ScatterFeatureRequirement: {}
   StepInputExpressionRequirement: {}
+  SubworkflowFeatureRequirement: {}
 steps:
   normal:
     in:
@@ -175,9 +179,7 @@ steps:
     in:
       vcfs:
         id: vcfs
-        linkMerge: merge_nested
-        source:
-        - variantCaller_GATK/out
+        source: variantCaller_GATK/out
     out:
     - out
     run: tools/Gatk4GatherVcfs.cwl

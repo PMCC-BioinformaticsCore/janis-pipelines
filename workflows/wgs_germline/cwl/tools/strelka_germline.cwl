@@ -12,6 +12,31 @@ arguments:
   valueFrom: $(inputs.runtime_cpu)
 class: CommandLineTool
 cwlVersion: v1.0
+doc: "Strelka2 is a fast and accurate small variant caller optimized for analysis\
+  \ of germline variation \nin small cohorts and somatic variation in tumor/normal\
+  \ sample pairs. The germline caller employs \nan efficient tiered haplotype model\
+  \ to improve accuracy and provide read-backed phasing, adaptively \nselecting between\
+  \ assembly and a faster alignment-based haplotyping approach at each variant locus.\
+  \ \nThe germline caller also analyzes input sequencing data using a mixture-model\
+  \ indel error estimation \nmethod to improve robustness to indel noise. The somatic\
+  \ calling model improves on the original \nStrelka method for liquid and late-stage\
+  \ tumor analysis by accounting for possible tumor cell \ncontamination in the normal\
+  \ sample. A final empirical variant re-scoring step using random forest \nmodels\
+  \ trained on various call quality features has been added to both callers to further\
+  \ improve precision.\n\nCompared with submissions to the recent PrecisonFDA Consistency\
+  \ and Truth challenges, the average \nindel F-score for Strelka2 running in its\
+  \ default configuration is 3.1% and 0.08% higher, respectively, \nthan the best\
+  \ challenge submissions. Runtime on a 28-core server is ~40 minutes for 40x WGS\
+  \ germline \nanalysis and ~3 hours for a 110x/40x WGS tumor-normal somatic analysis\n\
+  \nStrelka accepts input read mappings from BAM or CRAM files, and optionally candidate\
+  \ and/or forced-call \nalleles from VCF. It reports all small variant predictions\
+  \ in VCF 4.1 format. Germline variant \nreporting uses the gVCF conventions to represent\
+  \ both variant and reference call confidence. \nFor best somatic indel performance,\
+  \ Strelka is designed to be run with the Manta structural variant \nand indel caller,\
+  \ which provides additional indel candidates up to a given maxiumum indel size \n\
+  (49 by default). By design, Manta and Strelka run together with default settings\
+  \ provide complete \ncoverage over all indel sizes (in additional to SVs and SNVs).\
+  \ \n\nSee the user guide for a full description of capabilities and limitations"
 id: strelka_germline
 inputs:
 - doc: Sample BAM or CRAM file. May be specified more than once, multiple inputs will

@@ -14,7 +14,7 @@ task GATK4ApplyBQSR {
     File reference_sa
     File reference_fai
     File reference_dict
-    String outputFilename = "generated-37c383de-ced9-11e9-8396-acde48001122.bam"
+    String outputFilename = "generated-98ec85e0-cf9f-11e9-a6a4-acde48001122.bam"
     File? recalFile
     File? intervals
     String? tmpDir
@@ -22,7 +22,7 @@ task GATK4ApplyBQSR {
   command {
     gatk ApplyBQSR \
       -R ${reference} \
-      ${"-O " + if defined(outputFilename) then outputFilename else "generated-37c38fa0-ced9-11e9-8396-acde48001122.bam"} \
+      ${"-O " + if defined(outputFilename) then outputFilename else "generated-98ec8ce8-cf9f-11e9-a6a4-acde48001122.bam"} \
       ${"--bqsr-recal-file " + recalFile} \
       ${"--intervals " + intervals} \
       -I ${bam} \
@@ -35,7 +35,7 @@ task GATK4ApplyBQSR {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-37c383de-ced9-11e9-8396-acde48001122.bam"
-    File out_bai = sub(if defined(outputFilename) then outputFilename else "generated-37c383de-ced9-11e9-8396-acde48001122.bam", "\\.bam$", ".bai")
+    File out = if defined(outputFilename) then outputFilename else "generated-98ec85e0-cf9f-11e9-a6a4-acde48001122.bam"
+    File out_bai = sub(if defined(outputFilename) then outputFilename else "generated-98ec85e0-cf9f-11e9-a6a4-acde48001122.bam", "\\.bam$", ".bai")
   }
 }

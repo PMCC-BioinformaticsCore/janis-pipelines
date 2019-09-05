@@ -16,7 +16,7 @@ task strelka_somatic {
     File reference_sa
     File reference_fai
     File reference_dict
-    String rundir = "generated-f8d2cc6a-cf83-11e9-8e32-acde48001122"
+    String rundir = "generated-8f3b4fd6-cf9f-11e9-b76d-acde48001122"
     File? region
     File? config
     File? outputcallableregions
@@ -45,7 +45,7 @@ task strelka_somatic {
       --normalBam=${normalBam} \
       --tumourBam=${tumorBam} \
       --referenceFasta=${reference} \
-      ${"--runDir=" + if defined(rundir) then rundir else "generated-f8d2f51e-cf83-11e9-8e32-acde48001122"} \
+      ${"--runDir=" + if defined(rundir) then rundir else "generated-8f3b79f2-cf9f-11e9-b76d-acde48001122"} \
       ${"--region=" + region} \
       ${"--config=" + config} \
       ${"--outputCallableRegions " + outputcallableregions} \
@@ -61,7 +61,7 @@ task strelka_somatic {
       ${true="--reportEVSFeatures" false="" reportevsfeatures} \
       ${"--snvScoringModelFile=" + snvscoringmodelfile} \
       ${"--indelScoringModelFile=" + indelscoringmodelfile} \
-      ;${if defined(rundir) then rundir else "generated-f8d2cc6a-cf83-11e9-8e32-acde48001122"}/runWorkflow.py \
+      ;${if defined(rundir) then rundir else "generated-8f3b4fd6-cf9f-11e9-b76d-acde48001122"}/runWorkflow.py \
       ${"--mode " + if defined(mode) then mode else "local"} \
       ${"--queue " + queue} \
       ${"--memGb " + memGb} \
@@ -75,12 +75,12 @@ task strelka_somatic {
     preemptible: 2
   }
   output {
-    File configPickle = "${if defined(rundir) then rundir else "generated-f8d2cc6a-cf83-11e9-8e32-acde48001122"}/runWorkflow.py.config.pickle"
-    File script = "${if defined(rundir) then rundir else "generated-f8d2cc6a-cf83-11e9-8e32-acde48001122"}/runWorkflow.py"
-    File stats = "${if defined(rundir) then rundir else "generated-f8d2cc6a-cf83-11e9-8e32-acde48001122"}/results/stats/runStats.tsv"
-    File indels = "${if defined(rundir) then rundir else "generated-f8d2cc6a-cf83-11e9-8e32-acde48001122"}/results/variants/somatic.indels.vcf.gz"
-    File indels_tbi = "${if defined(rundir) then rundir else "generated-f8d2cc6a-cf83-11e9-8e32-acde48001122"}/results/variants/somatic.indels.vcf.gz.tbi"
-    File snvs = "${if defined(rundir) then rundir else "generated-f8d2cc6a-cf83-11e9-8e32-acde48001122"}/results/variants/somatic.snvs.vcf.gz"
-    File snvs_tbi = "${if defined(rundir) then rundir else "generated-f8d2cc6a-cf83-11e9-8e32-acde48001122"}/results/variants/somatic.snvs.vcf.gz.tbi"
+    File configPickle = "${if defined(rundir) then rundir else "generated-8f3b4fd6-cf9f-11e9-b76d-acde48001122"}/runWorkflow.py.config.pickle"
+    File script = "${if defined(rundir) then rundir else "generated-8f3b4fd6-cf9f-11e9-b76d-acde48001122"}/runWorkflow.py"
+    File stats = "${if defined(rundir) then rundir else "generated-8f3b4fd6-cf9f-11e9-b76d-acde48001122"}/results/stats/runStats.tsv"
+    File indels = "${if defined(rundir) then rundir else "generated-8f3b4fd6-cf9f-11e9-b76d-acde48001122"}/results/variants/somatic.indels.vcf.gz"
+    File indels_tbi = "${if defined(rundir) then rundir else "generated-8f3b4fd6-cf9f-11e9-b76d-acde48001122"}/results/variants/somatic.indels.vcf.gz.tbi"
+    File snvs = "${if defined(rundir) then rundir else "generated-8f3b4fd6-cf9f-11e9-b76d-acde48001122"}/results/variants/somatic.snvs.vcf.gz"
+    File snvs_tbi = "${if defined(rundir) then rundir else "generated-8f3b4fd6-cf9f-11e9-b76d-acde48001122"}/results/variants/somatic.snvs.vcf.gz.tbi"
   }
 }

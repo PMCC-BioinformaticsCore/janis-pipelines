@@ -39,13 +39,15 @@ outputs:
     id: reports
     outputSource: fastqc/out
     type:
-      items: File
+      items:
+        items: File
+        type: array
       type: array
 requirements:
   InlineJavascriptRequirement: {}
-  MultipleInputFeatureRequirement: {}
   ScatterFeatureRequirement: {}
   StepInputExpressionRequirement: {}
+  SubworkflowFeatureRequirement: {}
 steps:
   alignAndSort:
     in:
@@ -80,9 +82,7 @@ steps:
     in:
       bams:
         id: bams
-        linkMerge: merge_nested
-        source:
-        - alignAndSort/out
+        source: alignAndSort/out
     out:
     - out
     run: mergeAndMarkBams.cwl

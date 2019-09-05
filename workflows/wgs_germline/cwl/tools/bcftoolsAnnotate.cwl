@@ -11,7 +11,7 @@ inputs:
     position: 100
   label: file
   type: File
-- default: generated-6516aa96-cf83-11e9-b4cb-acde48001122.vcf
+- default: generated-543a1382-cf9e-11e9-97c1-acde48001122.vcf
   doc: '[-o] see Common Options'
   id: outputFilename
   inputBinding:
@@ -68,6 +68,7 @@ inputs:
     is not a VCF/BCF, all new annotations must be defined via -h, --header-lines.'
   id: columns
   inputBinding:
+    itemSeparator: ' '
     prefix: --columns
   label: columns
   type:
@@ -164,6 +165,7 @@ inputs:
 - doc: '[-s] subset of samples to annotate, see also Common Options'
   id: samples
   inputBinding:
+    itemSeparator: ' '
     prefix: --samples
   label: samples
   type:
@@ -195,6 +197,7 @@ inputs:
     for FORMAT and FILTER). "INFO" can be abbreviated to "INF" and "FORMAT" to "FMT".'
   id: remove
   inputBinding:
+    itemSeparator: ' '
     prefix: --remove
   label: remove
   type:

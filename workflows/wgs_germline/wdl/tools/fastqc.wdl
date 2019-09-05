@@ -40,7 +40,7 @@ task fastqc {
       ${"--kmers " + kmers} \
       ${true="--quiet" false="" quiet} \
       ${"--dir " + dir} \
-      ${sep=" " prefix("", reads)}
+      ${sep=" " reads}
   }
   runtime {
     docker: "biocontainers/fastqc:v0.11.5_cv3"

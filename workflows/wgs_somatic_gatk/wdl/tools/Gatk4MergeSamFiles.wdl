@@ -6,7 +6,7 @@ task Gatk4MergeSamFiles {
     Int? runtime_memory
     Array[File] bams
     Array[File] bams_bai
-    String outputFilename = "generated-37c2b7c4-ced9-11e9-8396-acde48001122.bam"
+    String outputFilename = "generated-98ebe5cc-cf9f-11e9-a6a4-acde48001122.bam"
     Array[File]? argumentsFile
     Boolean? assumeSorted
     Array[String]? comment
@@ -35,12 +35,12 @@ task Gatk4MergeSamFiles {
   command {
     gatk MergeSamFiles \
       ${true="-AS" false="" assumeSorted} \
-      ${if defined(comment) then "-CO " else ""}${sep=" -CO " comment} \
+      ${true="-CO" false="" defined(comment)}${sep=" " comment} \
       ${true="-MSD" false="" mergeSequenceDictionaries} \
       ${true="--USE_THREADING" false="" useThreading} \
-      ${sep=" " prefix("-I ", bams)} \
-      ${"-O " + if defined(outputFilename) then outputFilename else "generated-37c2c930-ced9-11e9-8396-acde48001122.bam"} \
-      ${if defined(argumentsFile) then "--arguments_file " else ""}${sep=" --arguments_file " argumentsFile} \
+      -I ${sep=" " bams} \
+      ${"-O " + if defined(outputFilename) then outputFilename else "generated-98ebf120-cf9f-11e9-a6a4-acde48001122.bam"} \
+      ${true="--arguments_file" false="" defined(argumentsFile)}${sep=" " argumentsFile} \
       ${"-SO " + sortOrder} \
       ${"--COMPRESSION_LEVEL " + compressionLevel} \
       ${true="--CREATE_INDEX" false="" createIndex} \
@@ -61,7 +61,7 @@ task Gatk4MergeSamFiles {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-37c2b7c4-ced9-11e9-8396-acde48001122.bam"
-    File out_bai = sub(if defined(outputFilename) then outputFilename else "generated-37c2b7c4-ced9-11e9-8396-acde48001122.bam", "\\.bam$", ".bai")
+    File out = if defined(outputFilename) then outputFilename else "generated-98ebe5cc-cf9f-11e9-a6a4-acde48001122.bam"
+    File out_bai = sub(if defined(outputFilename) then outputFilename else "generated-98ebe5cc-cf9f-11e9-a6a4-acde48001122.bam", "\\.bam$", ".bai")
   }
 }

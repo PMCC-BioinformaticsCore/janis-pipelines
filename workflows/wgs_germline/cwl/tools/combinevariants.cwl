@@ -1,15 +1,32 @@
 baseCommand: combine_vcf.py
 class: CommandLineTool
 cwlVersion: v1.0
+doc: "\nusage: combine_vcf.py [-h] -i I --columns COLUMNS -o O --type\n          \
+  \            {germline,somatic} [--regions REGIONS] [--normal NORMAL]\n        \
+  \              [--tumor TUMOR] [--priority PRIORITY [PRIORITY ...]]\n\nExtracts\
+  \ and combines the information from germline / somatic vcfs into one\n\nrequired\
+  \ arguments:\n  -i I                  input vcfs, the priority of the vcfs will\
+  \ be based on\n                        the order of the input. This parameter can\
+  \ be\n                        specified more than once\n  --columns COLUMNS    \
+  \ Columns to keep. This parameter can be specified more\n                      \
+  \  than once\n  -o O                  output vcf (unsorted)\n  --type {germline,somatic}\n\
+  \                        must be either germline or somatic\n  --regions REGIONS\
+  \     Region file containing all the variants, used as\n                       \
+  \ samtools mpileup\n  --normal NORMAL       Sample id of germline vcf, or normal\
+  \ sample id of\n                        somatic vcf\n  --tumor TUMOR         tumor\
+  \ sample ID, required if inputs are somatic vcfs\n  --priority PRIORITY [PRIORITY\
+  \ ...]\n                        The priority of the callers, must match with the\n\
+  \                        callers in the source header\n\noptional arguments:\n \
+  \ -h, --help            show this help message and exit\n"
 id: combinevariants
 inputs:
-- default: generated-6516d642-cf83-11e9-b4cb-acde48001122.combined.vcf
+- default: generated-543a4672-cf9e-11e9-97c1-acde48001122.combined.vcf
   id: outputFilename
   inputBinding:
     prefix: -o
   label: outputFilename
   type: string
-- default: generated-6516d692-cf83-11e9-b4cb-acde48001122.tsv
+- default: generated-543a46d6-cf9e-11e9-97c1-acde48001122.tsv
   doc: Region file containing all the variants, used as samtools mpileup
   id: regions
   inputBinding:

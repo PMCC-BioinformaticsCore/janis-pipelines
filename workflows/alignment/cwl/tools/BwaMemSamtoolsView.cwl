@@ -56,6 +56,7 @@ inputs:
   type: File
 - id: reads
   inputBinding:
+    itemSeparator: ' '
     position: 3
     shellQuote: false
   label: reads
@@ -64,6 +65,7 @@ inputs:
     type: array
 - id: mates
   inputBinding:
+    itemSeparator: ' '
     position: 4
     shellQuote: false
   label: mates
@@ -71,7 +73,7 @@ inputs:
   - items: File
     type: array
   - 'null'
-- default: generated-34418214-cf84-11e9-aa68-acde48001122.bam
+- default: generated-57ab2f16-cf9d-11e9-938d-acde48001122.bam
   doc: output file name [stdout]
   id: outputFilename
   inputBinding:
@@ -391,6 +393,7 @@ inputs:
 - doc: only include reads with all of the FLAGs in INT present [0]
   id: includeReadsWithAllFLAGs
   inputBinding:
+    itemSeparator: ' '
     position: 8
     prefix: -f
     shellQuote: false
@@ -402,6 +405,7 @@ inputs:
 - doc: only include reads with none of the FLAGS in INT present [0]
   id: includeReadsWithoutFLAGs
   inputBinding:
+    itemSeparator: ' '
     position: 8
     prefix: -F
     shellQuote: false
@@ -414,6 +418,7 @@ inputs:
     pairs to keep; INT part sets seed)
   id: excludeReadsWithAllFLAGs
   inputBinding:
+    itemSeparator: ' '
     position: 8
     prefix: -G
     shellQuote: false

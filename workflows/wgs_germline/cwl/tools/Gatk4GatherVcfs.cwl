@@ -3,17 +3,21 @@ baseCommand:
 - GatherVcfs
 class: CommandLineTool
 cwlVersion: v1.0
+doc: "GatherVcfs (Picard)\n            \nGathers multiple VCF files from a scatter\
+  \ operation into a single VCF file. \nInput files must be supplied in genomic order\
+  \ and must not have events at overlapping positions."
 id: Gatk4GatherVcfs
 inputs:
 - doc: '[default: []] (-I) Input VCF file(s).'
   id: vcfs
   inputBinding:
+    itemSeparator: ' '
     prefix: --INPUT
   label: vcfs
   type:
     items: File
     type: array
-- default: generated-65160e7e-cf83-11e9-b4cb-acde48001122.gathered.vcf
+- default: generated-54397508-cf9e-11e9-97c1-acde48001122.gathered.vcf
   doc: '[default: null] (-O) Output VCF file.'
   id: outputFilename
   inputBinding:
@@ -24,6 +28,7 @@ inputs:
     line'
   id: argumentsFile
   inputBinding:
+    itemSeparator: ' '
     prefix: --arguments_file
   label: argumentsFile
   type:

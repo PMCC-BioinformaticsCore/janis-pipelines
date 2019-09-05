@@ -44,9 +44,7 @@ steps:
     in:
       bams:
         id: bams
-        linkMerge: merge_nested
-        source:
-        - samtools/out
+        source: samtools/out
       blacklist:
         id: blacklist
         source: blacklist

@@ -34,7 +34,7 @@ task SamToolsView {
     File? reference_sa
     File? reference_fai
     File? reference_dict
-    String outputFilename = "generated-6817b6f4-cf83-11e9-b4cb-acde48001122.bam"
+    String outputFilename = "generated-565a4358-cf9e-11e9-97c1-acde48001122.bam"
   }
   command {
     samtools view \
@@ -62,7 +62,7 @@ task SamToolsView {
       ${true="-B" false="" collapseBackwardCIGAR} \
       ${"-s " + subsamplingProportion} \
       ${"-@ " + threads} \
-      ${"-o " + if defined(outputFilename) then outputFilename else "generated-6817c55e-cf83-11e9-b4cb-acde48001122.bam"} \
+      ${"-o " + if defined(outputFilename) then outputFilename else "generated-565a5082-cf9e-11e9-97c1-acde48001122.bam"} \
       ${"-T " + reference} \
       ${sam}
   }
@@ -73,6 +73,6 @@ task SamToolsView {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-6817b6f4-cf83-11e9-b4cb-acde48001122.bam"
+    File out = if defined(outputFilename) then outputFilename else "generated-565a4358-cf9e-11e9-97c1-acde48001122.bam"
   }
 }

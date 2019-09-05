@@ -3,6 +3,7 @@ baseCommand:
 - sort
 class: CommandLineTool
 cwlVersion: v1.0
+doc: "About:   Sort VCF/BCF file.\nUsage:   bcftools sort [OPTIONS] <FILE.vcf>"
 id: bcftoolssort
 inputs:
 - doc: The VCF file to sort
@@ -11,7 +12,7 @@ inputs:
     position: 1
   label: vcf
   type: File
-- default: generated-7ede21a2-cf83-11e9-907b-acde48001122.sorted.vcf
+- default: generated-5c380e72-cf9e-11e9-8f9a-acde48001122.sorted.vcf
   doc: (-o) output file name [stdout]
   id: outputFilename
   inputBinding:

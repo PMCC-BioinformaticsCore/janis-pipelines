@@ -13,8 +13,8 @@ task gridss {
     File reference_sa
     File reference_fai
     File reference_dict
-    String outputFilename = "generated-6817d6de-cf83-11e9-b4cb-acde48001122.vcf"
-    String assemblyFilename = "generated-6817d756-cf83-11e9-b4cb-acde48001122.bam"
+    String outputFilename = "generated-565a618a-cf9e-11e9-97c1-acde48001122.vcf"
+    String assemblyFilename = "generated-565a6202-cf9e-11e9-97c1-acde48001122.bam"
     Int? threads
     File? blacklist
   }
@@ -22,10 +22,10 @@ task gridss {
     gridss.sh \
       ${"--threads " + if defined(threads) then threads else if defined(runtime_cpu) then runtime_cpu else 1} \
       --reference ${reference} \
-      ${"--output " + if defined(outputFilename) then outputFilename else "generated-6817df08-cf83-11e9-b4cb-acde48001122.vcf"} \
-      ${"--assembly " + if defined(assemblyFilename) then assemblyFilename else "generated-6817df94-cf83-11e9-b4cb-acde48001122.bam"} \
+      ${"--output " + if defined(outputFilename) then outputFilename else "generated-565a693c-cf9e-11e9-97c1-acde48001122.vcf"} \
+      ${"--assembly " + if defined(assemblyFilename) then assemblyFilename else "generated-565a69c8-cf9e-11e9-97c1-acde48001122.bam"} \
       ${"--blacklist " + blacklist} \
-      ${sep=" " prefix("", bams)}
+      ${sep=" " bams}
   }
   runtime {
     docker: "michaelfranklin/gridss:2.5.1-dev2"
@@ -34,7 +34,7 @@ task gridss {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-6817d6de-cf83-11e9-b4cb-acde48001122.vcf"
-    File assembly = if defined(assemblyFilename) then assemblyFilename else "generated-6817d756-cf83-11e9-b4cb-acde48001122.bam"
+    File out = if defined(outputFilename) then outputFilename else "generated-565a618a-cf9e-11e9-97c1-acde48001122.vcf"
+    File assembly = if defined(assemblyFilename) then assemblyFilename else "generated-565a6202-cf9e-11e9-97c1-acde48001122.bam"
   }
 }

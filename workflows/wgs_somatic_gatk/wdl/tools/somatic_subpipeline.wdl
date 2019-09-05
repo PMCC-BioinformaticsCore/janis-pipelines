@@ -48,6 +48,6 @@ workflow somatic_subpipeline {
   output {
     File out = mergeAndMark.out
     File out_bai = mergeAndMark.out_bai
-    Array[File] reports = fastqc.out
+    Array[Array[File]] reports = fastqc.out
   }
 }

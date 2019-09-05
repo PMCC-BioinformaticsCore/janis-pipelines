@@ -19,7 +19,7 @@ task gatkmutect2 {
     File reference_sa
     File reference_fai
     File reference_dict
-    String outputFilename = "generated-f8d21b8a-cf83-11e9-8e32-acde48001122.vcf.gz"
+    String outputFilename = "generated-8f3a8812-cf9f-11e9-b76d-acde48001122.vcf.gz"
     File? germlineResource
     File? germlineResource_idx
     Float? afOfAllelesNotInResource
@@ -37,7 +37,7 @@ task gatkmutect2 {
       ${"--germline-resource " + germlineResource} \
       ${"--panel-of-normals " + panelOfNormals} \
       ${"--af-of-alleles-not-in-resource " + afOfAllelesNotInResource} \
-      ${"-O " + if defined(outputFilename) then outputFilename else "generated-f8d224ae-cf83-11e9-8e32-acde48001122.vcf.gz"}
+      ${"-O " + if defined(outputFilename) then outputFilename else "generated-8f3a9168-cf9f-11e9-b76d-acde48001122.vcf.gz"}
   }
   runtime {
     docker: "broadinstitute/gatk:4.0.12.0"
@@ -46,7 +46,7 @@ task gatkmutect2 {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-f8d21b8a-cf83-11e9-8e32-acde48001122.vcf.gz"
-    File out_tbi = if defined(outputFilename) then outputFilename else "generated-f8d21b8a-cf83-11e9-8e32-acde48001122.vcf.gz" + ".tbi"
+    File out = if defined(outputFilename) then outputFilename else "generated-8f3a8812-cf9f-11e9-b76d-acde48001122.vcf.gz"
+    File out_tbi = if defined(outputFilename) then outputFilename else "generated-8f3a8812-cf9f-11e9-b76d-acde48001122.vcf.gz" + ".tbi"
   }
 }

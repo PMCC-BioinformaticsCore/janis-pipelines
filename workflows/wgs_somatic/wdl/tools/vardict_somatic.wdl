@@ -14,7 +14,7 @@ task vardict_somatic {
     String tumorName
     String normalName
     Float? alleleFreqThreshold
-    String outputFilename = "generated-f8d3a5b8-cf83-11e9-8e32-acde48001122.vardict.vcf"
+    String outputFilename = "generated-8f3c3068-cf9f-11e9-b76d-acde48001122.vardict.vcf"
     Boolean? indels3prime
     Float? amplicon
     Int? minReads
@@ -105,7 +105,7 @@ task vardict_somatic {
       var2vcf_paired.pl \
       -N '${tumorName}|${normalName}' \
       -f ${alleleFreqThreshold} \
-      ${"> " + if defined(outputFilename) then outputFilename else "generated-f8d3c688-cf83-11e9-8e32-acde48001122.vardict.vcf"}
+      ${"> " + if defined(outputFilename) then outputFilename else "generated-8f3c51ba-cf9f-11e9-b76d-acde48001122.vardict.vcf"}
   }
   runtime {
     docker: "michaelfranklin/vardict:1.5.8"
@@ -114,6 +114,6 @@ task vardict_somatic {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-f8d3a5b8-cf83-11e9-8e32-acde48001122.vardict.vcf"
+    File out = if defined(outputFilename) then outputFilename else "generated-8f3c3068-cf9f-11e9-b76d-acde48001122.vardict.vcf"
   }
 }

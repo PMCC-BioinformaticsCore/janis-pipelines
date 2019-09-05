@@ -47,7 +47,7 @@ task GatkHaplotypeCaller {
     File reference_sa
     File reference_fai
     File reference_dict
-    String outputFilename = "generated-80b3c7f2-cf83-11e9-907b-acde48001122.vcf"
+    String outputFilename = "generated-5e01269e-cf9e-11e9-8f9a-acde48001122.vcf"
     File dbsnp
     File dbsnp_tbi
     File? intervals
@@ -57,10 +57,10 @@ task GatkHaplotypeCaller {
       ${"--activity-profile-out " + activityProfileOut} \
       ${"--alleles " + alleles} \
       ${true="--annotate-with-num-discovered-alleles" false="" annotateWithNumDiscoveredAlleles} \
-      ${if defined(annotation) then "--annotation " else ""}${sep=" --annotation " annotation} \
-      ${if defined(annotationGroup) then "--annotation-group " else ""}${sep=" --annotation-group " annotationGroup} \
-      ${if defined(annotationsToExclude) then "--annotations-to-exclude " else ""}${sep=" --annotations-to-exclude " annotationsToExclude} \
-      ${if defined(arguments_file) then "--arguments_file " else ""}${sep=" --arguments_file " arguments_file} \
+      ${true="--annotation" false="" defined(annotation)}${sep=" " annotation} \
+      ${true="--annotation-group" false="" defined(annotationGroup)}${sep=" " annotationGroup} \
+      ${true="--annotations-to-exclude" false="" defined(annotationsToExclude)}${sep=" " annotationsToExclude} \
+      ${true="--arguments_file" false="" defined(arguments_file)}${sep=" " arguments_file} \
       ${"--assembly-region-out " + assemblyRegionOut} \
       ${"--base-quality-score-threshold " + baseQualityScoreThreshold} \
       ${"--cloud-index-prefetch-buffer " + cloudIndexPrefetchBuffer} \
@@ -68,7 +68,7 @@ task GatkHaplotypeCaller {
       ${"--contamination-fraction-to-filter " + contaminationFractionToFilter} \
       ${true="--correct-overlapping-quality" false="" correctOverlappingQuality} \
       ${true="--disable-bam-index-caching" false="" disableBamIndexCaching} \
-      ${if defined(founderId) then "--founder-id " else ""}${sep=" --founder-id " founderId} \
+      ${true="--founder-id" false="" defined(founderId)}${sep=" " founderId} \
       ${"--genotyping-mode " + genotypingMode} \
       ${"--heterozygosity " + heterozygosity} \
       ${"--heterozygosity-stdev " + heterozygosityStdev} \
@@ -91,7 +91,7 @@ task GatkHaplotypeCaller {
       ${"--intervals " + intervals} \
       --reference ${reference} \
       --dbsnp ${dbsnp} \
-      ${"--output " + if defined(outputFilename) then outputFilename else "generated-80b3d9e0-cf83-11e9-907b-acde48001122.vcf"}
+      ${"--output " + if defined(outputFilename) then outputFilename else "generated-5e01388c-cf9e-11e9-8f9a-acde48001122.vcf"}
   }
   runtime {
     docker: "broadinstitute/gatk:4.0.12.0"
@@ -100,7 +100,7 @@ task GatkHaplotypeCaller {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-80b3c7f2-cf83-11e9-907b-acde48001122.vcf"
-    File out_idx = if defined(outputFilename) then outputFilename else "generated-80b3c7f2-cf83-11e9-907b-acde48001122.vcf" + ".idx"
+    File out = if defined(outputFilename) then outputFilename else "generated-5e01269e-cf9e-11e9-8f9a-acde48001122.vcf"
+    File out_idx = if defined(outputFilename) then outputFilename else "generated-5e01269e-cf9e-11e9-8f9a-acde48001122.vcf" + ".idx"
   }
 }

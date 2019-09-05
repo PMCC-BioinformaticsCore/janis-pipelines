@@ -3,6 +3,9 @@ baseCommand:
 - view
 class: CommandLineTool
 cwlVersion: v1.0
+doc: "________________________________\n \n        View, subset and filter VCF or\
+  \ BCF files by position and filtering expression\n        Convert between VCF and\
+  \ BCF. Former bcftools subset."
 id: bcftoolsview
 inputs:
 - id: file
@@ -143,6 +146,7 @@ inputs:
 - doc: (-s) comma separated list of samples to include (or exclude with '^' prefix)
   id: samples
   inputBinding:
+    itemSeparator: ' '
     position: 1
     prefix: --samples
   label: samples
@@ -193,6 +197,7 @@ inputs:
 - doc: (-f) require at least one of the listed FILTER strings (e.g. 'PASS,.'')
   id: applyFilters
   inputBinding:
+    itemSeparator: ' '
     position: 1
     prefix: --apply-filters
   label: applyFilters
@@ -328,6 +333,7 @@ inputs:
     [null]'
   id: types
   inputBinding:
+    itemSeparator: ' '
     position: 1
     prefix: --types
   label: types
@@ -339,6 +345,7 @@ inputs:
     [null]'
   id: excludeTypes
   inputBinding:
+    itemSeparator: ' '
     position: 1
     prefix: --exclude-types
   label: excludeTypes

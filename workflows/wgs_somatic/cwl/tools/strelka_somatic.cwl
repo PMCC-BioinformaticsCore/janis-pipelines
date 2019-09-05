@@ -10,6 +10,11 @@ arguments:
   valueFrom: $(inputs.runtime_cpu)
 class: CommandLineTool
 cwlVersion: v1.0
+doc: "Usage: configureStrelkaSomaticWorkflow.py [options]\nVersion: 2.9.10\nThis script\
+  \ configures Strelka somatic small variant calling.\nYou must specify an alignment\
+  \ file (BAM or CRAM) for each sample of a matched tumor-normal pair.\nConfiguration\
+  \ will produce a workflow run script which can execute the workflow on a single\
+  \ node or through\nsge and resume any interrupted execution."
 id: strelka_somatic
 inputs:
 - doc: Normal sample BAM or CRAM file. (no default)
@@ -48,7 +53,7 @@ inputs:
   - .fai
   - ^.dict
   type: File
-- default: generated-f5b1faba-cf83-11e9-8e32-acde48001122
+- default: generated-8c0373a2-cf9f-11e9-b76d-acde48001122
   doc: 'Name of directory to be created where all workflow scripts and output will
     be written. Each analysis requires a separate directory. (default: StrelkaSomaticWorkflow)'
   id: rundir

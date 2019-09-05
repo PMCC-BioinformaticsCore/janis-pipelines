@@ -261,7 +261,7 @@ inputs:
   type:
   - File
   - 'null'
-- default: generated-6516c24c-cf83-11e9-b4cb-acde48001122.bam
+- default: generated-543a2dea-cf9e-11e9-97c1-acde48001122.bam
   doc: Output to FILE [stdout].
   id: outputFilename
   inputBinding:
