@@ -3,29 +3,6 @@ baseCommand:
 - HaplotypeCaller
 class: CommandLineTool
 cwlVersion: v1.0
-doc: "Call germline SNPs and indels via local re-assembly of haplotypes\n    \nThe\
-  \ HaplotypeCaller is capable of calling SNPs and indels simultaneously via local\
-  \ de-novo assembly of haplotypes \nin an active region. In other words, whenever\
-  \ the program encounters a region showing signs of variation, it \ndiscards the\
-  \ existing mapping information and completely reassembles the reads in that region.\
-  \ This allows the \nHaplotypeCaller to be more accurate when calling regions that\
-  \ are traditionally difficult to call, for example when \nthey contain different\
-  \ types of variants close to each other. It also makes the HaplotypeCaller much\
-  \ better at \ncalling indels than position-based callers like UnifiedGenotyper.\n\
-  \nIn the GVCF workflow used for scalable variant calling in DNA sequence data, HaplotypeCaller\
-  \ runs per-sample to \ngenerate an intermediate GVCF (not to be used in final analysis),\
-  \ which can then be used in GenotypeGVCFs for joint \ngenotyping of multiple samples\
-  \ in a very efficient way. The GVCF workflow enables rapid incremental processing\
-  \ of \nsamples as they roll off the sequencer, as well as scaling to very large\
-  \ cohort sizes (e.g. the 92K exomes of ExAC).\n\nIn addition, HaplotypeCaller is\
-  \ able to handle non-diploid organisms as well as pooled experiment data. \nNote\
-  \ however that the algorithms used to calculate variant likelihoods is not well\
-  \ suited to extreme allele \nfrequencies (relative to ploidy) so its use is not\
-  \ recommended for somatic (cancer) variant discovery. \nFor that purpose, use Mutect2\
-  \ instead.\n\nFinally, HaplotypeCaller is also able to correctly handle the splice\
-  \ junctions that make RNAseq a challenge \nfor most variant callers, on the condition\
-  \ that the input read data has previously been processed according \nto our recommendations\
-  \ as documented (https://software.broadinstitute.org/gatk/documentation/article?id=4067)."
 id: GatkHaplotypeCaller
 inputs:
 - doc: 'Output the raw activity profile results in IGV format (default: null)'
@@ -380,7 +357,7 @@ inputs:
   - .fai
   - ^.dict
   type: File
-- default: generated-3602ec6c-c3b0-11e9-81d9-f218985ebfa7.vcf
+- default: generated-6515fa74-cf83-11e9-b4cb-acde48001122.vcf
   doc: File to which variants should be written
   id: outputFilename
   inputBinding:

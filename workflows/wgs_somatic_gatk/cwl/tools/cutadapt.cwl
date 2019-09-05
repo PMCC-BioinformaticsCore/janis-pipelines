@@ -1,20 +1,6 @@
 baseCommand: cutadapt
 class: CommandLineTool
 cwlVersion: v1.0
-doc: "\nCutadapt finds and removes adapter sequences, primers, poly-A tails and other\
-  \ types of unwanted sequence \nfrom your high-throughput sequencing reads.\n\nCleaning\
-  \ your data in this way is often required: Reads from small-RNA sequencing \ncontain\
-  \ the 3\u2019 sequencing adapter because the read is longer than the molecule that\
-  \ is sequenced. \nAmplicon reads start with a primer sequence. Poly-A tails are\
-  \ useful for pulling out RNA from your sample, \nbut often you don\u2019t want them\
-  \ to be in your reads.\nCutadapt helps with these trimming tasks by finding the\
-  \ adapter or primer sequences in an error-tolerant way. \nIt can also modify and\
-  \ filter reads in various ways. Adapter sequences can contain IUPAC wildcard characters.\
-  \ \nAlso, paired-end reads and even colorspace data is supported. If you want, you\
-  \ can also just demultiplex your \ninput data, without removing adapter sequences\
-  \ at all.\n\nCutadapt comes with an extensive suite of automated tests and is available\
-  \ under the terms of the MIT license.\nIf you use Cutadapt, please cite DOI:10.14806/ej.17.1.200\
-  \ ."
 id: cutadapt
 inputs:
 - id: fastq
@@ -34,7 +20,7 @@ inputs:
   type:
   - string
   - 'null'
-- default: generated-4fecacbc-c3b0-11e9-9ec0-f218985ebfa7-R1.fastq.gz
+- default: generated-37a0d6a4-ced9-11e9-8396-acde48001122-R1.fastq.gz
   doc: "Write trimmed reads to FILE. FASTQ or FASTA format is chosen depending on\
     \ input. The summary report is sent to standard output. Use '{name}' in FILE to\
     \ demultiplex reads into multiple files. Default: write to standard output"
@@ -43,7 +29,7 @@ inputs:
     prefix: -o
   label: outputFilename
   type: string
-- default: generated-4fecacbc-c3b0-11e9-9ec0-f218985ebfa7-R2.fastq.gz
+- default: generated-37a0d6a4-ced9-11e9-8396-acde48001122-R2.fastq.gz
   doc: Write second read in a pair to FILE.
   id: secondReadFile
   inputBinding:

@@ -5,12 +5,12 @@ task trimIUPAC {
     Int? runtime_cpu
     Int? runtime_memory
     File vcf
-    String outputFilename = "generated-363f8618-c3b0-11e9-81d9-f218985ebfa7.trimmed.vcf"
+    String outputFilename = "generated-68178da0-cf83-11e9-b4cb-acde48001122.trimmed.vcf"
   }
   command {
     trimIUPAC.py \
       ${vcf} \
-      ${if defined(outputFilename) then outputFilename else "generated-363f897e-c3b0-11e9-81d9-f218985ebfa7.trimmed.vcf"}
+      ${if defined(outputFilename) then outputFilename else "generated-68179160-cf83-11e9-b4cb-acde48001122.trimmed.vcf"}
   }
   runtime {
     docker: "michaelfranklin/pmacutil:0.0.4"
@@ -19,6 +19,6 @@ task trimIUPAC {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-363f8618-c3b0-11e9-81d9-f218985ebfa7.trimmed.vcf"
+    File out = if defined(outputFilename) then outputFilename else "generated-68178da0-cf83-11e9-b4cb-acde48001122.trimmed.vcf"
   }
 }

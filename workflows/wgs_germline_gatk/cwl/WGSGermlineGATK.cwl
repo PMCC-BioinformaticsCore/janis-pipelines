@@ -2,6 +2,11 @@ class: Workflow
 cwlVersion: v1.0
 id: WGSGermlineGATK
 inputs:
+  alignSortedBam_sortsam_tmpDir:
+    id: alignSortedBam_sortsam_tmpDir
+    type:
+    - string
+    - 'null'
   fastqs:
     id: fastqs
     type:
@@ -19,8 +24,8 @@ inputs:
     secondaryFiles:
     - .tbi
     type: File
-  mills_1000gp_indels:
-    id: mills_1000gp_indels
+  mills_indels:
+    id: mills_indels
     secondaryFiles:
     - .tbi
     type: File
@@ -36,6 +41,7 @@ inputs:
     - ^.dict
     type: File
   sampleName:
+    default: NA12878
     id: sampleName
     type: string
   snps_1000gp:
@@ -64,19 +70,18 @@ outputs:
         items: File
         type: array
       type: array
-  scattered_variants:
-    id: scattered_variants
-    outputSource: variantCaller_GATK/out
-    type:
-      items: File
-      type: array
   variants:
     id: variants
     outputSource: sortCombined/out
     type: File
+  variants_split:
+    id: variants_split
+    outputSource: variantCaller_GATK/out
+    type:
+      items: File
+      type: array
 requirements:
   InlineJavascriptRequirement: {}
-  MultipleInputFeatureRequirement: {}
   ScatterFeatureRequirement: {}
   StepInputExpressionRequirement: {}
   SubworkflowFeatureRequirement: {}
@@ -86,14 +91,16 @@ steps:
       fastq:
         id: fastq
         source: fastqs
+      name:
+        id: name
+        source: sampleName
       reference:
         id: reference
         source: reference
-      sampleName:
-        id: sampleName
-        source: sampleName
+      sortsam_tmpDir:
+        id: sortsam_tmpDir
+        source: alignSortedBam_sortsam_tmpDir
     out:
-    - out_bwa
     - out
     run: tools/BwaAligner.cwl
     scatter:
@@ -112,9 +119,7 @@ steps:
     in:
       bams:
         id: bams
-        linkMerge: merge_nested
-        source:
-        - alignSortedBam/out
+        source: alignSortedBam/out
     out:
     - out
     run: tools/mergeAndMarkBams.cwl
@@ -139,7 +144,7 @@ steps:
         source: known_indels
       millsIndels:
         id: millsIndels
-        source: mills_1000gp_indels
+        source: mills_indels
       reference:
         id: reference
         source: reference
@@ -158,9 +163,7 @@ steps:
     in:
       vcfs:
         id: vcfs
-        linkMerge: merge_nested
-        source:
-        - variantCaller_GATK/out
+        source: variantCaller_GATK/out
     out:
     - out
     run: tools/Gatk4GatherVcfs.cwl

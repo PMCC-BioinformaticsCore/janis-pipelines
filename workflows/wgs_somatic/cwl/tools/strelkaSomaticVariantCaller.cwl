@@ -2,10 +2,10 @@ class: Workflow
 cwlVersion: v1.0
 id: strelkaSomaticVariantCaller
 inputs:
-  filters:
+  bcf_view_applyFilters:
     default:
     - PASS
-    id: filters
+    id: bcf_view_applyFilters
     type:
       items: string
       type: array
@@ -63,7 +63,7 @@ steps:
     in:
       applyFilters:
         id: applyFilters
-        source: filters
+        source: bcf_view_applyFilters
       file:
         id: file
         source: strelka/snvs

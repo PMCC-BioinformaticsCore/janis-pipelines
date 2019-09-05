@@ -1,15 +1,16 @@
 {
-    "WGSSomaticMultiCallers.allelFreqThreshold": 0.05,
-    "WGSSomaticMultiCallers.columns": [
+    "WGSSomaticMultiCallers.alleleFreqThreshold": 0.05,
+    "WGSSomaticMultiCallers.combineVariants_columns": [
         "AD",
         "DP",
         "GT"
     ],
+    "WGSSomaticMultiCallers.combineVariants_type": "somatic",
     "WGSSomaticMultiCallers.gatkIntervals": null,
     "WGSSomaticMultiCallers.known_indels": null,
     "WGSSomaticMultiCallers.known_indels_tbi": null,
-    "WGSSomaticMultiCallers.mills_1000gp_indels": null,
-    "WGSSomaticMultiCallers.mills_1000gp_indels_tbi": null,
+    "WGSSomaticMultiCallers.mills_indels": null,
+    "WGSSomaticMultiCallers.mills_indels_tbi": null,
     "WGSSomaticMultiCallers.normalInputs": null,
     "WGSSomaticMultiCallers.normalName": "NA24385_normal",
     "WGSSomaticMultiCallers.reference": null,
@@ -24,12 +25,8 @@
     "WGSSomaticMultiCallers.snps_1000gp_tbi": null,
     "WGSSomaticMultiCallers.snps_dbsnp": null,
     "WGSSomaticMultiCallers.snps_dbsnp_tbi": null,
-    "WGSSomaticMultiCallers.sortSamTmpDir": "/tmp",
-    "WGSSomaticMultiCallers.strelkaIntervals": null,
-    "WGSSomaticMultiCallers.strelkaIntervals_tbi": null,
     "WGSSomaticMultiCallers.tumorInputs": null,
     "WGSSomaticMultiCallers.tumorName": "NA24385_tumour",
     "WGSSomaticMultiCallers.vardictHeaderLines": null,
-    "WGSSomaticMultiCallers.vardictIntervals": null,
-    "WGSSomaticMultiCallers.variant_type": "somatic"
+    "WGSSomaticMultiCallers.vardictIntervals": null
 }

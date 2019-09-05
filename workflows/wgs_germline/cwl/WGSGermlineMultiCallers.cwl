@@ -2,10 +2,15 @@ class: Workflow
 cwlVersion: v1.0
 id: WGSGermlineMultiCallers
 inputs:
-  allelFreqThreshold:
-    id: allelFreqThreshold
+  alignSortedBam_sortsam_tmpDir:
+    default: ./tmp
+    id: alignSortedBam_sortsam_tmpDir
+    type: string
+  alleleFreqThreshold:
+    default: 0.05
+    id: alleleFreqThreshold
     type: float
-  columns:
+  combineVariants_columns:
     default:
     - AC
     - AN
@@ -13,10 +18,14 @@ inputs:
     - AD
     - DP
     - GT
-    id: columns
+    id: combineVariants_columns
     type:
       items: string
       type: array
+  combineVariants_type:
+    default: Germline
+    id: combineVariants_type
+    type: string
   fastqs:
     id: fastqs
     type:
@@ -29,13 +38,16 @@ inputs:
     type:
       items: File
       type: array
+  gridssBlacklist:
+    id: gridssBlacklist
+    type: File
   known_indels:
     id: known_indels
     secondaryFiles:
     - .tbi
     type: File
-  mills_1000gp_indels:
-    id: mills_1000gp_indels
+  mills_indels:
+    id: mills_indels
     secondaryFiles:
     - .tbi
     type: File
@@ -51,6 +63,7 @@ inputs:
     - ^.dict
     type: File
   sampleName:
+    default: NA12878
     id: sampleName
     type: string
   snps_1000gp:
@@ -63,10 +76,6 @@ inputs:
     secondaryFiles:
     - .tbi
     type: File
-  sortSamTmpdir:
-    default: ./tmp
-    id: sortSamTmpdir
-    type: string
   strelkaIntervals:
     id: strelkaIntervals
     secondaryFiles:
@@ -80,10 +89,6 @@ inputs:
     type:
       items: File
       type: array
-  variant_type:
-    default: germline
-    id: variant_type
-    type: string
 label: WGS Germline (Multi callers)
 outputs:
   bam:
@@ -114,20 +119,24 @@ outputs:
     type:
       items: File
       type: array
+  variants_gridss:
+    id: variants_gridss
+    outputSource: variantCaller_GRIDSS/out
+    type: File
   variants_strelka:
     id: variants_strelka
     outputSource: variantCaller_Strelka/out
     type: File
   variants_vardict:
     id: variants_vardict
-    outputSource: variantCaller_merge_Vardict/out
-    type: File
-  variants_vardict_split:
-    id: variants_vardict_split
     outputSource: variantCaller_Vardict/out
     type:
       items: File
       type: array
+  variants_vardict_split:
+    id: variants_vardict_split
+    outputSource: variantCaller_merge_Vardict/out
+    type: File
 requirements:
   InlineJavascriptRequirement: {}
   MultipleInputFeatureRequirement: {}
@@ -140,17 +149,16 @@ steps:
       fastq:
         id: fastq
         source: fastqs
+      name:
+        id: name
+        source: sampleName
       reference:
         id: reference
         source: reference
-      sampleName:
-        id: sampleName
-        source: sampleName
-      sortSamTmpDir:
-        id: sortSamTmpDir
-        source: sortSamTmpdir
+      sortsam_tmpDir:
+        id: sortsam_tmpDir
+        source: alignSortedBam_sortsam_tmpDir
     out:
-    - out_bwa
     - out
     run: tools/BwaAligner.cwl
     scatter:
@@ -159,16 +167,17 @@ steps:
     in:
       columns:
         id: columns
-        source: columns
+        source: combineVariants_columns
       type:
         id: type
-        source: variant_type
+        source: combineVariants_type
       vcfs:
         id: vcfs
         source:
         - variantCaller_merge_GATK/out
         - variantCaller_Strelka/out
         - variantCaller_merge_Vardict/out
+        - variantCaller_GRIDSS/out
     out:
     - vcf
     - tsv
@@ -187,9 +196,7 @@ steps:
     in:
       bams:
         id: bams
-        linkMerge: merge_nested
-        source:
-        - alignSortedBam/out
+        source: alignSortedBam/out
     out:
     - out
     run: tools/mergeAndMarkBams.cwl
@@ -214,7 +221,7 @@ steps:
         source: known_indels
       millsIndels:
         id: millsIndels
-        source: mills_1000gp_indels
+        source: mills_indels
       reference:
         id: reference
         source: reference
@@ -229,6 +236,21 @@ steps:
     run: tools/GATK4_GermlineVariantCaller.cwl
     scatter:
     - intervals
+  variantCaller_GRIDSS:
+    in:
+      bam:
+        id: bam
+        source: processBamFiles/out
+      blacklist:
+        id: blacklist
+        source: gridssBlacklist
+      reference:
+        id: reference
+        source: reference
+    out:
+    - out
+    - assembly
+    run: tools/gridssGermlineVariantCaller.cwl
   variantCaller_Strelka:
     in:
       bam:
@@ -247,9 +269,9 @@ steps:
     run: tools/strelkaGermlineVariantCaller.cwl
   variantCaller_Vardict:
     in:
-      allelFreqThreshold:
-        id: allelFreqThreshold
-        source: allelFreqThreshold
+      alleleFreqThreshold:
+        id: alleleFreqThreshold
+        source: alleleFreqThreshold
       bam:
         id: bam
         source: processBamFiles/out
@@ -275,9 +297,7 @@ steps:
     in:
       vcfs:
         id: vcfs
-        linkMerge: merge_nested
-        source:
-        - variantCaller_GATK/out
+        source: variantCaller_GATK/out
     out:
     - out
     run: tools/Gatk4GatherVcfs.cwl
@@ -285,9 +305,7 @@ steps:
     in:
       vcfs:
         id: vcfs
-        linkMerge: merge_nested
-        source:
-        - variantCaller_Vardict/out
+        source: variantCaller_Vardict/out
     out:
     - out
     run: tools/Gatk4GatherVcfs.cwl

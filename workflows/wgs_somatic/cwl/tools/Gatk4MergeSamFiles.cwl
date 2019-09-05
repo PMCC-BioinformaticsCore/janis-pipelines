@@ -3,7 +3,6 @@ baseCommand:
 - MergeSamFiles
 class: CommandLineTool
 cwlVersion: v1.0
-doc: Merges multiple SAM/BAM files into one file
 id: Gatk4MergeSamFiles
 inputs:
 - doc: The SAM/BAM file to sort.
@@ -15,7 +14,7 @@ inputs:
   type:
     items: File
     type: array
-- default: generated-43439eee-c3b0-11e9-af7e-f218985ebfa7.bam
+- default: generated-f5b1487c-cf83-11e9-8e32-acde48001122.bam
   doc: SAM/BAM file to write merged result to
   id: outputFilename
   inputBinding:

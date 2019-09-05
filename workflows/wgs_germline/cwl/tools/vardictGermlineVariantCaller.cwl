@@ -2,26 +2,15 @@ class: Workflow
 cwlVersion: v1.0
 id: vardictGermlineVariantCaller
 inputs:
-  allelFreqThreshold:
-    id: allelFreqThreshold
+  alleleFreqThreshold:
+    default: 0.5
+    id: alleleFreqThreshold
     type: float
   bam:
     id: bam
     secondaryFiles:
     - ^.bai
     type: File
-  chromColumn:
-    default: 1
-    id: chromColumn
-    type: int
-  chromNamesAreNumbers:
-    default: true
-    id: chromNamesAreNumbers
-    type: boolean
-  geneEndCol:
-    default: 3
-    id: geneEndCol
-    type: int
   headerLines:
     id: headerLines
     type: File
@@ -39,16 +28,28 @@ inputs:
     - .fai
     - ^.dict
     type: File
-  regStartCol:
-    default: 2
-    id: regStartCol
-    type: int
   sampleName:
     id: sampleName
     type: string
-  vcfFormat:
+  vardict_chromColumn:
+    default: 1
+    id: vardict_chromColumn
+    type: int
+  vardict_chromNamesAreNumbers:
     default: true
-    id: vcfFormat
+    id: vardict_chromNamesAreNumbers
+    type: boolean
+  vardict_geneEndCol:
+    default: 3
+    id: vardict_geneEndCol
+    type: int
+  vardict_regStartCol:
+    default: 2
+    id: vardict_regStartCol
+    type: int
+  vardict_vcfFormat:
+    default: true
+    id: vardict_vcfFormat
     type: boolean
 label: Vardict Germline Variant Caller
 outputs:
@@ -98,19 +99,19 @@ steps:
     in:
       alleleFreqThreshold:
         id: alleleFreqThreshold
-        source: allelFreqThreshold
+        source: alleleFreqThreshold
       bam:
         id: bam
         source: bam
       chromColumn:
         id: chromColumn
-        source: chromColumn
+        source: vardict_chromColumn
       chromNamesAreNumbers:
         id: chromNamesAreNumbers
-        source: chromNamesAreNumbers
+        source: vardict_chromNamesAreNumbers
       geneEndCol:
         id: geneEndCol
-        source: geneEndCol
+        source: vardict_geneEndCol
       intervals:
         id: intervals
         source: intervals
@@ -119,19 +120,19 @@ steps:
         source: reference
       regStartCol:
         id: regStartCol
-        source: regStartCol
+        source: vardict_regStartCol
       sampleName:
         id: sampleName
         source: sampleName
       var2vcfAlleleFreqThreshold:
         id: var2vcfAlleleFreqThreshold
-        source: allelFreqThreshold
+        source: alleleFreqThreshold
       var2vcfSampleName:
         id: var2vcfSampleName
         source: sampleName
       vcfFormat:
         id: vcfFormat
-        source: vcfFormat
+        source: vardict_vcfFormat
     out:
     - out
     run: vardict_germline.cwl

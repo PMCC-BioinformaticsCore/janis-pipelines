@@ -3,13 +3,13 @@ class: CommandLineTool
 cwlVersion: v1.0
 id: combinevariants
 inputs:
-- default: generated-4344a6c2-c3b0-11e9-af7e-f218985ebfa7.combined.vcf
+- default: generated-f5b26d06-cf83-11e9-8e32-acde48001122.combined.vcf
   id: outputFilename
   inputBinding:
     prefix: -o
   label: outputFilename
   type: string
-- default: generated-4344a71c-c3b0-11e9-af7e-f218985ebfa7.tsv
+- default: generated-f5b26d60-cf83-11e9-8e32-acde48001122.tsv
   doc: Region file containing all the variants, used as samtools mpileup
   id: regions
   inputBinding:

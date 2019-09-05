@@ -3,20 +3,9 @@ cwlVersion: v1.0
 id: vardictSomaticVariantCaller
 inputs:
   alleleFreqThreshold:
+    default: 0.05
     id: alleleFreqThreshold
     type: float
-  chromColumn:
-    default: 1
-    id: chromColumn
-    type: int
-  chromNamesAreNumbers:
-    default: true
-    id: chromNamesAreNumbers
-    type: boolean
-  geneEndCol:
-    default: 3
-    id: geneEndCol
-    type: int
   headerLines:
     id: headerLines
     type: File
@@ -42,10 +31,6 @@ inputs:
     - .fai
     - ^.dict
     type: File
-  regStartCol:
-    default: 2
-    id: regStartCol
-    type: int
   tumorBam:
     id: tumorBam
     secondaryFiles:
@@ -54,9 +39,25 @@ inputs:
   tumorName:
     id: tumorName
     type: string
-  vcfFormat:
+  vardict_chromColumn:
+    default: 1
+    id: vardict_chromColumn
+    type: int
+  vardict_chromNamesAreNumbers:
     default: true
-    id: vcfFormat
+    id: vardict_chromNamesAreNumbers
+    type: boolean
+  vardict_geneEndCol:
+    default: 3
+    id: vardict_geneEndCol
+    type: int
+  vardict_regStartCol:
+    default: 2
+    id: vardict_regStartCol
+    type: int
+  vardict_vcfFormat:
+    default: true
+    id: vardict_vcfFormat
     type: boolean
 label: Vardict Somatic Variant Caller
 outputs:
@@ -109,13 +110,13 @@ steps:
         source: alleleFreqThreshold
       chromColumn:
         id: chromColumn
-        source: chromColumn
+        source: vardict_chromColumn
       chromNamesAreNumbers:
         id: chromNamesAreNumbers
-        source: chromNamesAreNumbers
+        source: vardict_chromNamesAreNumbers
       geneEndCol:
         id: geneEndCol
-        source: geneEndCol
+        source: vardict_geneEndCol
       intervals:
         id: intervals
         source: intervals
@@ -130,7 +131,7 @@ steps:
         source: reference
       regStartCol:
         id: regStartCol
-        source: regStartCol
+        source: vardict_regStartCol
       tumorBam:
         id: tumorBam
         source: tumorBam
@@ -139,7 +140,7 @@ steps:
         source: tumorName
       vcfFormat:
         id: vcfFormat
-        source: vcfFormat
+        source: vardict_vcfFormat
     out:
     - out
     run: vardict_somatic.cwl

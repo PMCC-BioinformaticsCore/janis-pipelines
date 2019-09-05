@@ -21,7 +21,7 @@ workflow strelkaSomaticVariantCaller {
     File reference_dict
     File? intervals
     File? intervals_tbi
-    Array[String]? filters
+    Array[String]? bcf_view_applyFilters
   }
   call M.manta as manta {
     input:
@@ -62,7 +62,7 @@ workflow strelkaSomaticVariantCaller {
   call B.bcftoolsview as bcf_view {
     input:
       file=strelka.snvs,
-      applyFilters=select_first([filters, ["PASS"]])
+      applyFilters=select_first([bcf_view_applyFilters, ["PASS"]])
   }
   call S2.SplitMultiAllele as splitMultiAllele {
     input:

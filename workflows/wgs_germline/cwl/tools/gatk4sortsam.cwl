@@ -3,7 +3,6 @@ baseCommand:
 - SortSam
 class: CommandLineTool
 cwlVersion: v1.0
-doc: Sorts a SAM/BAM/CRAM file.
 id: gatk4sortsam
 inputs:
 - doc: The SAM/BAM/CRAM file to sort.
@@ -13,7 +12,7 @@ inputs:
     prefix: -I
   label: bam
   type: File
-- default: generated-3602a07c-c3b0-11e9-81d9-f218985ebfa7.bam
+- default: generated-6515bb72-cf83-11e9-b4cb-acde48001122.bam
   doc: The sorted SAM/BAM/CRAM output file.
   id: outputFilename
   inputBinding:

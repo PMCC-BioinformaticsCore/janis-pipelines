@@ -12,8 +12,8 @@ inputs:
     secondaryFiles:
     - .tbi
     type: File
-  mills_1000gp_indels:
-    id: mills_1000gp_indels
+  mills_indels:
+    id: mills_indels
     secondaryFiles:
     - .tbi
     type: File
@@ -25,6 +25,7 @@ inputs:
         type: array
       type: array
   normalName:
+    default: NA24385_normal
     id: normalName
     type: string
   reference:
@@ -48,11 +49,6 @@ inputs:
     secondaryFiles:
     - .tbi
     type: File
-  sortSamTmpDir:
-    id: sortSamTmpDir
-    type:
-    - string
-    - 'null'
   tumorInputs:
     id: tumorInputs
     type:
@@ -61,6 +57,7 @@ inputs:
         type: array
       type: array
   tumorName:
+    default: NA24385_tumour
     id: tumorName
     type: string
 label: WGS Somatic (GATK only)
@@ -73,11 +70,9 @@ outputs:
     type: File
   normalReport:
     id: normalReport
-    outputSource: normal/fastq
+    outputSource: normal/reports
     type:
-      items:
-        items: File
-        type: array
+      items: File
       type: array
   tumorBam:
     id: tumorBam
@@ -87,28 +82,59 @@ outputs:
     type: File
   tumorReport:
     id: tumorReport
-    outputSource: tumor/fastq
+    outputSource: tumor/reports
     type:
-      items:
-        items: File
-        type: array
+      items: File
       type: array
-  variants:
-    id: variants
-    outputSource: sortCombined/out
-    type: File
-  variants_combined:
-    id: variants_combined
-    outputSource: sortCombined/out
+  variants_gatk:
+    id: variants_gatk
+    outputSource: sorted/out
     type: File
 requirements:
   InlineJavascriptRequirement: {}
   MultipleInputFeatureRequirement: {}
   ScatterFeatureRequirement: {}
   StepInputExpressionRequirement: {}
-  SubworkflowFeatureRequirement: {}
 steps:
-  GATK_VariantCaller:
+  normal:
+    in:
+      reads:
+        id: reads
+        source: tumorInputs
+      reference:
+        id: reference
+        source: reference
+      sampleName:
+        id: sampleName
+        source: tumorName
+    out:
+    - out
+    - reports
+    run: tools/somatic_subpipeline.cwl
+  sorted:
+    in:
+      vcf:
+        id: vcf
+        source: variantCaller_GATK_merge/out
+    out:
+    - out
+    run: tools/bcftoolssort.cwl
+  tumor:
+    in:
+      reads:
+        id: reads
+        source: normalInputs
+      reference:
+        id: reference
+        source: reference
+      sampleName:
+        id: sampleName
+        source: normalName
+    out:
+    - out
+    - reports
+    run: tools/somatic_subpipeline.cwl
+  variantCaller_GATK:
     in:
       intervals:
         id: intervals
@@ -118,10 +144,10 @@ steps:
         source: known_indels
       millsIndels:
         id: millsIndels
-        source: mills_1000gp_indels
+        source: mills_indels
       normalBam:
         id: normalBam
-        source: normal/out
+        source: tumor/out
       normalName:
         id: normalName
         source: normalName
@@ -136,7 +162,7 @@ steps:
         source: snps_dbsnp
       tumorBam:
         id: tumorBam
-        source: tumor/out
+        source: normal/out
       tumorName:
         id: tumorName
         source: tumorName
@@ -145,57 +171,13 @@ steps:
     run: tools/GATK4_SomaticVariantCaller.cwl
     scatter:
     - intervals
-  normal:
-    in:
-      inputs:
-        id: inputs
-        source: normalInputs
-      reference:
-        id: reference
-        source: reference
-      sampleName:
-        id: sampleName
-        source: normalName
-      sortSamTmpDir:
-        id: sortSamTmpDir
-        source: sortSamTmpDir
-    out:
-    - out
-    - fastq
-    run: tools/somatic_subpipeline.cwl
-  sortCombined:
-    in:
-      vcf:
-        id: vcf
-        source: variantCaller_merge_GATK/out
-    out:
-    - out
-    run: tools/bcftoolssort.cwl
-  tumor:
-    in:
-      inputs:
-        id: inputs
-        source: tumorInputs
-      reference:
-        id: reference
-        source: reference
-      sampleName:
-        id: sampleName
-        source: tumorName
-      sortSamTmpDir:
-        id: sortSamTmpDir
-        source: sortSamTmpDir
-    out:
-    - out
-    - fastq
-    run: tools/somatic_subpipeline.cwl
-  variantCaller_merge_GATK:
+  variantCaller_GATK_merge:
     in:
       vcfs:
         id: vcfs
         linkMerge: merge_nested
         source:
-        - GATK_VariantCaller/out
+        - variantCaller_GATK/out
     out:
     - out
     run: tools/Gatk4GatherVcfs.cwl

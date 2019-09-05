@@ -7,10 +7,10 @@ inputs:
     secondaryFiles:
     - ^.bai
     type: File
-  filters:
+  bcfview_applyFilters:
     default:
     - PASS
-    id: filters
+    id: bcfview_applyFilters
     type:
       items: string
       type: array
@@ -54,11 +54,11 @@ requirements:
   InlineJavascriptRequirement: {}
   StepInputExpressionRequirement: {}
 steps:
-  bcf_view:
+  bcfview:
     in:
       applyFilters:
         id: applyFilters
-        source: filters
+        source: bcfview_applyFilters
       file:
         id: file
         source: strelka/variants
@@ -93,7 +93,7 @@ steps:
         source: reference
       vcf:
         id: vcf
-        source: bcf_view/out
+        source: bcfview/out
     out:
     - out
     run: SplitMultiAllele.cwl

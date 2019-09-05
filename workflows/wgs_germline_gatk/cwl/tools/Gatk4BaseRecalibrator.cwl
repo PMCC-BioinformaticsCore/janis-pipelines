@@ -3,17 +3,6 @@ baseCommand:
 - BaseRecalibrator
 class: CommandLineTool
 cwlVersion: v1.0
-doc: "First pass of the base quality score recalibration. Generates a recalibration\
-  \ table based on various covariates. \nThe default covariates are read group, reported\
-  \ quality score, machine cycle, and nucleotide context.\n\nThis walker generates\
-  \ tables based on specified covariates. It does a by-locus traversal operating only\
-  \ at sites \nthat are in the known sites VCF. ExAc, gnomAD, or dbSNP resources can\
-  \ be used as known sites of variation. \nWe assume that all reference mismatches\
-  \ we see are therefore errors and indicative of poor base quality. \nSince there\
-  \ is a large amount of data one can then calculate an empirical probability of error\
-  \ given the \nparticular covariates seen at this site, where p(error) = num mismatches\
-  \ / num observations. The output file is a \ntable (of the several covariate values,\
-  \ num observations, num mismatches, empirical quality score)."
 id: Gatk4BaseRecalibrator
 inputs:
 - default: /tmp/
@@ -66,7 +55,7 @@ inputs:
   - .fai
   - ^.dict
   type: File
-- default: generated-1c8f3358-c3b0-11e9-917e-f218985ebfa7.table
+- default: generated-7eddfc5e-cf83-11e9-907b-acde48001122.table
   doc: "**The output recalibration table filename to create.** After the header, data\
     \ records occur one per line until the end of the file. The first several items\
     \ on a line are the values of the individual covariates and will change depending\

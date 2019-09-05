@@ -2,18 +2,23 @@ class: Workflow
 cwlVersion: v1.0
 id: WGSSomaticMultiCallers
 inputs:
-  allelFreqThreshold:
-    id: allelFreqThreshold
+  alleleFreqThreshold:
+    default: 0.05
+    id: alleleFreqThreshold
     type: float
-  columns:
+  combineVariants_columns:
     default:
     - AD
     - DP
     - GT
-    id: columns
+    id: combineVariants_columns
     type:
       items: string
       type: array
+  combineVariants_type:
+    default: somatic
+    id: combineVariants_type
+    type: string
   gatkIntervals:
     id: gatkIntervals
     type:
@@ -24,8 +29,8 @@ inputs:
     secondaryFiles:
     - .tbi
     type: File
-  mills_1000gp_indels:
-    id: mills_1000gp_indels
+  mills_indels:
+    id: mills_indels
     secondaryFiles:
     - .tbi
     type: File
@@ -37,6 +42,7 @@ inputs:
         type: array
       type: array
   normalName:
+    default: NA24385_normal
     id: normalName
     type: string
   reference:
@@ -60,11 +66,6 @@ inputs:
     secondaryFiles:
     - .tbi
     type: File
-  sortSamTmpDir:
-    id: sortSamTmpDir
-    type:
-    - string
-    - 'null'
   strelkaIntervals:
     id: strelkaIntervals
     secondaryFiles:
@@ -80,6 +81,7 @@ inputs:
         type: array
       type: array
   tumorName:
+    default: NA24385_tumour
     id: tumorName
     type: string
   vardictHeaderLines:
@@ -90,10 +92,6 @@ inputs:
     type:
       items: File
       type: array
-  variant_type:
-    default: somatic
-    id: variant_type
-    type: string
 label: WGS Somatic (Multi callers)
 outputs:
   normalBam:
@@ -104,7 +102,7 @@ outputs:
     type: File
   normalReport:
     id: normalReport
-    outputSource: normal/fastq
+    outputSource: normal/reports
     type:
       items:
         items: File
@@ -118,7 +116,7 @@ outputs:
     type: File
   tumorReport:
     id: tumorReport
-    outputSource: tumor/fastq
+    outputSource: tumor/reports
     type:
       items:
         items: File
@@ -126,19 +124,19 @@ outputs:
       type: array
   variants_combined:
     id: variants_combined
-    outputSource: sortCombined/out
+    outputSource: combineVariants/vcf
     type: File
   variants_gatk:
     id: variants_gatk
-    outputSource: variantCaller_merge_GATK/out
+    outputSource: variantCaller_GATK_merge/out
     type: File
   variants_strelka:
     id: variants_strelka
-    outputSource: Strelka_VariantCaller/out
+    outputSource: variantCaller_Strelka/out
     type: File
   variants_vardict:
     id: variants_vardict
-    outputSource: variantCaller_merge_Vardict/out
+    outputSource: variantCaller_VarDict_merge/out
     type: File
 requirements:
   InlineJavascriptRequirement: {}
@@ -147,7 +145,69 @@ requirements:
   StepInputExpressionRequirement: {}
   SubworkflowFeatureRequirement: {}
 steps:
-  GATK_VariantCaller:
+  combineVariants:
+    in:
+      columns:
+        id: columns
+        source: combineVariants_columns
+      normal:
+        id: normal
+        source: normalName
+      tumor:
+        id: tumor
+        source: tumorName
+      type:
+        id: type
+        source: combineVariants_type
+      vcfs:
+        id: vcfs
+        source:
+        - variantCaller_GATK_merge/out
+        - variantCaller_Strelka/out
+        - variantCaller_VarDict_merge/out
+    out:
+    - vcf
+    - tsv
+    run: tools/combinevariants.cwl
+  normal:
+    in:
+      reads:
+        id: reads
+        source: tumorInputs
+      reference:
+        id: reference
+        source: reference
+      sampleName:
+        id: sampleName
+        source: tumorName
+    out:
+    - out
+    - reports
+    run: tools/somatic_subpipeline.cwl
+  sortCombined:
+    in:
+      vcf:
+        id: vcf
+        source: combineVariants/vcf
+    out:
+    - out
+    run: tools/bcftoolssort.cwl
+  tumor:
+    in:
+      reads:
+        id: reads
+        source: normalInputs
+      reference:
+        id: reference
+        source: reference
+      sampleName:
+        id: sampleName
+        source: normalName
+    out:
+    - out
+    - reports
+    run: tools/somatic_subpipeline.cwl
+  variantCaller_GATK:
     in:
       intervals:
         id: intervals
@@ -157,10 +217,10 @@ steps:
         source: known_indels
       millsIndels:
         id: millsIndels
-        source: mills_1000gp_indels
+        source: mills_indels
       normalBam:
         id: normalBam
-        source: normal/out
+        source: tumor/out
       normalName:
         id: normalName
         source: normalName
@@ -175,7 +235,7 @@ steps:
         source: snps_dbsnp
       tumorBam:
         id: tumorBam
-        source: tumor/out
+        source: normal/out
       tumorName:
         id: tumorName
         source: tumorName
@@ -184,7 +244,15 @@ steps:
     run: tools/GATK4_SomaticVariantCaller.cwl
     scatter:
     - intervals
-  Strelka_VariantCaller:
+  variantCaller_GATK_merge:
+    in:
+      vcfs:
+        id: vcfs
+        source: variantCaller_GATK/out
+    out:
+    - out
+    run: tools/Gatk4GatherVcfs.cwl
+  variantCaller_Strelka:
     in:
       intervals:
         id: intervals
@@ -203,11 +271,11 @@ steps:
     - variants
     - out
     run: tools/strelkaSomaticVariantCaller.cwl
-  VarDict_VariantCaller:
+  variantCaller_VarDict:
     in:
       alleleFreqThreshold:
         id: alleleFreqThreshold
-        source: allelFreqThreshold
+        source: alleleFreqThreshold
       headerLines:
         id: headerLines
         source: vardictHeaderLines
@@ -216,7 +284,7 @@ steps:
         source: vardictIntervals
       normalBam:
         id: normalBam
-        source: normal/out
+        source: tumor/out
       normalName:
         id: normalName
         source: normalName
@@ -225,7 +293,7 @@ steps:
         source: reference
       tumorBam:
         id: tumorBam
-        source: tumor/out
+        source: normal/out
       tumorName:
         id: tumorName
         source: tumorName
@@ -235,91 +303,11 @@ steps:
     run: tools/vardictSomaticVariantCaller.cwl
     scatter:
     - intervals
-  combineVariants:
-    in:
-      columns:
-        id: columns
-        source: columns
-      normal:
-        id: normal
-        source: normalName
-      tumor:
-        id: tumor
-        source: tumorName
-      type:
-        id: type
-        source: variant_type
-      vcfs:
-        id: vcfs
-        source:
-        - variantCaller_merge_GATK/out
-        - Strelka_VariantCaller/out
-        - variantCaller_merge_Vardict/out
-    out:
-    - vcf
-    - tsv
-    run: tools/combinevariants.cwl
-  normal:
-    in:
-      inputs:
-        id: inputs
-        source: normalInputs
-      reference:
-        id: reference
-        source: reference
-      sampleName:
-        id: sampleName
-        source: normalName
-      sortSamTmpDir:
-        id: sortSamTmpDir
-        source: sortSamTmpDir
-    out:
-    - out
-    - fastq
-    run: tools/somatic_subpipeline.cwl
-  sortCombined:
-    in:
-      vcf:
-        id: vcf
-        source: combineVariants/vcf
-    out:
-    - out
-    run: tools/bcftoolssort.cwl
-  tumor:
-    in:
-      inputs:
-        id: inputs
-        source: tumorInputs
-      reference:
-        id: reference
-        source: reference
-      sampleName:
-        id: sampleName
-        source: tumorName
-      sortSamTmpDir:
-        id: sortSamTmpDir
-        source: sortSamTmpDir
-    out:
-    - out
-    - fastq
-    run: tools/somatic_subpipeline.cwl
-  variantCaller_merge_GATK:
+  variantCaller_VarDict_merge:
     in:
       vcfs:
         id: vcfs
-        linkMerge: merge_nested
-        source:
-        - GATK_VariantCaller/out
-    out:
-    - out
-    run: tools/Gatk4GatherVcfs.cwl
-  variantCaller_merge_Vardict:
-    in:
-      vcfs:
-        id: vcfs
-        linkMerge: merge_nested
-        source:
-        - VarDict_VariantCaller/out
+        source: variantCaller_VarDict/out
     out:
     - out
     run: tools/Gatk4GatherVcfs.cwl

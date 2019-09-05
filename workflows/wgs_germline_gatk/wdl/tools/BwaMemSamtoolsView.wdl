@@ -14,7 +14,7 @@ task BwaMemSamtoolsView {
     File reference_dict
     Array[File] reads
     Array[File]? mates
-    String outputFilename = "generated-1cb48e46-c3b0-11e9-917e-f218985ebfa7.bam"
+    String outputFilename = "generated-80b2b9a2-cf83-11e9-907b-acde48001122.bam"
     String sampleName
     Int? minimumSeedLength
     Int? bandwidth
@@ -82,7 +82,7 @@ task BwaMemSamtoolsView {
       | \
       samtools \
       view \
-      ${"-o " + if defined(outputFilename) then outputFilename else "generated-1cb4aa8e-c3b0-11e9-917e-f218985ebfa7.bam"} \
+      ${"-o " + if defined(outputFilename) then outputFilename else "generated-80b2d5c2-cf83-11e9-907b-acde48001122.bam"} \
       ${"-U " + skippedReadsOutputFilename} \
       ${"-t " + referenceIndex} \
       ${"-L " + intervals} \
@@ -110,6 +110,6 @@ task BwaMemSamtoolsView {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-1cb48e46-c3b0-11e9-917e-f218985ebfa7.bam"
+    File out = if defined(outputFilename) then outputFilename else "generated-80b2b9a2-cf83-11e9-907b-acde48001122.bam"
   }
 }

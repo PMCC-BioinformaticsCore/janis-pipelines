@@ -47,7 +47,7 @@ task GatkHaplotypeCaller {
     File reference_sa
     File reference_fai
     File reference_dict
-    String outputFilename = "generated-363d13b0-c3b0-11e9-81d9-f218985ebfa7.vcf"
+    String outputFilename = "generated-6815bd5e-cf83-11e9-b4cb-acde48001122.vcf"
     File dbsnp
     File dbsnp_tbi
     File? intervals
@@ -91,7 +91,7 @@ task GatkHaplotypeCaller {
       ${"--intervals " + intervals} \
       --reference ${reference} \
       --dbsnp ${dbsnp} \
-      ${"--output " + if defined(outputFilename) then outputFilename else "generated-363d2238-c3b0-11e9-81d9-f218985ebfa7.vcf"}
+      ${"--output " + if defined(outputFilename) then outputFilename else "generated-6815ce48-cf83-11e9-b4cb-acde48001122.vcf"}
   }
   runtime {
     docker: "broadinstitute/gatk:4.0.12.0"
@@ -100,7 +100,7 @@ task GatkHaplotypeCaller {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-363d13b0-c3b0-11e9-81d9-f218985ebfa7.vcf"
-    File out_idx = if defined(outputFilename) then outputFilename else "generated-363d13b0-c3b0-11e9-81d9-f218985ebfa7.vcf" + ".idx"
+    File out = if defined(outputFilename) then outputFilename else "generated-6815bd5e-cf83-11e9-b4cb-acde48001122.vcf"
+    File out_idx = if defined(outputFilename) then outputFilename else "generated-6815bd5e-cf83-11e9-b4cb-acde48001122.vcf" + ".idx"
   }
 }

@@ -67,7 +67,6 @@ outputs:
     type: File
 requirements:
   InlineJavascriptRequirement: {}
-  MultipleInputFeatureRequirement: {}
   StepInputExpressionRequirement: {}
 steps:
   applyBQSR_normal:

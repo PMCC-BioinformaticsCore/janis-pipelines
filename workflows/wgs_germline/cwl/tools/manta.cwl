@@ -11,22 +11,6 @@ arguments:
   valueFrom: $(inputs.runtime_cpu)
 class: CommandLineTool
 cwlVersion: v1.0
-doc: "Manta calls structural variants (SVs) and indels from mapped paired-end sequencing\
-  \ reads. \nIt is optimized for analysis of germline variation in small sets of individuals\
-  \ and somatic \nvariation in tumor/normal sample pairs. Manta discovers, assembles\
-  \ and scores large-scale SVs, \nmedium-sized indels and large insertions within\
-  \ a single efficient workflow. The method is \ndesigned for rapid analysis on standard\
-  \ compute hardware: NA12878 at 50x genomic coverage is \nanalyzed in less than 20\
-  \ minutes on a 20 core server, and most WGS tumor/normal analyses \ncan be completed\
-  \ within 2 hours. Manta combines paired and split-read evidence during SV \ndiscovery\
-  \ and scoring to improve accuracy, but does not require split-reads or successful\
-  \ \nbreakpoint assemblies to report a variant in cases where there is strong evidence\
-  \ otherwise. \n\nIt provides scoring models for germline variants in small sets\
-  \ of diploid samples and somatic \nvariants in matched tumor/normal sample pairs.\
-  \ There is experimental support for analysis of \nunmatched tumor samples as well.\
-  \ Manta accepts input read mappings from BAM or CRAM files and \nreports all SV\
-  \ and indel inferences in VCF 4.1 format. See the user guide for a full description\
-  \ \nof capabilities and limitations."
 id: manta
 inputs:
 - doc: provide a configuration file to override defaults in global config file (/opt/conda/share/manta-1.2.1-0/bin/configManta.py.ini)
@@ -51,7 +35,7 @@ inputs:
   secondaryFiles:
   - ^.bai
   type: File
-- default: generated-35fb315c-c3b0-11e9-81d9-f218985ebfa7
+- default: generated-6510923c-cf83-11e9-b4cb-acde48001122
   doc: 'Run script and run output will be written to this directory [required] (default:
     MantaWorkflow)'
   id: runDir

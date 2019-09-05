@@ -11,7 +11,11 @@ workflow vardictSomaticVariantCaller {
     File normalBam_bai
     File tumorBam
     File tumorBam_bai
+    String normalName
+    String tumorName
     File intervals
+    Float? alleleFreqThreshold
+    File headerLines
     File reference
     File reference_amb
     File reference_ann
@@ -20,15 +24,11 @@ workflow vardictSomaticVariantCaller {
     File reference_sa
     File reference_fai
     File reference_dict
-    String normalName
-    String tumorName
-    Float alleleFreqThreshold
-    Boolean? chromNamesAreNumbers
-    Boolean? vcfFormat
-    Int? chromColumn
-    Int? regStartCol
-    Int? geneEndCol
-    File headerLines
+    Boolean? vardict_chromNamesAreNumbers
+    Boolean? vardict_vcfFormat
+    Int? vardict_chromColumn
+    Int? vardict_regStartCol
+    Int? vardict_geneEndCol
   }
   call V.vardict_somatic as vardict {
     input:
@@ -41,12 +41,12 @@ workflow vardictSomaticVariantCaller {
       reference=reference,
       tumorName=tumorName,
       normalName=normalName,
-      alleleFreqThreshold=alleleFreqThreshold,
-      chromNamesAreNumbers=select_first([chromNamesAreNumbers, true]),
-      chromColumn=select_first([chromColumn, 1]),
-      geneEndCol=select_first([geneEndCol, 3]),
-      regStartCol=select_first([regStartCol, 2]),
-      vcfFormat=select_first([vcfFormat, true])
+      alleleFreqThreshold=select_first([alleleFreqThreshold, 0.05]),
+      chromNamesAreNumbers=select_first([vardict_chromNamesAreNumbers, true]),
+      chromColumn=select_first([vardict_chromColumn, 1]),
+      geneEndCol=select_first([vardict_geneEndCol, 3]),
+      regStartCol=select_first([vardict_regStartCol, 2]),
+      vcfFormat=select_first([vardict_vcfFormat, true])
   }
   call B.bcftoolsAnnotate as annotate {
     input:

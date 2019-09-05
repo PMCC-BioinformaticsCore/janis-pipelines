@@ -3,16 +3,6 @@ baseCommand:
 - Mutect2
 class: CommandLineTool
 cwlVersion: v1.0
-doc: "Call somatic short variants via local assembly of haplotypes. Short variants\
-  \ include single nucleotide (SNV) \nand insertion and deletion (indel) variants.\
-  \ The caller combines the DREAM challenge-winning somatic \ngenotyping engine of\
-  \ the original MuTect (Cibulskis et al., 2013) with the assembly-based machinery\
-  \ of HaplotypeCaller.\n\nThis tool is featured in the Somatic Short Mutation calling\
-  \ Best Practice Workflow. See Tutorial#11136 \nfor a step-by-step description of\
-  \ the workflow and Article#11127 for an overview of what traditional \nsomatic calling\
-  \ entails. For the latest pipeline scripts, see the Mutect2 WDL scripts directory.\
-  \ \nAlthough we present the tool for somatic calling, it may apply to other contexts,\
-  \ \nsuch as mitochondrial variant calling."
 id: gatkmutect2
 inputs:
 - doc: BAM/SAM/CRAM file containing reads
@@ -73,7 +63,7 @@ inputs:
   - .fai
   - ^.dict
   type: File
-- default: generated-4fed3e66-c3b0-11e9-9ec0-f218985ebfa7.vcf.gz
+- default: generated-37a14aa8-ced9-11e9-8396-acde48001122.vcf.gz
   id: outputFilename
   inputBinding:
     position: 20

@@ -16,7 +16,7 @@ inputs:
     shellQuote: false
   label: intervals
   type: File
-- default: generated-360394e6-c3b0-11e9-81d9-f218985ebfa7.vardict.vcf
+- default: generated-65169ac4-cf83-11e9-b4cb-acde48001122.vardict.vcf
   id: outputFilename
   inputBinding:
     position: 6

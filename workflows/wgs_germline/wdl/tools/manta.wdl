@@ -7,7 +7,7 @@ task manta {
     File? config
     File bam
     File bam_bai
-    String runDir = "generated-35fb315c-c3b0-11e9-81d9-f218985ebfa7"
+    String runDir = "generated-6510923c-cf83-11e9-b4cb-acde48001122"
     File reference
     File reference_amb
     File reference_ann
@@ -35,7 +35,7 @@ task manta {
       configManta.py \
       ${"--config " + config} \
       --bam ${bam} \
-      ${"--runDir " + if defined(runDir) then runDir else "generated-35fb315c-c3b0-11e9-81d9-f218985ebfa7"} \
+      ${"--runDir " + if defined(runDir) then runDir else "generated-6510923c-cf83-11e9-b4cb-acde48001122"} \
       --referenceFasta ${reference} \
       ${"--tumorBam " + tumorBam} \
       ${true="--exome" false="" exome} \
@@ -43,7 +43,7 @@ task manta {
       ${"--unstrandedRNA " + unstrandedRNA} \
       ${"--outputContig " + outputContig} \
       ${"--callRegions " + callRegions} \
-      ;${if defined(runDir) then runDir else "generated-35fb315c-c3b0-11e9-81d9-f218985ebfa7"}/runWorkflow.py \
+      ;${if defined(runDir) then runDir else "generated-6510923c-cf83-11e9-b4cb-acde48001122"}/runWorkflow.py \
       ${"--mode " + if defined(mode) then mode else "local"} \
       ${true="--quiet" false="" quiet} \
       ${"--queue " + queue} \
@@ -58,16 +58,16 @@ task manta {
     preemptible: 2
   }
   output {
-    File python = "${if defined(runDir) then runDir else "generated-35fb315c-c3b0-11e9-81d9-f218985ebfa7"}/runWorkflow.py"
-    File pickle = "${if defined(runDir) then runDir else "generated-35fb315c-c3b0-11e9-81d9-f218985ebfa7"}/runWorkflow.py.config.pickle"
-    File candidateSV = "${if defined(runDir) then runDir else "generated-35fb315c-c3b0-11e9-81d9-f218985ebfa7"}/results/variants/candidateSV.vcf.gz"
-    File candidateSV_tbi = "${if defined(runDir) then runDir else "generated-35fb315c-c3b0-11e9-81d9-f218985ebfa7"}/results/variants/candidateSV.vcf.gz.tbi"
-    File candidateSmallIndels = "${if defined(runDir) then runDir else "generated-35fb315c-c3b0-11e9-81d9-f218985ebfa7"}/results/variants/candidateSmallIndels.vcf.gz"
-    File candidateSmallIndels_tbi = "${if defined(runDir) then runDir else "generated-35fb315c-c3b0-11e9-81d9-f218985ebfa7"}/results/variants/candidateSmallIndels.vcf.gz.tbi"
-    File diploidSV = "${if defined(runDir) then runDir else "generated-35fb315c-c3b0-11e9-81d9-f218985ebfa7"}/results/variants/diploidSV.vcf.gz"
-    File diploidSV_tbi = "${if defined(runDir) then runDir else "generated-35fb315c-c3b0-11e9-81d9-f218985ebfa7"}/results/variants/diploidSV.vcf.gz.tbi"
-    File alignmentStatsSummary = "${if defined(runDir) then runDir else "generated-35fb315c-c3b0-11e9-81d9-f218985ebfa7"}/results/stats/alignmentStatsSummary.txt"
-    File svCandidateGenerationStats = "${if defined(runDir) then runDir else "generated-35fb315c-c3b0-11e9-81d9-f218985ebfa7"}/results/stats/svCandidateGenerationStats.tsv"
-    File svLocusGraphStats = "${if defined(runDir) then runDir else "generated-35fb315c-c3b0-11e9-81d9-f218985ebfa7"}/results/stats/svLocusGraphStats.tsv"
+    File python = "${if defined(runDir) then runDir else "generated-6510923c-cf83-11e9-b4cb-acde48001122"}/runWorkflow.py"
+    File pickle = "${if defined(runDir) then runDir else "generated-6510923c-cf83-11e9-b4cb-acde48001122"}/runWorkflow.py.config.pickle"
+    File candidateSV = "${if defined(runDir) then runDir else "generated-6510923c-cf83-11e9-b4cb-acde48001122"}/results/variants/candidateSV.vcf.gz"
+    File candidateSV_tbi = "${if defined(runDir) then runDir else "generated-6510923c-cf83-11e9-b4cb-acde48001122"}/results/variants/candidateSV.vcf.gz.tbi"
+    File candidateSmallIndels = "${if defined(runDir) then runDir else "generated-6510923c-cf83-11e9-b4cb-acde48001122"}/results/variants/candidateSmallIndels.vcf.gz"
+    File candidateSmallIndels_tbi = "${if defined(runDir) then runDir else "generated-6510923c-cf83-11e9-b4cb-acde48001122"}/results/variants/candidateSmallIndels.vcf.gz.tbi"
+    File diploidSV = "${if defined(runDir) then runDir else "generated-6510923c-cf83-11e9-b4cb-acde48001122"}/results/variants/diploidSV.vcf.gz"
+    File diploidSV_tbi = "${if defined(runDir) then runDir else "generated-6510923c-cf83-11e9-b4cb-acde48001122"}/results/variants/diploidSV.vcf.gz.tbi"
+    File alignmentStatsSummary = "${if defined(runDir) then runDir else "generated-6510923c-cf83-11e9-b4cb-acde48001122"}/results/stats/alignmentStatsSummary.txt"
+    File svCandidateGenerationStats = "${if defined(runDir) then runDir else "generated-6510923c-cf83-11e9-b4cb-acde48001122"}/results/stats/svCandidateGenerationStats.tsv"
+    File svLocusGraphStats = "${if defined(runDir) then runDir else "generated-6510923c-cf83-11e9-b4cb-acde48001122"}/results/stats/svLocusGraphStats.tsv"
   }
 }
