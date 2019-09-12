@@ -119,9 +119,7 @@ steps:
     in:
       bams:
         id: bams
-        linkMerge: merge_nested
-        source:
-        - alignSortedBam/out
+        source: alignSortedBam/out
     out:
     - out
     run: tools/mergeAndMarkBams.cwl
@@ -165,9 +163,7 @@ steps:
     in:
       vcfs:
         id: vcfs
-        linkMerge: merge_nested
-        source:
-        - variantCaller_GATK/out
+        source: variantCaller_GATK/out
     out:
     - out
     run: tools/Gatk4GatherVcfs.cwl

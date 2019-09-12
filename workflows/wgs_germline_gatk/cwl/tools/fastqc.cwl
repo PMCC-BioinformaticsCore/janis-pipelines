@@ -12,7 +12,6 @@ id: fastqc
 inputs:
 - id: reads
   inputBinding:
-    itemSeparator: ' '
     position: 5
   label: reads
   type:

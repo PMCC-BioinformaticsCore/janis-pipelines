@@ -11,13 +11,12 @@ inputs:
 - doc: '[default: []] (-I) Input VCF file(s).'
   id: vcfs
   inputBinding:
-    itemSeparator: ' '
     prefix: --INPUT
   label: vcfs
   type:
     items: File
     type: array
-- default: generated-54397508-cf9e-11e9-97c1-acde48001122.gathered.vcf
+- default: generated-d8f78578-d5b6-11e9-a585-f218985ebfa7.gathered.vcf
   doc: '[default: null] (-O) Output VCF file.'
   id: outputFilename
   inputBinding:
@@ -28,7 +27,6 @@ inputs:
     line'
   id: argumentsFile
   inputBinding:
-    itemSeparator: ' '
     prefix: --arguments_file
   label: argumentsFile
   type:
@@ -152,6 +150,6 @@ outputs:
   type: File
 requirements:
   DockerRequirement:
-    dockerPull: broadinstitute/gatk:4.0.12.0
+    dockerPull: broadinstitute/gatk:4.1.3.0
   InlineJavascriptRequirement: {}
   ShellCommandRequirement: {}

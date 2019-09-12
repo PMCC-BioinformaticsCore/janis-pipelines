@@ -45,7 +45,7 @@ inputs:
   - .fai
   - ^.dict
   type: File
-- default: generated-5c380030-cf9e-11e9-8f9a-acde48001122.norm.vcf
+- default: generated-012e8b54-d5b7-11e9-bba8-f218985ebfa7.norm.vcf
   id: outputFilename
   inputBinding:
     position: 10

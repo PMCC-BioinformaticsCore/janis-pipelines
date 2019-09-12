@@ -7,5 +7,5 @@ combineVariants_columns:
 - AD
 - DP
 - GT
-combineVariants_type: Germline
+combineVariants_type: germline
 sampleName: NA12878

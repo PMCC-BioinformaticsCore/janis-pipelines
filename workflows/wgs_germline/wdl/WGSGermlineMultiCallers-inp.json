@@ -9,10 +9,9 @@
         "DP",
         "GT"
     ],
-    "WGSGermlineMultiCallers.combineVariants_type": "Germline",
+    "WGSGermlineMultiCallers.combineVariants_type": "germline",
     "WGSGermlineMultiCallers.fastqs": null,
     "WGSGermlineMultiCallers.gatkIntervals": null,
-    "WGSGermlineMultiCallers.gridssBlacklist": null,
     "WGSGermlineMultiCallers.known_indels": null,
     "WGSGermlineMultiCallers.known_indels_tbi": null,
     "WGSGermlineMultiCallers.mills_indels": null,

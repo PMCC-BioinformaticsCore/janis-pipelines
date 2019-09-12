@@ -12,7 +12,7 @@ inputs:
     position: 1
   label: vcf
   type: File
-- default: generated-5c380e72-cf9e-11e9-8f9a-acde48001122.sorted.vcf
+- default: generated-012e9aae-d5b7-11e9-bba8-f218985ebfa7.sorted.vcf.gz
   doc: (-o) output file name [stdout]
   id: outputFilename
   inputBinding:

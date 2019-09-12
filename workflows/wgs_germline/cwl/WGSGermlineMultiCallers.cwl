@@ -23,7 +23,7 @@ inputs:
       items: string
       type: array
   combineVariants_type:
-    default: Germline
+    default: germline
     id: combineVariants_type
     type: string
   fastqs:
@@ -38,9 +38,6 @@ inputs:
     type:
       items: File
       type: array
-  gridssBlacklist:
-    id: gridssBlacklist
-    type: File
   known_indels:
     id: known_indels
     secondaryFiles:
@@ -119,10 +116,6 @@ outputs:
     type:
       items: File
       type: array
-  variants_gridss:
-    id: variants_gridss
-    outputSource: variantCaller_GRIDSS/out
-    type: File
   variants_strelka:
     id: variants_strelka
     outputSource: variantCaller_Strelka/out
@@ -177,7 +170,6 @@ steps:
         - variantCaller_merge_GATK/out
         - variantCaller_Strelka/out
         - variantCaller_merge_Vardict/out
-        - variantCaller_GRIDSS/out
     out:
     - vcf
     - tsv
@@ -196,9 +188,7 @@ steps:
     in:
       bams:
         id: bams
-        linkMerge: merge_nested
-        source:
-        - alignSortedBam/out
+        source: alignSortedBam/out
     out:
     - out
     run: tools/mergeAndMarkBams.cwl
@@ -238,21 +228,6 @@ steps:
     run: tools/GATK4_GermlineVariantCaller.cwl
     scatter:
     - intervals
-  variantCaller_GRIDSS:
-    in:
-      bam:
-        id: bam
-        source: processBamFiles/out
-      blacklist:
-        id: blacklist
-        source: gridssBlacklist
-      reference:
-        id: reference
-        source: reference
-    out:
-    - out
-    - assembly
-    run: tools/gridssGermlineVariantCaller.cwl
   variantCaller_Strelka:
     in:
       bam:
@@ -299,9 +274,7 @@ steps:
     in:
       vcfs:
         id: vcfs
-        linkMerge: merge_nested
-        source:
-        - variantCaller_GATK/out
+        source: variantCaller_GATK/out
     out:
     - out
     run: tools/Gatk4GatherVcfs.cwl
@@ -309,9 +282,7 @@ steps:
     in:
       vcfs:
         id: vcfs
-        linkMerge: merge_nested
-        source:
-        - variantCaller_Vardict/out
+        source: variantCaller_Vardict/out
     out:
     - out
     run: tools/Gatk4GatherVcfs.cwl

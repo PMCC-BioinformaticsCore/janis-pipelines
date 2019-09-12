@@ -59,11 +59,11 @@ inputs:
   - boolean
   - 'null'
 - doc: (-o) output file name [stdout]
-  id: outputFile
+  id: outputFilename
   inputBinding:
     position: 1
     prefix: --output-file
-  label: outputFile
+  label: outputFilename
   type:
   - File
   - 'null'
@@ -146,7 +146,6 @@ inputs:
 - doc: (-s) comma separated list of samples to include (or exclude with '^' prefix)
   id: samples
   inputBinding:
-    itemSeparator: ' '
     position: 1
     prefix: --samples
   label: samples
@@ -197,7 +196,6 @@ inputs:
 - doc: (-f) require at least one of the listed FILTER strings (e.g. 'PASS,.'')
   id: applyFilters
   inputBinding:
-    itemSeparator: ' '
     position: 1
     prefix: --apply-filters
   label: applyFilters
@@ -333,7 +331,6 @@ inputs:
     [null]'
   id: types
   inputBinding:
-    itemSeparator: ' '
     position: 1
     prefix: --types
   label: types
@@ -345,7 +342,6 @@ inputs:
     [null]'
   id: excludeTypes
   inputBinding:
-    itemSeparator: ' '
     position: 1
     prefix: --exclude-types
   label: excludeTypes

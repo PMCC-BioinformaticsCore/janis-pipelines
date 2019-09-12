@@ -4,10 +4,9 @@
 
 .idea/
 
-# Hide incidential running files
+# Hide incidental running files
 *.conf
 **/__pycache__/
-**/**/tools/
-**/**/tools.zip
 **/**/cromwell-workflow-logs/
 **/**/cromwell-executions/
+**-runner.py

@@ -11,13 +11,12 @@ inputs:
 - doc: '[default: []] (-I) Input VCF file(s).'
   id: vcfs
   inputBinding:
-    itemSeparator: ' '
     prefix: --INPUT
   label: vcfs
   type:
     items: File
     type: array
-- default: generated-5c38065c-cf9e-11e9-8f9a-acde48001122.gathered.vcf
+- default: generated-012e9144-d5b7-11e9-bba8-f218985ebfa7.gathered.vcf
   doc: '[default: null] (-O) Output VCF file.'
   id: outputFilename
   inputBinding:
@@ -28,7 +27,6 @@ inputs:
     line'
   id: argumentsFile
   inputBinding:
-    itemSeparator: ' '
     prefix: --arguments_file
   label: argumentsFile
   type:

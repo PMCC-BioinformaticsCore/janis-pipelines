@@ -57,7 +57,6 @@ inputs:
 - doc: '-A: One or more specific annotations to add to variant calls'
   id: annotation
   inputBinding:
-    itemSeparator: ' '
     prefix: --annotation
   label: annotation
   type:
@@ -67,7 +66,6 @@ inputs:
 - doc: "-G\tOne or more groups of annotations to apply to variant calls"
   id: annotationGroup
   inputBinding:
-    itemSeparator: ' '
     prefix: --annotation-group
   label: annotationGroup
   type:
@@ -77,7 +75,6 @@ inputs:
 - doc: "-AX\tOne or more specific annotations to exclude from variant calls"
   id: annotationsToExclude
   inputBinding:
-    itemSeparator: ' '
     prefix: --annotations-to-exclude
   label: annotationsToExclude
   type:
@@ -87,7 +84,6 @@ inputs:
 - doc: read one or more arguments files and add them to the command line
   id: arguments_file
   inputBinding:
-    itemSeparator: ' '
     prefix: --arguments_file
   label: arguments_file
   type:
@@ -161,7 +157,6 @@ inputs:
 - doc: Samples representing the population "founders"
   id: founderId
   inputBinding:
-    itemSeparator: ' '
     prefix: --founder-id
   label: founderId
   type:
@@ -385,7 +380,7 @@ inputs:
   - .fai
   - ^.dict
   type: File
-- default: generated-54395cf8-cf9e-11e9-97c1-acde48001122.vcf
+- default: generated-d8f758f0-d5b6-11e9-a585-f218985ebfa7.vcf
   doc: File to which variants should be written
   id: outputFilename
   inputBinding:
@@ -423,6 +418,6 @@ outputs:
   type: File
 requirements:
   DockerRequirement:
-    dockerPull: broadinstitute/gatk:4.0.12.0
+    dockerPull: broadinstitute/gatk:4.1.3.0
   InlineJavascriptRequirement: {}
   ShellCommandRequirement: {}

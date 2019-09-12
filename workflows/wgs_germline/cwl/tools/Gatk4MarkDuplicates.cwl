@@ -54,7 +54,7 @@ inputs:
   secondaryFiles:
   - ^.bai
   type: File
-- default: generated-54393818-cf9e-11e9-97c1-acde48001122.bam
+- default: generated-d8f71f98-d5b6-11e9-a585-f218985ebfa7.bam
   doc: File to write duplication metrics to
   id: outputFilename
   inputBinding:
@@ -62,7 +62,7 @@ inputs:
     prefix: -O
   label: outputFilename
   type: string
-- default: generated-5439387c-cf9e-11e9-97c1-acde48001122.metrics.txt
+- default: generated-d8f72024-d5b6-11e9-a585-f218985ebfa7.metrics.txt
   doc: The output file to write marked records to.
   id: metricsFilename
   inputBinding:
@@ -73,7 +73,6 @@ inputs:
 - doc: read one or more arguments files and add them to the command line
   id: argumentsFile
   inputBinding:
-    itemSeparator: ' '
     position: 10
     prefix: --arguments_file
   label: argumentsFile
@@ -104,7 +103,6 @@ inputs:
 - doc: Comment(s) to include in the output file's header.
   id: comment
   inputBinding:
-    itemSeparator: ' '
     prefix: -CO
   label: comment
   type:
@@ -224,6 +222,6 @@ outputs:
   type: File
 requirements:
   DockerRequirement:
-    dockerPull: broadinstitute/gatk:4.0.12.0
+    dockerPull: broadinstitute/gatk:4.1.3.0
   InlineJavascriptRequirement: {}
   ShellCommandRequirement: {}

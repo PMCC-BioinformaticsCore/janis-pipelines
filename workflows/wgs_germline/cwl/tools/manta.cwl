@@ -51,7 +51,7 @@ inputs:
   secondaryFiles:
   - ^.bai
   type: File
-- default: generated-5432bfec-cf9e-11e9-97c1-acde48001122
+- default: generated-d8efc72a-d5b6-11e9-a585-f218985ebfa7
   doc: 'Run script and run output will be written to this directory [required] (default:
     MantaWorkflow)'
   id: runDir

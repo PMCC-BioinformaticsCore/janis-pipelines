@@ -9,14 +9,13 @@ inputs:
 - doc: The SAM/BAM file to sort.
   id: bams
   inputBinding:
-    itemSeparator: ' '
     position: 10
     prefix: -I
   label: bams
   type:
     items: File
     type: array
-- default: generated-5c37c570-cf9e-11e9-8f9a-acde48001122.bam
+- default: generated-012e4ae0-d5b7-11e9-bba8-f218985ebfa7.bam
   doc: SAM/BAM file to write merged result to
   id: outputFilename
   inputBinding:
@@ -27,7 +26,6 @@ inputs:
 - doc: read one or more arguments files and add them to the command line
   id: argumentsFile
   inputBinding:
-    itemSeparator: ' '
     position: 10
     prefix: --arguments_file
   label: argumentsFile
@@ -47,7 +45,6 @@ inputs:
 - doc: Comment(s) to include in the merged output file's header.
   id: comment
   inputBinding:
-    itemSeparator: ' '
     prefix: -CO
   label: comment
   type:
@@ -207,6 +204,6 @@ outputs:
   type: File
 requirements:
   DockerRequirement:
-    dockerPull: broadinstitute/gatk:4.0.12.0
+    dockerPull: broadinstitute/gatk:4.1.3.0
   InlineJavascriptRequirement: {}
   ShellCommandRequirement: {}

@@ -14,8 +14,9 @@ task BwaMemSamtoolsView {
     File reference_dict
     Array[File] reads
     Array[File]? mates
-    String outputFilename = "generated-5e000994-cf9e-11e9-8f9a-acde48001122.bam"
+    String outputFilename = "generated-03023606-d5b7-11e9-bba8-f218985ebfa7.bam"
     String sampleName
+    String? platformTechnology
     Int? minimumSeedLength
     Int? bandwidth
     Int? offDiagonalXDropoff
@@ -75,14 +76,14 @@ task BwaMemSamtoolsView {
       ${true="-H" false="" hardClipping} \
       ${true="-M" false="" markShorterSplits} \
       ${"-v " + verboseLevel} \
-      -R '@RG\tID:${sampleName}\tSM:${sampleName}\tLB:${sampleName}\tPL:ILLUMINA' \
+      -R '@RG\tID:${sampleName}\tSM:${sampleName}\tLB:${sampleName}\tPL:${if defined(platformTechnology) then platformTechnology else "ILLUMINA"}' \
       -t ${if defined(runtime_cpu) then runtime_cpu else 1} \
       ${sep=" " reads} \
       ${true="" false="" defined(mates)}${sep=" " mates} \
       | \
       samtools \
       view \
-      ${"-o " + if defined(outputFilename) then outputFilename else "generated-5e002532-cf9e-11e9-8f9a-acde48001122.bam"} \
+      ${"-o " + if defined(outputFilename) then outputFilename else "generated-03025690-d5b7-11e9-bba8-f218985ebfa7.bam"} \
       ${"-U " + skippedReadsOutputFilename} \
       ${"-t " + referenceIndex} \
       ${"-L " + intervals} \
@@ -91,9 +92,9 @@ task BwaMemSamtoolsView {
       ${"-q " + includeReadsWithQuality} \
       ${"-l " + includeReadsInLibrary} \
       ${"-m " + includeReadsWithCIGAROps} \
-      ${true="-f" false="" defined(includeReadsWithAllFLAGs)}${sep=" " includeReadsWithAllFLAGs} \
-      ${true="-F" false="" defined(includeReadsWithoutFLAGs)}${sep=" " includeReadsWithoutFLAGs} \
-      ${true="-G" false="" defined(excludeReadsWithAllFLAGs)}${sep=" " excludeReadsWithAllFLAGs} \
+      ${true="-f " false="" defined(includeReadsWithAllFLAGs)}${sep=" " includeReadsWithAllFLAGs} \
+      ${true="-F " false="" defined(includeReadsWithoutFLAGs)}${sep=" " includeReadsWithoutFLAGs} \
+      ${true="-G " false="" defined(excludeReadsWithAllFLAGs)}${sep=" " excludeReadsWithAllFLAGs} \
       ${true="-M" false="" useMultiRegionIterator} \
       ${"-x " + readTagToStrip} \
       ${true="-B" false="" collapseBackwardCIGAROps} \
@@ -110,6 +111,6 @@ task BwaMemSamtoolsView {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-5e000994-cf9e-11e9-8f9a-acde48001122.bam"
+    File out = if defined(outputFilename) then outputFilename else "generated-03023606-d5b7-11e9-bba8-f218985ebfa7.bam"
   }
 }

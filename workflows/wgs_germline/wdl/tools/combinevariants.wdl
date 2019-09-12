@@ -4,8 +4,8 @@ task combinevariants {
   input {
     Int? runtime_cpu
     Int? runtime_memory
-    String outputFilename = "generated-565a8674-cf9e-11e9-97c1-acde48001122.combined.vcf"
-    String regions = "generated-565a870a-cf9e-11e9-97c1-acde48001122.tsv"
+    String outputFilename = "generated-dc8eacb6-d5b6-11e9-a585-f218985ebfa7.combined.vcf"
+    String regions = "generated-dc8ead38-d5b6-11e9-a585-f218985ebfa7.tsv"
     Array[File] vcfs
     String type
     Array[String]? columns
@@ -15,8 +15,8 @@ task combinevariants {
   }
   command {
     combine_vcf.py \
-      ${"-o " + if defined(outputFilename) then outputFilename else "generated-565a8eb2-cf9e-11e9-97c1-acde48001122.combined.vcf"} \
-      ${"--regions " + if defined(regions) then regions else "generated-565a8f5c-cf9e-11e9-97c1-acde48001122.tsv"} \
+      ${"-o " + if defined(outputFilename) then outputFilename else "generated-dc8eb544-d5b6-11e9-a585-f218985ebfa7.combined.vcf"} \
+      ${"--regions " + if defined(regions) then regions else "generated-dc8eb5ee-d5b6-11e9-a585-f218985ebfa7.tsv"} \
       ${sep=" " prefix("-i ", vcfs)} \
       --type ${type} \
       ${if defined(columns) then "--columns " else ""}${sep=" --columns " columns} \
@@ -31,7 +31,7 @@ task combinevariants {
     preemptible: 2
   }
   output {
-    File vcf = if defined(outputFilename) then outputFilename else "generated-565a8674-cf9e-11e9-97c1-acde48001122.combined.vcf"
-    File tsv = if defined(regions) then regions else "generated-565a870a-cf9e-11e9-97c1-acde48001122.tsv"
+    File vcf = if defined(outputFilename) then outputFilename else "generated-dc8eacb6-d5b6-11e9-a585-f218985ebfa7.combined.vcf"
+    File tsv = if defined(regions) then regions else "generated-dc8ead38-d5b6-11e9-a585-f218985ebfa7.tsv"
   }
 }

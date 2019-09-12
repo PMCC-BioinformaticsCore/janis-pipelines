@@ -6,7 +6,7 @@ task Gatk4MergeSamFiles {
     Int? runtime_memory
     Array[File] bams
     Array[File] bams_bai
-    String outputFilename = "generated-5e00981e-cf9e-11e9-8f9a-acde48001122.bam"
+    String outputFilename = "generated-0302da02-d5b7-11e9-bba8-f218985ebfa7.bam"
     Array[File]? argumentsFile
     Boolean? assumeSorted
     Array[String]? comment
@@ -35,12 +35,12 @@ task Gatk4MergeSamFiles {
   command {
     gatk MergeSamFiles \
       ${true="-AS" false="" assumeSorted} \
-      ${true="-CO" false="" defined(comment)}${sep=" " comment} \
+      ${true="-CO " false="" defined(comment)}${sep=" " comment} \
       ${true="-MSD" false="" mergeSequenceDictionaries} \
       ${true="--USE_THREADING" false="" useThreading} \
       -I ${sep=" " bams} \
-      ${"-O " + if defined(outputFilename) then outputFilename else "generated-5e00a304-cf9e-11e9-8f9a-acde48001122.bam"} \
-      ${true="--arguments_file" false="" defined(argumentsFile)}${sep=" " argumentsFile} \
+      ${"-O " + if defined(outputFilename) then outputFilename else "generated-0302e696-d5b7-11e9-bba8-f218985ebfa7.bam"} \
+      ${true="--arguments_file " false="" defined(argumentsFile)}${sep=" " argumentsFile} \
       ${"-SO " + sortOrder} \
       ${"--COMPRESSION_LEVEL " + compressionLevel} \
       ${true="--CREATE_INDEX" false="" createIndex} \
@@ -55,13 +55,13 @@ task Gatk4MergeSamFiles {
       ${"--verbosity " + verbosity}
   }
   runtime {
-    docker: "broadinstitute/gatk:4.0.12.0"
+    docker: "broadinstitute/gatk:4.1.3.0"
     cpu: if defined(runtime_cpu) then runtime_cpu else 1
     memory: if defined(runtime_memory) then "${runtime_memory}G" else "4G"
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-5e00981e-cf9e-11e9-8f9a-acde48001122.bam"
-    File out_bai = sub(if defined(outputFilename) then outputFilename else "generated-5e00981e-cf9e-11e9-8f9a-acde48001122.bam", "\\.bam$", ".bai")
+    File out = if defined(outputFilename) then outputFilename else "generated-0302da02-d5b7-11e9-bba8-f218985ebfa7.bam"
+    File out_bai = sub(if defined(outputFilename) then outputFilename else "generated-0302da02-d5b7-11e9-bba8-f218985ebfa7.bam", "\\.bam$", ".bai")
   }
 }

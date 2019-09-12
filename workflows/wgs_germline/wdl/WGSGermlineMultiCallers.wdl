@@ -7,7 +7,6 @@ import "tools/GATK4_GermlineVariantCaller.wdl" as G
 import "tools/Gatk4GatherVcfs.wdl" as G2
 import "tools/strelkaGermlineVariantCaller.wdl" as S
 import "tools/vardictGermlineVariantCaller.wdl" as V
-import "tools/gridssGermlineVariantCaller.wdl" as G3
 import "tools/combinevariants.wdl" as C
 import "tools/bcftoolssort.wdl" as B2
 
@@ -29,7 +28,6 @@ workflow WGSGermlineMultiCallers {
     File vardictHeaderLines
     String? sampleName
     Float? alleleFreqThreshold
-    File gridssBlacklist
     File snps_dbsnp
     File snps_dbsnp_tbi
     File snps_1000gp
@@ -135,24 +133,10 @@ workflow WGSGermlineMultiCallers {
     input:
       vcfs=variantCaller_Vardict.out
   }
-  call G3.gridssGermlineVariantCaller as variantCaller_GRIDSS {
-    input:
-      bam_bai=processBamFiles.out_bai,
-      bam=processBamFiles.out,
-      reference_amb=reference_amb,
-      reference_ann=reference_ann,
-      reference_bwt=reference_bwt,
-      reference_pac=reference_pac,
-      reference_sa=reference_sa,
-      reference_fai=reference_fai,
-      reference_dict=reference_dict,
-      reference=reference,
-      blacklist=gridssBlacklist
-  }
   call C.combinevariants as combineVariants {
     input:
-      vcfs=[variantCaller_merge_GATK.out, variantCaller_Strelka.out, variantCaller_merge_Vardict.out, variantCaller_GRIDSS.out],
-      type=select_first([combineVariants_type, "Germline"]),
+      vcfs=[variantCaller_merge_GATK.out, variantCaller_Strelka.out, variantCaller_merge_Vardict.out],
+      type=select_first([combineVariants_type, "germline"]),
       columns=select_first([combineVariants_columns, ["AC", "AN", "AF", "AD", "DP", "GT"]])
   }
   call B2.bcftoolssort as sortCombined {
@@ -169,6 +153,5 @@ workflow WGSGermlineMultiCallers {
     File variants_strelka = variantCaller_Strelka.out
     File variants_gatk = variantCaller_merge_GATK.out
     Array[File] variants_vardict = variantCaller_Vardict.out
-    File variants_gridss = variantCaller_GRIDSS.out
   }
 }
