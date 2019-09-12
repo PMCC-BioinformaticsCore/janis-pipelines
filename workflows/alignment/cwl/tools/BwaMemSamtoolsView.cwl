@@ -30,8 +30,8 @@ arguments:
   valueFrom: -b
 - position: 2
   prefix: -R
-  valueFrom: $("@RG\\tID:{name}\\tSM:{name}\\tLB:{name}\\tPL:ILLUMINA".replace(/\{name\}/g,
-    inputs.sampleName))
+  valueFrom: $("@RG\\tID:{name}\\tSM:{name}\\tLB:{name}\\tPL:{pl}".replace(/\{name\}/g,
+    inputs.sampleName).replace(/\{pl\}/g, inputs.platformTechnology))
 - position: 2
   prefix: -t
   shellQuote: false
@@ -56,7 +56,6 @@ inputs:
   type: File
 - id: reads
   inputBinding:
-    itemSeparator: ' '
     position: 3
     shellQuote: false
   label: reads
@@ -73,7 +72,7 @@ inputs:
   - items: File
     type: array
   - 'null'
-- default: generated-57ab2f16-cf9d-11e9-938d-acde48001122.bam
+- default: generated-065d6bc6-d5b8-11e9-b54b-f218985ebfa7.bam
   doc: output file name [stdout]
   id: outputFilename
   inputBinding:
@@ -86,6 +85,11 @@ inputs:
     tSM:{name}\\tLB:{name}\\tPL:ILLUMINA'"
   id: sampleName
   label: sampleName
+  type: string
+- default: ILLUMINA
+  doc: '(ReadGroup: PL) Used to construct the readGroupHeaderLine, defaults: ILLUMINA'
+  id: platformTechnology
+  label: platformTechnology
   type: string
 - doc: 'Matches shorter than INT will be missed. The alignment speed is usually insensitive
     to this value unless it significantly deviates 20. (Default: 19)'
