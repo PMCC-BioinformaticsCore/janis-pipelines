@@ -1,6 +1,6 @@
 from janis_bioinformatics.data_types import (
     FastaWithDict,
-    Fastq,
+    FastqGzPair,
     VcfTabix,
     Bed,
     BedTabix,
@@ -8,29 +8,29 @@ from janis_bioinformatics.data_types import (
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
 from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
-from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_0
-from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_0
+from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
+from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
 from janis_bioinformatics.tools.pmac import CombineVariants_0_0_4
-from janis_bioinformatics.tools.variantcallers.gatksomatic_variants import (
-    GatkSomaticVariantCaller,
-)
+from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
 from janis_bioinformatics.tools.variantcallers.illuminasomatic_strelka import (
     IlluminaSomaticVariantCaller,
 )
 from janis_bioinformatics.tools.variantcallers.vardictsomatic_variants import (
     VardictSomaticVariantCaller,
 )
-from janis_core import String, Workflow, File, Array, Float
+from janis_core import String, WorkflowBuilder, File, Array, Float
 
 
 class WGSSomaticMultiCallers(BioinformaticsWorkflow):
-    def __init__(self):
-        BioinformaticsWorkflow.__init__(
-            self, "WGSSomaticMultiCallers", "WGS Somatic (Multi callers)"
-        )
+    def id(self):
+        return "WGSSomaticMultiCallers"
 
-        self.input("normalInputs", Array(Fastq))
-        self.input("tumorInputs", Array(Fastq))
+    def friendly_name(self):
+        return "WGS Somatic (Multi callers)"
+
+    def constructor(self):
+        self.input("normalInputs", Array(FastqGzPair))
+        self.input("tumorInputs", Array(FastqGzPair))
 
         self.input("normalName", String(), default="NA24385_normal")
         self.input("tumorName", String(), default="NA24385_tumour")
@@ -51,83 +51,87 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
 
         self.step(
             "normal",
-            self.process_subpipeline(),
-            reads=self.tumorInputs,
-            sampleName=self.tumorName,
-            reference=self.reference,
+            self.process_subpipeline().as_subworkflow(
+                reads=self.tumorInputs,
+                sampleName=self.tumorName,
+                reference=self.reference,
+            ),
         )
         self.step(
             "tumor",
-            self.process_subpipeline(),
-            reads=self.normalInputs,
-            sampleName=self.normalName,
-            reference=self.reference,
+            self.process_subpipeline().as_subworkflow(
+                reads=self.normalInputs,
+                sampleName=self.normalName,
+                reference=self.reference,
+            ),
         )
 
         self.step(
             "variantCaller_GATK",
-            GatkSomaticVariantCaller,
+            GatkSomaticVariantCaller_4_1_3(
+                normalBam=self.tumor.out,
+                tumorBam=self.normal.out,
+                normalName=self.normalName,
+                tumorName=self.tumorName,
+                intervals=self.gatkIntervals,
+                reference=self.reference,
+                snps_dbsnp=self.snps_dbsnp,
+                snps_1000gp=self.snps_1000gp,
+                knownIndels=self.known_indels,
+                millsIndels=self.mills_indels,
+            ),
             scatter="intervals",
-            normalBam=self.tumor.out,
-            tumorBam=self.normal.out,
-            normalName=self.normalName,
-            tumorName=self.tumorName,
-            intervals=self.gatkIntervals,
-            reference=self.reference,
-            snps_dbsnp=self.snps_dbsnp,
-            snps_1000gp=self.snps_1000gp,
-            knownIndels=self.known_indels,
-            millsIndels=self.mills_indels,
         )
 
         self.step(
             "variantCaller_GATK_merge",
-            Gatk4GatherVcfs_4_0,
-            vcfs=self.variantCaller_GATK,
+            Gatk4GatherVcfs_4_1_3(vcfs=self.variantCaller_GATK),
         )
 
         self.step(
             "variantCaller_Strelka",
-            IlluminaSomaticVariantCaller,
-            normalBam=self.normal.out,
-            tumorBam=self.tumor.out,
-            intervals=self.strelkaIntervals,
-            reference=self.reference,
+            IlluminaSomaticVariantCaller(
+                normalBam=self.normal.out,
+                tumorBam=self.tumor.out,
+                intervals=self.strelkaIntervals,
+                reference=self.reference,
+            ),
         )
         self.step(
             "variantCaller_VarDict",
-            VardictSomaticVariantCaller,
+            VardictSomaticVariantCaller(
+                normalBam=self.tumor.out,
+                tumorBam=self.normal.out,
+                normalName=self.normalName,
+                tumorName=self.tumorName,
+                headerLines=self.vardictHeaderLines,
+                intervals=self.vardictIntervals,
+                reference=self.reference,
+                alleleFreqThreshold=self.alleleFreqThreshold,
+            ),
             scatter="intervals",
-            normalBam=self.tumor.out,
-            tumorBam=self.normal.out,
-            normalName=self.normalName,
-            tumorName=self.tumorName,
-            headerLines=self.vardictHeaderLines,
-            intervals=self.vardictIntervals,
-            reference=self.reference,
-            alleleFreqThreshold=self.alleleFreqThreshold,
         )
 
         self.step(
             "variantCaller_VarDict_merge",
-            Gatk4GatherVcfs_4_0,
-            vcfs=self.variantCaller_VarDict.out,
+            Gatk4GatherVcfs_4_1_3(vcfs=self.variantCaller_VarDict.out),
         )
 
         self.step(
             "combineVariants",
-            CombineVariants_0_0_4,
-            normal=self.normalName,
-            tumor=self.tumorName,
-            vcfs=[
-                self.variantCaller_GATK_merge,
-                self.variantCaller_Strelka.out,
-                self.variantCaller_VarDict_merge,
-            ],
-            type="somatic",
-            columns=["AD", "DP", "GT"],
+            CombineVariants_0_0_4(
+                normal=self.normalName,
+                tumor=self.tumorName,
+                vcfs=[
+                    self.variantCaller_GATK_merge,
+                    self.variantCaller_Strelka.out,
+                    self.variantCaller_VarDict_merge,
+                ],
+                type="somatic",
+                columns=["AD", "DP", "GT"],
+            ),
         )
-        self.step("sortCombined", BcfToolsSort_1_9, vcf=self.combineVariants.vcf)
+        self.step("sortCombined", BcfToolsSort_1_9(vcf=self.combineVariants.vcf))
 
         # Outputs
 
@@ -143,24 +147,25 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
 
     @staticmethod
     def process_subpipeline():
-        w = Workflow("somatic_subpipeline")
+        w = WorkflowBuilder("somatic_subpipeline")
 
         w.input("reference", FastaWithDict)
-        w.input("reads", Array(Fastq))
+        w.input("reads", Array(FastqGzPair))
 
         w.input("sampleName", String)
 
         w.step(
             "alignAndSort",
-            BwaAligner,
+            BwaAligner(
+                fastq=w.reads,
+                reference=w.reference,
+                name=w.sampleName,
+                sortsam_tmpDir=None,
+            ),
             scatter="fastq",
-            fastq=w.reads,
-            reference=w.reference,
-            name=w.sampleName,
-            sortsam_tmpDir=None,
         )
-        w.step("mergeAndMark", MergeAndMarkBams_4_0, bams=w.alignAndSort.out)
-        w.step("fastqc", FastQC_0_11_5, scatter="reads", reads=w.reads)
+        w.step("mergeAndMark", MergeAndMarkBams_4_1_3(bams=w.alignAndSort.out))
+        w.step("fastqc", FastQC_0_11_5(reads=w.reads), scatter="reads")
 
         w.output("out", source=w.mergeAndMark.out)
         w.output("reports", source=w.fastqc)
@@ -177,4 +182,4 @@ if __name__ == "__main__":
         "export_path": "{language}",
     }
     w.translate("cwl", **args)
-    w.translate("wdl", **args)
+    # w.translate("wdl", **args)
