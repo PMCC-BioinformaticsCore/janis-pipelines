@@ -17,7 +17,7 @@ task Gatk4BaseRecalibrator {
     File reference_sa
     File reference_fai
     File reference_dict
-    String outputFilename = "generated-32dc628a-d5c0-11e9-8cfd-f218985ebfa7.table"
+    String outputFilename = "generated-55be7e4e-d5cc-11e9-bc6b-f218985ebfa7.table"
     File? intervals
   }
   command {
@@ -26,7 +26,7 @@ task Gatk4BaseRecalibrator {
       ${"--intervals " + intervals} \
       -R ${reference} \
       -I ${bam} \
-      ${"-O " + if defined(outputFilename) then outputFilename else "generated-32dc69ba-d5c0-11e9-8cfd-f218985ebfa7.table"} \
+      ${"-O " + if defined(outputFilename) then outputFilename else "generated-55be8592-d5cc-11e9-bc6b-f218985ebfa7.table"} \
       ${sep=" " prefix("--known-sites ", knownSites)}
   }
   runtime {
@@ -36,6 +36,6 @@ task Gatk4BaseRecalibrator {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-32dc628a-d5c0-11e9-8cfd-f218985ebfa7.table"
+    File out = if defined(outputFilename) then outputFilename else "generated-55be7e4e-d5cc-11e9-bc6b-f218985ebfa7.table"
   }
 }

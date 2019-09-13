@@ -10,7 +10,9 @@ inputs:
   reads:
     id: reads
     type:
-      items: File
+      items:
+        items: File
+        type: array
       type: array
   reference:
     id: reference
@@ -43,7 +45,6 @@ outputs:
       type: array
 requirements:
   InlineJavascriptRequirement: {}
-  MultipleInputFeatureRequirement: {}
   ScatterFeatureRequirement: {}
   StepInputExpressionRequirement: {}
   SubworkflowFeatureRequirement: {}

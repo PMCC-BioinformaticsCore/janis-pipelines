@@ -39,7 +39,7 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
 
         self.step(
             "normal",
-            self.process_subpipeline().as_subworkflow(
+            self.process_subpipeline(
                 reads=self.tumorInputs,
                 sampleName=self.tumorName,
                 reference=self.reference,
@@ -47,7 +47,7 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
         )
         self.step(
             "tumor",
-            self.process_subpipeline().as_subworkflow(
+            self.process_subpipeline(
                 reads=self.normalInputs,
                 sampleName=self.normalName,
                 reference=self.reference,
@@ -87,7 +87,7 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
         self.output("variants_gatk", source=self.sorted.out)
 
     @staticmethod
-    def process_subpipeline():
+    def process_subpipeline(**connections):
         w = WorkflowBuilder("somatic_subpipeline")
 
         w.input("reference", FastaWithDict)
@@ -111,7 +111,7 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
         w.output("out", source=w.mergeAndMark.out)
         w.output("reports", source=w.fastqc)
 
-        return w
+        return w(**connections)
 
 
 if __name__ == "__main__":

@@ -51,7 +51,7 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
 
         self.step(
             "normal",
-            self.process_subpipeline().as_subworkflow(
+            self.process_subpipeline(
                 reads=self.tumorInputs,
                 sampleName=self.tumorName,
                 reference=self.reference,
@@ -59,7 +59,7 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
         )
         self.step(
             "tumor",
-            self.process_subpipeline().as_subworkflow(
+            self.process_subpipeline(
                 reads=self.normalInputs,
                 sampleName=self.normalName,
                 reference=self.reference,
@@ -146,7 +146,7 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
         self.output("variants_combined", source=self.combineVariants.vcf)
 
     @staticmethod
-    def process_subpipeline():
+    def process_subpipeline(**connections):
         w = WorkflowBuilder("somatic_subpipeline")
 
         w.input("reference", FastaWithDict)
@@ -170,7 +170,7 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
         w.output("out", source=w.mergeAndMark.out)
         w.output("reports", source=w.fastqc)
 
-        return w
+        return w(**connections)
 
 
 if __name__ == "__main__":
@@ -181,5 +181,5 @@ if __name__ == "__main__":
         "validate": True,
         "export_path": "{language}",
     }
-    # w.translate("cwl", **args)
+    w.translate("cwl", **args)
     w.translate("wdl", **args)
