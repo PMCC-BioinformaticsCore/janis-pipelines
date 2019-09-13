@@ -20,9 +20,7 @@ inputs:
   normalInputs:
     id: normalInputs
     type:
-      items:
-        items: File
-        type: array
+      items: File
       type: array
   normalName:
     default: NA24385_normal
@@ -52,9 +50,7 @@ inputs:
   tumorInputs:
     id: tumorInputs
     type:
-      items:
-        items: File
-        type: array
+      items: File
       type: array
   tumorName:
     default: NA24385_tumour

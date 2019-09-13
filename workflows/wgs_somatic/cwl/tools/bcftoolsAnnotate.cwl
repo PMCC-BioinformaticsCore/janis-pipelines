@@ -11,7 +11,7 @@ inputs:
     position: 100
   label: file
   type: File
-- default: generated-3252a912-d5b8-11e9-82df-f218985ebfa7.vcf.gz
+- default: generated-2e998c70-d5c0-11e9-96ee-f218985ebfa7.vcf.gz
   doc: '[-o] see Common Options'
   id: outputFilename
   inputBinding:

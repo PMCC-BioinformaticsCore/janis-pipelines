@@ -181,5 +181,5 @@ if __name__ == "__main__":
         "validate": True,
         "export_path": "{language}",
     }
-    w.translate("cwl", **args)
-    # w.translate("wdl", **args)
+    # w.translate("cwl", **args)
+    w.translate("wdl", **args)

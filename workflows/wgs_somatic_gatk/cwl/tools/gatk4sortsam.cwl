@@ -13,7 +13,7 @@ inputs:
     prefix: -I
   label: bam
   type: File
-- default: generated-966c2b36-cf9f-11e9-a6a4-acde48001122.bam
+- default: generated-b85ec122-d5b7-11e9-a06a-f218985ebfa7.bam
   doc: The sorted SAM/BAM/CRAM output file.
   id: outputFilename
   inputBinding:
@@ -165,6 +165,6 @@ outputs:
   type: File
 requirements:
   DockerRequirement:
-    dockerPull: broadinstitute/gatk:4.0.12.0
+    dockerPull: broadinstitute/gatk:4.1.3.0
   InlineJavascriptRequirement: {}
   ShellCommandRequirement: {}

@@ -74,7 +74,7 @@ inputs:
   type:
   - float
   - 'null'
-- default: generated-8c03acf0-cf9f-11e9-b76d-acde48001122.vardict.vcf
+- default: generated-2e9970aa-d5c0-11e9-96ee-f218985ebfa7.vardict.vcf
   id: outputFilename
   inputBinding:
     position: 6

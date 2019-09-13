@@ -5,7 +5,7 @@ task bcftoolsAnnotate {
     Int? runtime_cpu
     Int? runtime_memory
     File file
-    String outputFilename = "generated-8f3c9904-cf9f-11e9-b76d-acde48001122.vcf"
+    String outputFilename = "generated-32e0567e-d5c0-11e9-8cfd-f218985ebfa7.vcf.gz"
     File? annotations
     String? collapse
     Array[String]? columns
@@ -26,10 +26,10 @@ task bcftoolsAnnotate {
   }
   command {
     bcftools annotate \
-      ${"--output " + if defined(outputFilename) then outputFilename else "generated-8f3ca340-cf9f-11e9-b76d-acde48001122.vcf"} \
+      ${"--output " + if defined(outputFilename) then outputFilename else "generated-32e061fa-d5c0-11e9-8cfd-f218985ebfa7.vcf.gz"} \
       ${"--annotations " + annotations} \
       ${"--collapse " + collapse} \
-      ${true="--columns" false="" defined(columns)}${sep=" " columns} \
+      ${true="--columns " false="" defined(columns)}${sep=" " columns} \
       ${"--exclude " + exclude} \
       ${"--header-lines " + headerLines} \
       ${"--set-id " + setId} \
@@ -40,10 +40,10 @@ task bcftoolsAnnotate {
       ${"--regions " + regions} \
       ${"--regions-file " + regionsFile} \
       ${"--rename-chrs " + renameChrs} \
-      ${true="--samples" false="" defined(samples)}${sep=" " samples} \
+      ${true="--samples " false="" defined(samples)}${sep=" " samples} \
       ${"--samples-file " + samplesFile} \
       ${"--threads " + threads} \
-      ${true="--remove" false="" defined(remove)}${sep=" " remove} \
+      ${true="--remove " false="" defined(remove)}${sep=" " remove} \
       ${file}
   }
   runtime {
@@ -53,6 +53,6 @@ task bcftoolsAnnotate {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-8f3c9904-cf9f-11e9-b76d-acde48001122.vcf"
+    File out = if defined(outputFilename) then outputFilename else "generated-32e0567e-d5c0-11e9-8cfd-f218985ebfa7.vcf.gz"
   }
 }

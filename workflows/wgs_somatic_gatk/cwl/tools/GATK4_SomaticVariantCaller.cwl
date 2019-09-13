@@ -1,8 +1,8 @@
 class: Workflow
 cwlVersion: v1.0
 doc: "This is a VariantCaller based on the GATK Best Practice pipelines. It uses the\
-  \ GATK4 toolkit, specifically 4.0.12.0.\n\nIt has the following steps:\n\n1. Base\
-  \ Recalibrator x 2\n3. Mutect2\n4. SplitMultiAllele"
+  \ GATK4 toolkit, specifically 4.0.12.0.\n\n        It has the following steps:\n\
+  \n        1. Base Recalibrator x 2\n        3. Mutect2\n        4. SplitMultiAllele"
 id: GATK4_SomaticVariantCaller
 inputs:
   intervals:
@@ -67,6 +67,7 @@ outputs:
     type: File
 requirements:
   InlineJavascriptRequirement: {}
+  MultipleInputFeatureRequirement: {}
   StepInputExpressionRequirement: {}
 steps:
   applyBQSR_normal:
@@ -150,23 +151,26 @@ steps:
       intervals:
         id: intervals
         source: intervals
-      normal:
-        id: normal
-        source: applyBQSR_normal/out
-      normalName:
-        id: normalName
+      normalBams:
+        id: normalBams
+        linkMerge: merge_nested
+        source:
+        - applyBQSR_normal/out
+      normalSample:
+        id: normalSample
         source: normalName
       reference:
         id: reference
         source: reference
-      tumor:
-        id: tumor
-        source: applyBQSR_tumor/out
-      tumorName:
-        id: tumorName
-        source: tumorName
+      tumorBams:
+        id: tumorBams
+        linkMerge: merge_nested
+        source:
+        - applyBQSR_tumor/out
     out:
     - out
+    - stats
+    - f1f2r_out
     run: gatkmutect2.cwl
   splitMultiAllele:
     in:

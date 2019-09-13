@@ -20,13 +20,13 @@ doc: "\nusage: combine_vcf.py [-h] -i I --columns COLUMNS -o O --type\n         
   \ -h, --help            show this help message and exit\n"
 id: combinevariants
 inputs:
-- default: generated-8c03da4a-cf9f-11e9-b76d-acde48001122.combined.vcf
+- default: generated-2e999f1c-d5c0-11e9-96ee-f218985ebfa7.combined.vcf
   id: outputFilename
   inputBinding:
     prefix: -o
   label: outputFilename
   type: string
-- default: generated-8c03daa4-cf9f-11e9-b76d-acde48001122.tsv
+- default: generated-2e999f76-d5c0-11e9-96ee-f218985ebfa7.tsv
   doc: Region file containing all the variants, used as samtools mpileup
   id: regions
   inputBinding:

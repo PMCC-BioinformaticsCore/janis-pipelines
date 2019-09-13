@@ -53,7 +53,7 @@ inputs:
   - .fai
   - ^.dict
   type: File
-- default: generated-8c0373a2-cf9f-11e9-b76d-acde48001122
+- default: generated-2e9937b6-d5c0-11e9-96ee-f218985ebfa7
   doc: 'Name of directory to be created where all workflow scripts and output will
     be written. Each analysis requires a separate directory. (default: StrelkaSomaticWorkflow)'
   id: rundir

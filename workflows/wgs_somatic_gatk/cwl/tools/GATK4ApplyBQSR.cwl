@@ -46,7 +46,7 @@ inputs:
   - .fai
   - ^.dict
   type: File
-- default: generated-966c6a24-cf9f-11e9-a6a4-acde48001122.bam
+- default: generated-b85f2cfc-d5b7-11e9-a06a-f218985ebfa7.bam
   doc: Write output to this file
   id: outputFilename
   inputBinding:
@@ -88,6 +88,6 @@ outputs:
   type: File
 requirements:
   DockerRequirement:
-    dockerPull: broadinstitute/gatk:4.0.12.0
+    dockerPull: broadinstitute/gatk:4.1.3.0
   InlineJavascriptRequirement: {}
   ShellCommandRequirement: {}

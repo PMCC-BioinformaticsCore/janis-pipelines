@@ -66,7 +66,7 @@ inputs:
   - .fai
   - ^.dict
   type: File
-- default: generated-966c64de-cf9f-11e9-a6a4-acde48001122.table
+- default: generated-b85f2612-d5b7-11e9-a06a-f218985ebfa7.table
   doc: "**The output recalibration table filename to create.** After the header, data\
     \ records occur one per line until the end of the file. The first several items\
     \ on a line are the values of the individual covariates and will change depending\
@@ -97,6 +97,6 @@ outputs:
   type: File
 requirements:
   DockerRequirement:
-    dockerPull: broadinstitute/gatk:4.0.12.0
+    dockerPull: broadinstitute/gatk:4.1.3.0
   InlineJavascriptRequirement: {}
   ShellCommandRequirement: {}

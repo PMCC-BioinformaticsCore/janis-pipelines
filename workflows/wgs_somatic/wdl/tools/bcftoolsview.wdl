@@ -10,7 +10,7 @@ task bcftoolsview {
     Boolean? noHeader
     Int? compressionLevel
     Boolean? noVersion
-    File? outputFile
+    File? outputFilename
     String? outputType
     String? regions
     File? regionsFile
@@ -50,7 +50,7 @@ task bcftoolsview {
       ${true="--no-header" false="" noHeader} \
       ${"--compression-level " + compressionLevel} \
       ${true="--no-version" false="" noVersion} \
-      ${"--output-file " + outputFile} \
+      ${"--output-file " + outputFilename} \
       ${"--output-type " + outputType} \
       ${"--regions " + regions} \
       ${"--regions-file " + regionsFile} \
@@ -59,12 +59,12 @@ task bcftoolsview {
       ${"--threads " + threads} \
       ${true="--trim-alt-alleles" false="" trimAltAlleles} \
       ${true="--no-update" false="" noUpdate} \
-      ${true="--samples" false="" defined(samples)}${sep=" " samples} \
+      ${true="--samples " false="" defined(samples)}${sep=" " samples} \
       ${"--samples-file " + samplesFile} \
       ${true="--force-samples" false="" forceSamples} \
       ${"--min-ac " + minAc} \
       ${"--max-ac " + maxAc} \
-      ${true="--apply-filters" false="" defined(applyFilters)}${sep=" " applyFilters} \
+      ${true="--apply-filters " false="" defined(applyFilters)}${sep=" " applyFilters} \
       ${"--genotype " + genotype} \
       ${"--include " + include} \
       ${"--exclude " + exclude} \
@@ -78,8 +78,8 @@ task bcftoolsview {
       ${"--max-af " + maxAf} \
       ${true="--uncalled" false="" uncalled} \
       ${true="--exclude-uncalled" false="" excludeUncalled} \
-      ${true="--types" false="" defined(types)}${sep=" " types} \
-      ${true="--exclude-types" false="" defined(excludeTypes)}${sep=" " excludeTypes} \
+      ${true="--types " false="" defined(types)}${sep=" " types} \
+      ${true="--exclude-types " false="" defined(excludeTypes)}${sep=" " excludeTypes} \
       ${true="--private" false="" private} \
       ${true="--exclude-private" false="" excludePrivate} \
       ${file}
