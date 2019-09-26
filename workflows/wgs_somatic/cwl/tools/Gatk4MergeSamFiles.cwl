@@ -15,7 +15,7 @@ inputs:
   type:
     items: File
     type: array
-- default: generated-2e98380c-d5c0-11e9-96ee-f218985ebfa7.bam
+- default: generated-f24609f2-e018-11e9-af76-a0cec8186c53.bam
   doc: SAM/BAM file to write merged result to
   id: outputFilename
   inputBinding:

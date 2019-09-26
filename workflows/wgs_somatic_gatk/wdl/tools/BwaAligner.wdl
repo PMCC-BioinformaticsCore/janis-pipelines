@@ -22,6 +22,7 @@ workflow BwaAligner {
     String? cutadapt_removeMiddle3Adapter
     Int? cutadapt_qualityCutoff
     Int? cutadapt_minReadLength
+    Boolean? bwamem_markShorterSplits
     String? sortsam_sortOrder
     Boolean? sortsam_createIndex
     String? sortsam_validationStringency
@@ -49,7 +50,8 @@ workflow BwaAligner {
       reference_dict=reference_dict,
       reference=reference,
       reads=cutadapt.out,
-      sampleName=name
+      sampleName=name,
+      markShorterSplits=select_first([bwamem_markShorterSplits, true])
   }
   call G.gatk4sortsam as sortsam {
     input:

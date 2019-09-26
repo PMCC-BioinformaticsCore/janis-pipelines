@@ -84,7 +84,7 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
         )
 
         self.step(
-            "variantCaller_GATK_merge",
+            "variantCaller_merge_GATK",
             Gatk4GatherVcfs_4_1_3(vcfs=self.variantCaller_GATK),
         )
 
@@ -113,7 +113,7 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
         )
 
         self.step(
-            "variantCaller_VarDict_merge",
+            "variantCaller_merge_VarDict",
             Gatk4GatherVcfs_4_1_3(vcfs=self.variantCaller_VarDict.out),
         )
 
@@ -123,9 +123,9 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
                 normal=self.normalName,
                 tumor=self.tumorName,
                 vcfs=[
-                    self.variantCaller_GATK_merge,
+                    self.variantCaller_merge_VarDict,
                     self.variantCaller_Strelka.out,
-                    self.variantCaller_VarDict_merge,
+                    self.variantCaller_merge_GATK,
                 ],
                 type="somatic",
                 columns=["AD", "DP", "GT"],
@@ -140,9 +140,9 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
         self.output("normalReport", source=self.normal.reports)
         self.output("tumorReport", source=self.tumor.reports)
 
-        self.output("variants_gatk", source=self.variantCaller_GATK_merge.out)
+        self.output("variants_gatk", source=self.variantCaller_merge_GATK.out)
         self.output("variants_strelka", source=self.variantCaller_Strelka.out)
-        self.output("variants_vardict", source=self.variantCaller_VarDict_merge.out)
+        self.output("variants_vardict", source=self.variantCaller_merge_VarDict.out)
         self.output("variants_combined", source=self.combineVariants.vcf)
 
     @staticmethod
@@ -176,7 +176,7 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
 if __name__ == "__main__":
     w = WGSSomaticMultiCallers()
     args = {
-        "to_console": False,
+        "to_console": True,
         "to_disk": True,
         "validate": True,
         "export_path": "{language}",

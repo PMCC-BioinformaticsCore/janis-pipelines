@@ -81,7 +81,7 @@ steps:
     in:
       bam:
         id: bam
-        source: bam
+        source: splitBams/out
       intervals:
         id: intervals
         source: intervals
@@ -115,6 +115,17 @@ steps:
     out:
     - out
     run: GatkHaplotypeCaller.cwl
+  splitBams:
+    in:
+      bam:
+        id: bam
+        source: bam
+      intervals:
+        id: intervals
+        source: intervals
+    out:
+    - out
+    run: gatk4splitreads.cwl
   splitMultiAllele:
     in:
       reference:

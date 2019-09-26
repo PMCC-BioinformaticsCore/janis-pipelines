@@ -12,8 +12,8 @@ inputs:
     - ^.bai
     type: File
   intervals:
-    doc: This optional intervals file supports processing by regions. If this file
-      resolves to null, then GATK will process the whole genome per each tool's spec
+    doc: This optional interval supports processing by regions. If this input resolves
+      to null, then GATK will process the whole genome per each tool's spec
     id: intervals
     type:
     - File
@@ -64,7 +64,7 @@ steps:
     in:
       bam:
         id: bam
-        source: bam
+        source: splitBams/out
       intervals:
         id: intervals
         source: intervals
@@ -81,7 +81,7 @@ steps:
     in:
       bam:
         id: bam
-        source: bam
+        source: splitBams/out
       intervals:
         id: intervals
         source: intervals
@@ -115,6 +115,17 @@ steps:
     out:
     - out
     run: GatkHaplotypeCaller.cwl
+  splitBams:
+    in:
+      bam:
+        id: bam
+        source: bam
+      intervals:
+        id: intervals
+        source: intervals
+    out:
+    - out
+    run: gatk4splitreads.cwl
   splitMultiAllele:
     in:
       reference:

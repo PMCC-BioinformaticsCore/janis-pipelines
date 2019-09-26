@@ -47,12 +47,21 @@ task GatkHaplotypeCaller {
     File reference_sa
     File reference_fai
     File reference_dict
-    String outputFilename = "generated-dc8bd4b4-d5b6-11e9-a585-f218985ebfa7.vcf"
+    String outputFilename = "generated-d91084a8-e018-11e9-851b-a0cec8186c53.vcf.gz"
     File dbsnp
     File dbsnp_tbi
     File? intervals
   }
   command {
+    if [ $(dirname "${inputRead_bai}") != $(dirname "inputRead") ]; then mv ${inputRead_bai} $(dirname ${inputRead}); fi
+    if [ $(dirname "${reference_amb}") != $(dirname "reference") ]; then mv ${reference_amb} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_ann}") != $(dirname "reference") ]; then mv ${reference_ann} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_bwt}") != $(dirname "reference") ]; then mv ${reference_bwt} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_pac}") != $(dirname "reference") ]; then mv ${reference_pac} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_sa}") != $(dirname "reference") ]; then mv ${reference_sa} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_fai}") != $(dirname "reference") ]; then mv ${reference_fai} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_dict}") != $(dirname "reference") ]; then mv ${reference_dict} $(dirname ${reference}); fi
+    if [ $(dirname "${dbsnp_tbi}") != $(dirname "dbsnp") ]; then mv ${dbsnp_tbi} $(dirname ${dbsnp}); fi
     gatk HaplotypeCaller \
       ${"--activity-profile-out " + activityProfileOut} \
       ${"--alleles " + alleles} \
@@ -91,7 +100,7 @@ task GatkHaplotypeCaller {
       ${"--intervals " + intervals} \
       --reference ${reference} \
       --dbsnp ${dbsnp} \
-      ${"--output " + if defined(outputFilename) then outputFilename else "generated-dc8be972-d5b6-11e9-a585-f218985ebfa7.vcf"}
+      ${"--output " + if defined(outputFilename) then outputFilename else "generated-d9109682-e018-11e9-851b-a0cec8186c53.vcf.gz"}
   }
   runtime {
     docker: "broadinstitute/gatk:4.1.3.0"
@@ -100,7 +109,6 @@ task GatkHaplotypeCaller {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-dc8bd4b4-d5b6-11e9-a585-f218985ebfa7.vcf"
-    File out_idx = if defined(outputFilename) then outputFilename else "generated-dc8bd4b4-d5b6-11e9-a585-f218985ebfa7.vcf" + ".idx"
+    File out = if defined(outputFilename) then outputFilename else "generated-d91084a8-e018-11e9-851b-a0cec8186c53.vcf.gz"
   }
 }

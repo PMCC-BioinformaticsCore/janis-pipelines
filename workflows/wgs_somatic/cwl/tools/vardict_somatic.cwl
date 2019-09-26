@@ -27,6 +27,9 @@ arguments:
   prefix: -f
   shellQuote: false
   valueFrom: $(inputs.alleleFreqThreshold)
+- position: 6
+  shellQuote: false
+  valueFrom: ' | bcftools view -O z'
 baseCommand: VarDict
 class: CommandLineTool
 cwlVersion: v1.0
@@ -74,10 +77,10 @@ inputs:
   type:
   - float
   - 'null'
-- default: generated-2e9970aa-d5c0-11e9-96ee-f218985ebfa7.vardict.vcf
+- default: generated-f2478e1c-e018-11e9-af76-a0cec8186c53.vardict.vcf
   id: outputFilename
   inputBinding:
-    position: 6
+    position: 10
     prefix: '>'
     shellQuote: false
   label: outputFilename
@@ -509,6 +512,6 @@ outputs:
   type: File
 requirements:
   DockerRequirement:
-    dockerPull: michaelfranklin/vardict:1.5.8
+    dockerPull: michaelfranklin/vardict:1.6.0
   InlineJavascriptRequirement: {}
   ShellCommandRequirement: {}

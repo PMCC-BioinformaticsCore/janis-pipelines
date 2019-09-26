@@ -1,4 +1,5 @@
 {
+    "WGSGermlineGATK.alignSortedBam_sortsam_tmpDir": ".",
     "WGSGermlineGATK.fastqs": null,
     "WGSGermlineGATK.gatkIntervals": null,
     "WGSGermlineGATK.known_indels": null,

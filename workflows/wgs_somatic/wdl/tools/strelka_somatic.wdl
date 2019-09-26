@@ -16,7 +16,7 @@ task strelka_somatic {
     File reference_sa
     File reference_fai
     File reference_dict
-    String rundir = "generated-55c118fc-d5cc-11e9-bc6b-f218985ebfa7"
+    String rundir = "generated-f5af7736-e018-11e9-af76-a0cec8186c53"
     File? region
     File? config
     File? outputcallableregions
@@ -40,12 +40,23 @@ task strelka_somatic {
     Boolean? quiet
   }
   command {
+    if [ $(dirname "${normalBam_bai}") != $(dirname "normalBam") ]; then mv ${normalBam_bai} $(dirname ${normalBam}); fi
+    if [ $(dirname "${tumorBam_bai}") != $(dirname "tumorBam") ]; then mv ${tumorBam_bai} $(dirname ${tumorBam}); fi
+    if [ $(dirname "${reference_amb}") != $(dirname "reference") ]; then mv ${reference_amb} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_ann}") != $(dirname "reference") ]; then mv ${reference_ann} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_bwt}") != $(dirname "reference") ]; then mv ${reference_bwt} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_pac}") != $(dirname "reference") ]; then mv ${reference_pac} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_sa}") != $(dirname "reference") ]; then mv ${reference_sa} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_fai}") != $(dirname "reference") ]; then mv ${reference_fai} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_dict}") != $(dirname "reference") ]; then mv ${reference_dict} $(dirname ${reference}); fi
+    if [ $(dirname "${indelCandidates_tbi}") != $(dirname "indelCandidates") ]; then mv ${indelCandidates_tbi} $(dirname ${indelCandidates}); fi
+    if [ $(dirname "${callRegions_tbi}") != $(dirname "callRegions") ]; then mv ${callRegions_tbi} $(dirname ${callRegions}); fi
      \
       'configureStrelkaSomaticWorkflow.py' \
       --normalBam=${normalBam} \
       --tumourBam=${tumorBam} \
       --referenceFasta=${reference} \
-      ${"--runDir=" + if defined(rundir) then rundir else "generated-55c142be-d5cc-11e9-bc6b-f218985ebfa7"} \
+      ${"--runDir=" + if defined(rundir) then rundir else "generated-f5afa080-e018-11e9-af76-a0cec8186c53"} \
       ${"--region=" + region} \
       ${"--config=" + config} \
       ${"--outputCallableRegions " + outputcallableregions} \
@@ -61,7 +72,7 @@ task strelka_somatic {
       ${true="--reportEVSFeatures" false="" reportevsfeatures} \
       ${"--snvScoringModelFile=" + snvscoringmodelfile} \
       ${"--indelScoringModelFile=" + indelscoringmodelfile} \
-      ;${if defined(rundir) then rundir else "generated-55c118fc-d5cc-11e9-bc6b-f218985ebfa7"}/runWorkflow.py \
+      ;${if defined(rundir) then rundir else "generated-f5af7736-e018-11e9-af76-a0cec8186c53"}/runWorkflow.py \
       ${"--mode " + if defined(mode) then mode else "local"} \
       ${"--queue " + queue} \
       ${"--memGb " + memGb} \
@@ -75,12 +86,12 @@ task strelka_somatic {
     preemptible: 2
   }
   output {
-    File configPickle = "${if defined(rundir) then rundir else "generated-55c118fc-d5cc-11e9-bc6b-f218985ebfa7"}/runWorkflow.py.config.pickle"
-    File script = "${if defined(rundir) then rundir else "generated-55c118fc-d5cc-11e9-bc6b-f218985ebfa7"}/runWorkflow.py"
-    File stats = "${if defined(rundir) then rundir else "generated-55c118fc-d5cc-11e9-bc6b-f218985ebfa7"}/results/stats/runStats.tsv"
-    File indels = "${if defined(rundir) then rundir else "generated-55c118fc-d5cc-11e9-bc6b-f218985ebfa7"}/results/variants/somatic.indels.vcf.gz"
-    File indels_tbi = "${if defined(rundir) then rundir else "generated-55c118fc-d5cc-11e9-bc6b-f218985ebfa7"}/results/variants/somatic.indels.vcf.gz.tbi"
-    File snvs = "${if defined(rundir) then rundir else "generated-55c118fc-d5cc-11e9-bc6b-f218985ebfa7"}/results/variants/somatic.snvs.vcf.gz"
-    File snvs_tbi = "${if defined(rundir) then rundir else "generated-55c118fc-d5cc-11e9-bc6b-f218985ebfa7"}/results/variants/somatic.snvs.vcf.gz.tbi"
+    File configPickle = "${if defined(rundir) then rundir else "generated-f5af7736-e018-11e9-af76-a0cec8186c53"}/runWorkflow.py.config.pickle"
+    File script = "${if defined(rundir) then rundir else "generated-f5af7736-e018-11e9-af76-a0cec8186c53"}/runWorkflow.py"
+    File stats = "${if defined(rundir) then rundir else "generated-f5af7736-e018-11e9-af76-a0cec8186c53"}/results/stats/runStats.tsv"
+    File indels = "${if defined(rundir) then rundir else "generated-f5af7736-e018-11e9-af76-a0cec8186c53"}/results/variants/somatic.indels.vcf.gz"
+    File indels_tbi = "${if defined(rundir) then rundir else "generated-f5af7736-e018-11e9-af76-a0cec8186c53"}/results/variants/somatic.indels.vcf.gz.tbi"
+    File snvs = "${if defined(rundir) then rundir else "generated-f5af7736-e018-11e9-af76-a0cec8186c53"}/results/variants/somatic.snvs.vcf.gz"
+    File snvs_tbi = "${if defined(rundir) then rundir else "generated-f5af7736-e018-11e9-af76-a0cec8186c53"}/results/variants/somatic.snvs.vcf.gz.tbi"
   }
 }

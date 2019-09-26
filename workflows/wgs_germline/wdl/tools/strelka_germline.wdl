@@ -35,6 +35,19 @@ task strelka_germline {
     String? mailTo
   }
   command {
+    if [ $(dirname "${bam_bai}") != $(dirname "bam") ]; then mv ${bam_bai} $(dirname ${bam}); fi
+    if [ $(dirname "${reference_amb}") != $(dirname "reference") ]; then mv ${reference_amb} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_ann}") != $(dirname "reference") ]; then mv ${reference_ann} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_bwt}") != $(dirname "reference") ]; then mv ${reference_bwt} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_pac}") != $(dirname "reference") ]; then mv ${reference_pac} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_sa}") != $(dirname "reference") ]; then mv ${reference_sa} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_fai}") != $(dirname "reference") ]; then mv ${reference_fai} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_dict}") != $(dirname "reference") ]; then mv ${reference_dict} $(dirname ${reference}); fi
+    if [ $(dirname "${ploidy_tbi}") != $(dirname "ploidy") ]; then mv ${ploidy_tbi} $(dirname ${ploidy}); fi
+    if [ $(dirname "${noCompress_tbi}") != $(dirname "noCompress") ]; then mv ${noCompress_tbi} $(dirname ${noCompress}); fi
+    if [ $(dirname "${indelCandidates_tbi}") != $(dirname "indelCandidates") ]; then mv ${indelCandidates_tbi} $(dirname ${indelCandidates}); fi
+    if [ $(dirname "${forcedGT_tbi}") != $(dirname "forcedGT") ]; then mv ${forcedGT_tbi} $(dirname ${forcedGT}); fi
+    if [ $(dirname "${callRegions_tbi}") != $(dirname "callRegions") ]; then mv ${callRegions_tbi} $(dirname ${callRegions}); fi
      \
       ${"--callContinuousVf " + callContinuousVf} \
       configureStrelkaGermlineWorkflow.py \

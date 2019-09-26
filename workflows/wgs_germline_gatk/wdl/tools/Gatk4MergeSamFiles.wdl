@@ -6,7 +6,7 @@ task Gatk4MergeSamFiles {
     Int? runtime_memory
     Array[File] bams
     Array[File] bams_bai
-    String outputFilename = "generated-0302da02-d5b7-11e9-bba8-f218985ebfa7.bam"
+    String outputFilename = "generated-e6b20abe-e018-11e9-b4b3-a0cec8186c53.bam"
     Array[File]? argumentsFile
     Boolean? assumeSorted
     Array[String]? comment
@@ -33,13 +33,20 @@ task Gatk4MergeSamFiles {
     String? verbosity
   }
   command {
+    if [ $(dirname "${reference_amb}") != $(dirname "reference") ]; then mv ${reference_amb} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_ann}") != $(dirname "reference") ]; then mv ${reference_ann} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_bwt}") != $(dirname "reference") ]; then mv ${reference_bwt} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_pac}") != $(dirname "reference") ]; then mv ${reference_pac} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_sa}") != $(dirname "reference") ]; then mv ${reference_sa} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_fai}") != $(dirname "reference") ]; then mv ${reference_fai} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_dict}") != $(dirname "reference") ]; then mv ${reference_dict} $(dirname ${reference}); fi
     gatk MergeSamFiles \
       ${true="-AS" false="" assumeSorted} \
       ${true="-CO " false="" defined(comment)}${sep=" " comment} \
       ${true="-MSD" false="" mergeSequenceDictionaries} \
       ${true="--USE_THREADING" false="" useThreading} \
       -I ${sep=" " bams} \
-      ${"-O " + if defined(outputFilename) then outputFilename else "generated-0302e696-d5b7-11e9-bba8-f218985ebfa7.bam"} \
+      ${"-O " + if defined(outputFilename) then outputFilename else "generated-e6b21324-e018-11e9-b4b3-a0cec8186c53.bam"} \
       ${true="--arguments_file " false="" defined(argumentsFile)}${sep=" " argumentsFile} \
       ${"-SO " + sortOrder} \
       ${"--COMPRESSION_LEVEL " + compressionLevel} \
@@ -61,7 +68,7 @@ task Gatk4MergeSamFiles {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-0302da02-d5b7-11e9-bba8-f218985ebfa7.bam"
-    File out_bai = sub(if defined(outputFilename) then outputFilename else "generated-0302da02-d5b7-11e9-bba8-f218985ebfa7.bam", "\\.bam$", ".bai")
+    File out = if defined(outputFilename) then outputFilename else "generated-e6b20abe-e018-11e9-b4b3-a0cec8186c53.bam"
+    File out_bai = sub(if defined(outputFilename) then outputFilename else "generated-e6b20abe-e018-11e9-b4b3-a0cec8186c53.bam", "\\.bam$", ".bai")
   }
 }

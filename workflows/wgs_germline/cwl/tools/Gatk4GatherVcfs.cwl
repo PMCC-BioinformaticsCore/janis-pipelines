@@ -10,13 +10,13 @@ id: Gatk4GatherVcfs
 inputs:
 - doc: '[default: []] (-I) Input VCF file(s).'
   id: vcfs
-  inputBinding:
-    prefix: --INPUT
   label: vcfs
   type:
+    inputBinding:
+      prefix: --INPUT
     items: File
     type: array
-- default: generated-d8f78578-d5b6-11e9-a585-f218985ebfa7.gathered.vcf
+- default: generated-d5e05f38-e018-11e9-851b-a0cec8186c53.gathered.vcf
   doc: '[default: null] (-O) Output VCF file.'
   id: outputFilename
   inputBinding:

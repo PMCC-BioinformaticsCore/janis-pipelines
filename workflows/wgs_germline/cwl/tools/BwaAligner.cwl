@@ -3,6 +3,10 @@ cwlVersion: v1.0
 doc: Align sorted bam with this subworkflow consisting of BWA Mem + SamTools + Gatk4SortSam
 id: BwaAligner
 inputs:
+  bwamem_markShorterSplits:
+    default: true
+    id: bwamem_markShorterSplits
+    type: boolean
   cutadapt_adapter:
     id: cutadapt_adapter
     type:
@@ -84,6 +88,9 @@ requirements:
 steps:
   bwamem:
     in:
+      markShorterSplits:
+        id: markShorterSplits
+        source: bwamem_markShorterSplits
       reads:
         id: reads
         source: cutadapt/out

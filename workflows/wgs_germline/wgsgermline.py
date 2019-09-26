@@ -44,8 +44,8 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
 
         self.input("vardictHeaderLines", File)
 
-        self.input("sampleName", String(), default="NA12878")
-        self.input("alleleFreqThreshold", Float(), default=0.05)
+        self.input("sampleName", String, default="NA12878")
+        self.input("alleleFreqThreshold", Float, default=0.05)
 
         # self.input("gridssBlacklist", Bed)
 

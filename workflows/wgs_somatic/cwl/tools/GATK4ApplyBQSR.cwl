@@ -46,7 +46,7 @@ inputs:
   - .fai
   - ^.dict
   type: File
-- default: generated-2e987d94-d5c0-11e9-96ee-f218985ebfa7.bam
+- default: generated-f2465c5e-e018-11e9-af76-a0cec8186c53.bam
   doc: Write output to this file
   id: outputFilename
   inputBinding:

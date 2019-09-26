@@ -93,7 +93,7 @@ workflow WGSSomaticMultiCallers {
         millsIndels=mills_indels
     }
   }
-  call G2.Gatk4GatherVcfs as variantCaller_GATK_merge {
+  call G2.Gatk4GatherVcfs as variantCaller_merge_GATK {
     input:
       vcfs=variantCaller_GATK.out
   }
@@ -136,13 +136,13 @@ workflow WGSSomaticMultiCallers {
         reference=reference
     }
   }
-  call G2.Gatk4GatherVcfs as variantCaller_VarDict_merge {
+  call G2.Gatk4GatherVcfs as variantCaller_merge_VarDict {
     input:
       vcfs=variantCaller_VarDict.out
   }
   call C.combinevariants as combineVariants {
     input:
-      vcfs=[variantCaller_GATK_merge.out, variantCaller_Strelka.out, variantCaller_VarDict_merge.out],
+      vcfs=[variantCaller_merge_VarDict.out, variantCaller_Strelka.out, variantCaller_merge_GATK.out],
       type=select_first([combineVariants_type, "somatic"]),
       columns=select_first([combineVariants_columns, ["AD", "DP", "GT"]]),
       normal=select_first([normalName, "NA24385_normal"]),
@@ -159,9 +159,9 @@ workflow WGSSomaticMultiCallers {
     File tumorBam_bai = tumor.out_bai
     Array[Array[File]] normalReport = normal.reports
     Array[Array[File]] tumorReport = tumor.reports
-    File variants_gatk = variantCaller_GATK_merge.out
+    File variants_gatk = variantCaller_merge_GATK.out
     File variants_strelka = variantCaller_Strelka.out
-    File variants_vardict = variantCaller_VarDict_merge.out
+    File variants_vardict = variantCaller_merge_VarDict.out
     File variants_combined = combineVariants.vcf
   }
 }

@@ -66,7 +66,7 @@ inputs:
   - .fai
   - ^.dict
   type: File
-- default: generated-2e98786c-d5c0-11e9-96ee-f218985ebfa7.table
+- default: generated-f2465664-e018-11e9-af76-a0cec8186c53.table
   doc: "**The output recalibration table filename to create.** After the header, data\
     \ records occur one per line until the end of the file. The first several items\
     \ on a line are the values of the individual covariates and will change depending\

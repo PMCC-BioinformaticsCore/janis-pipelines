@@ -380,7 +380,7 @@ inputs:
   - .fai
   - ^.dict
   type: File
-- default: generated-d8f758f0-d5b6-11e9-a585-f218985ebfa7.vcf
+- default: generated-d5e04a02-e018-11e9-851b-a0cec8186c53.vcf.gz
   doc: File to which variants should be written
   id: outputFilename
   inputBinding:
@@ -413,8 +413,6 @@ outputs:
   label: out
   outputBinding:
     glob: $(inputs.outputFilename)
-  secondaryFiles:
-  - .idx
   type: File
 requirements:
   DockerRequirement:

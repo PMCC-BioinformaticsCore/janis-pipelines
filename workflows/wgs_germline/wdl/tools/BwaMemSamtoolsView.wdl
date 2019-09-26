@@ -14,7 +14,7 @@ task BwaMemSamtoolsView {
     File reference_dict
     Array[File] reads
     Array[File]? mates
-    String outputFilename = "generated-dc89eb18-d5b6-11e9-a585-f218985ebfa7.bam"
+    String outputFilename = "generated-d90f1398-e018-11e9-851b-a0cec8186c53.bam"
     String sampleName
     String? platformTechnology
     Int? minimumSeedLength
@@ -53,6 +53,13 @@ task BwaMemSamtoolsView {
     String? outputFmt
   }
   command {
+    if [ $(dirname "${reference_amb}") != $(dirname "reference") ]; then mv ${reference_amb} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_ann}") != $(dirname "reference") ]; then mv ${reference_ann} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_bwt}") != $(dirname "reference") ]; then mv ${reference_bwt} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_pac}") != $(dirname "reference") ]; then mv ${reference_pac} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_sa}") != $(dirname "reference") ]; then mv ${reference_sa} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_fai}") != $(dirname "reference") ]; then mv ${reference_fai} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_dict}") != $(dirname "reference") ]; then mv ${reference_dict} $(dirname ${reference}); fi
      \
       bwa \
       mem \
@@ -83,7 +90,7 @@ task BwaMemSamtoolsView {
       | \
       samtools \
       view \
-      ${"-o " + if defined(outputFilename) then outputFilename else "generated-dc8a2ce0-d5b6-11e9-a585-f218985ebfa7.bam"} \
+      ${"-o " + if defined(outputFilename) then outputFilename else "generated-d90f31f2-e018-11e9-851b-a0cec8186c53.bam"} \
       ${"-U " + skippedReadsOutputFilename} \
       ${"-t " + referenceIndex} \
       ${"-L " + intervals} \
@@ -111,6 +118,6 @@ task BwaMemSamtoolsView {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-dc89eb18-d5b6-11e9-a585-f218985ebfa7.bam"
+    File out = if defined(outputFilename) then outputFilename else "generated-d90f1398-e018-11e9-851b-a0cec8186c53.bam"
   }
 }

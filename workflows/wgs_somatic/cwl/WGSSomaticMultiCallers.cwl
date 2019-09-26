@@ -128,7 +128,7 @@ outputs:
     type: File
   variants_gatk:
     id: variants_gatk
-    outputSource: variantCaller_GATK_merge/out
+    outputSource: variantCaller_merge_GATK/out
     type: File
   variants_strelka:
     id: variants_strelka
@@ -136,7 +136,7 @@ outputs:
     type: File
   variants_vardict:
     id: variants_vardict
-    outputSource: variantCaller_VarDict_merge/out
+    outputSource: variantCaller_merge_VarDict/out
     type: File
 requirements:
   InlineJavascriptRequirement: {}
@@ -162,9 +162,9 @@ steps:
       vcfs:
         id: vcfs
         source:
-        - variantCaller_GATK_merge/out
+        - variantCaller_merge_VarDict/out
         - variantCaller_Strelka/out
-        - variantCaller_VarDict_merge/out
+        - variantCaller_merge_GATK/out
     out:
     - vcf
     - tsv
@@ -244,14 +244,6 @@ steps:
     run: tools/GATK4_SomaticVariantCaller.cwl
     scatter:
     - intervals
-  variantCaller_GATK_merge:
-    in:
-      vcfs:
-        id: vcfs
-        source: variantCaller_GATK/out
-    out:
-    - out
-    run: tools/Gatk4GatherVcfs.cwl
   variantCaller_Strelka:
     in:
       intervals:
@@ -303,7 +295,15 @@ steps:
     run: tools/vardictSomaticVariantCaller.cwl
     scatter:
     - intervals
-  variantCaller_VarDict_merge:
+  variantCaller_merge_GATK:
+    in:
+      vcfs:
+        id: vcfs
+        source: variantCaller_GATK/out
+    out:
+    - out
+    run: tools/Gatk4GatherVcfs.cwl
+  variantCaller_merge_VarDict:
     in:
       vcfs:
         id: vcfs

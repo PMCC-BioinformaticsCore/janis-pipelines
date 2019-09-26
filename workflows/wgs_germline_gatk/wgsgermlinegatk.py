@@ -1,11 +1,18 @@
 from janis_core import String, Array
 
-from janis_bioinformatics.data_types import FastaWithDict, VcfTabix, FastqGzPair, Bed
+from janis_bioinformatics.data_types import (
+    FastaWithDict,
+    VcfTabix,
+    FastqGzPair,
+    Bed,
+    Bam,
+    BamBai,
+)
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
 from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
 from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
-from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_0
+from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_0, Gatk4SortSam_4_1_3
 from janis_bioinformatics.tools.variantcallers import GatkGermlineVariantCaller_4_1_3
 
 
@@ -35,20 +42,18 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
 
         # STEPS
 
+        self.step("fastqc", FastQC_0_11_5(reads=self.fastqs), scatter="reads")
         self.step(
             "alignSortedBam",
             BwaAligner(
                 fastq=self.fastqs,
                 reference=self.reference,
                 name=self.sampleName,
-                sortsam_tmpDir=None,
+                sortsam_tmpDir=".",
             ),
             scatter="fastq",
         )
-        self.step("fastqc", FastQC_0_11_5(reads=self.fastqs), scatter="reads")
-        self.step(
-            "processBamFiles", MergeAndMarkBams_4_1_3(bams=self.alignSortedBam.out)
-        )
+        self.step("processBamFiles", MergeAndMarkBams_4_1_3(bams=self.alignSortedBam))
 
         # VARIANT CALLERS
 
@@ -56,7 +61,7 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
         self.step(
             "variantCaller_GATK",
             GatkGermlineVariantCaller_4_1_3(
-                bam=self.processBamFiles.out,
+                bam=self.processBamFiles,
                 intervals=self.gatkIntervals,
                 reference=self.reference,
                 snps_dbsnp=self.snps_dbsnp,
@@ -77,8 +82,8 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
             "sortCombined", BcfToolsSort_1_9(vcf=self.variantCaller_merge_GATK.out)
         )
 
-        self.output("bam", source=self.processBamFiles.out)
-        self.output("reports", source=self.fastqc)
+        # self.output("bam", source=self.processBamFiles.out)
+        # self.output("reports", source=self.fastqc)
         self.output("variants", source=self.sortCombined.out)
         self.output("variants_split", source=self.variantCaller_GATK.out)
 
@@ -91,5 +96,5 @@ if __name__ == "__main__":
         "validate": True,
         "export_path": "{language}",
     }
-    w.translate("cwl", **args)
+    # w.translate("cwl", **args)
     w.translate("wdl", **args)

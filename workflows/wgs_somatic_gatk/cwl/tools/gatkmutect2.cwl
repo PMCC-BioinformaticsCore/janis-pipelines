@@ -31,7 +31,7 @@ inputs:
     prefix: --normal-sample
   label: normalSample
   type: string
-- default: generated-6f02fb80-d5c9-11e9-bfac-f218985ebfa7.vcf.gz
+- default: generated-f7e85ff4-e018-11e9-8aa4-a0cec8186c53.vcf.gz
   id: outputFilename
   inputBinding:
     position: 20
@@ -299,7 +299,7 @@ inputs:
   type:
   - int
   - 'null'
-- default: generated-6f02ff36-d5c9-11e9-bfac-f218985ebfa7.tar.gz
+- default: generated-f7e86378-e018-11e9-8aa4-a0cec8186c53.tar.gz
   doc: 'If specified, collect F1R2 counts and output files into this tar.gz file Default
     value: null. '
   id: f1r2TarGz_outputFilename
@@ -448,7 +448,7 @@ inputs:
     prefix: --intervals
   label: intervals
   type:
-  - string
+  - File
   - 'null'
 - doc: '(--lenient) Lenient processing of VCF files Default value: false. Possible
     values: {true, false}'

@@ -1,7 +1,7 @@
 version development
 
-import "tools/BwaAligner.wdl" as B
 import "tools/fastqc.wdl" as F
+import "tools/BwaAligner.wdl" as B
 import "tools/mergeAndMarkBams.wdl" as M
 import "tools/GATK4_GermlineVariantCaller.wdl" as G
 import "tools/Gatk4GatherVcfs.wdl" as G2
@@ -31,6 +31,12 @@ workflow WGSGermlineGATK {
     String? alignSortedBam_sortsam_tmpDir
   }
   scatter (f in fastqs) {
+     call F.fastqc as fastqc {
+      input:
+        reads=f
+    }
+  }
+  scatter (f in fastqs) {
      call B.BwaAligner as alignSortedBam {
       input:
         name=select_first([sampleName, "NA12878"]),
@@ -43,13 +49,7 @@ workflow WGSGermlineGATK {
         reference_dict=reference_dict,
         reference=reference,
         fastq=f,
-        sortsam_tmpDir=alignSortedBam_sortsam_tmpDir
-    }
-  }
-  scatter (f in fastqs) {
-     call F.fastqc as fastqc {
-      input:
-        reads=f
+        sortsam_tmpDir=select_first([alignSortedBam_sortsam_tmpDir, "."])
     }
   }
   call M.mergeAndMarkBams as processBamFiles {
@@ -90,9 +90,6 @@ workflow WGSGermlineGATK {
       vcf=variantCaller_merge_GATK.out
   }
   output {
-    File bam = processBamFiles.out
-    File bam_bai = processBamFiles.out_bai
-    Array[Array[File]] reports = fastqc.out
     File variants = sortCombined.out
     Array[File] variants_split = variantCaller_GATK.out
   }

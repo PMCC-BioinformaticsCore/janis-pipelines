@@ -72,7 +72,7 @@ inputs:
   - items: File
     type: array
   - 'null'
-- default: generated-2e980fb2-d5c0-11e9-96ee-f218985ebfa7.bam
+- default: generated-f245d450-e018-11e9-af76-a0cec8186c53.bam
   doc: output file name [stdout]
   id: outputFilename
   inputBinding:

@@ -9,7 +9,7 @@ task gatkmutect2 {
     Array[File] normalBams
     Array[File] normalBams_bai
     String normalSample
-    String outputFilename = "generated-71d34f04-d5c9-11e9-bfac-f218985ebfa7.vcf.gz"
+    String outputFilename = "generated-fa91fc2e-e018-11e9-8aa4-a0cec8186c53.vcf.gz"
     File reference
     File reference_amb
     File reference_ann
@@ -44,7 +44,7 @@ task gatkmutect2 {
     Int? f1r2MaxDepth
     Int? f1r2MedianMq
     Int? f1r2MinBq
-    String f1r2TarGz_outputFilename = "generated-71d353e6-d5c9-11e9-bfac-f218985ebfa7.tar.gz"
+    String f1r2TarGz_outputFilename = "generated-fa920124-e018-11e9-8aa4-a0cec8186c53.tar.gz"
     String? founderId
     String? gatkConfigFile
     Int? gcsRetries
@@ -61,7 +61,7 @@ task gatkmutect2 {
     String? imr
     String? ip
     String? isr
-    String? intervals
+    File? intervals
     Boolean? le
     String? maxPopulationAf
     Int? maxReadsPerAlignmentStart
@@ -149,6 +149,15 @@ task gatkmutect2 {
     String? sample
   }
   command {
+    if [ $(dirname "${reference_amb}") != $(dirname "reference") ]; then mv ${reference_amb} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_ann}") != $(dirname "reference") ]; then mv ${reference_ann} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_bwt}") != $(dirname "reference") ]; then mv ${reference_bwt} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_pac}") != $(dirname "reference") ]; then mv ${reference_pac} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_sa}") != $(dirname "reference") ]; then mv ${reference_sa} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_fai}") != $(dirname "reference") ]; then mv ${reference_fai} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_dict}") != $(dirname "reference") ]; then mv ${reference_dict} $(dirname ${reference}); fi
+    if [ $(dirname "${germlineResource_tbi}") != $(dirname "germlineResource") ]; then mv ${germlineResource_tbi} $(dirname ${germlineResource}); fi
+    if [ $(dirname "${panelOfNormals_tbi}") != $(dirname "panelOfNormals") ]; then mv ${panelOfNormals_tbi} $(dirname ${panelOfNormals}); fi
     gatk Mutect2 \
       ${sep=" " prefix("-I ", tumorBams)} \
       ${sep=" " prefix("-I ", normalBams)} \
@@ -180,7 +189,7 @@ task gatkmutect2 {
       ${"--f1r2-max-depth " + f1r2MaxDepth} \
       ${"--f1r2-median-mq " + f1r2MedianMq} \
       ${"--f1r2-min-bq " + f1r2MinBq} \
-      ${"--f1r2-tar-gz " + if defined(f1r2TarGz_outputFilename) then f1r2TarGz_outputFilename else "generated-71d3a012-d5c9-11e9-bfac-f218985ebfa7.tar.gz"} \
+      ${"--f1r2-tar-gz " + if defined(f1r2TarGz_outputFilename) then f1r2TarGz_outputFilename else "generated-fa924c4c-e018-11e9-8aa4-a0cec8186c53.tar.gz"} \
       ${"-founder-id " + founderId} \
       ${"--gatk-config-file " + gatkConfigFile} \
       ${"-gcs-retries " + gcsRetries} \
@@ -281,7 +290,7 @@ task gatkmutect2 {
       ${"--read-name " + readName} \
       ${true="--keep-reverse-strand-only" false="" keepReverseStrandOnly} \
       ${"-sample " + sample} \
-      ${"-O " + if defined(outputFilename) then outputFilename else "generated-71d39b08-d5c9-11e9-bfac-f218985ebfa7.vcf.gz"}
+      ${"-O " + if defined(outputFilename) then outputFilename else "generated-fa92468e-e018-11e9-8aa4-a0cec8186c53.vcf.gz"}
   }
   runtime {
     docker: "broadinstitute/gatk:4.1.3.0"
@@ -290,9 +299,9 @@ task gatkmutect2 {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-71d34f04-d5c9-11e9-bfac-f218985ebfa7.vcf.gz"
-    File out_tbi = if defined(outputFilename) then outputFilename else "generated-71d34f04-d5c9-11e9-bfac-f218985ebfa7.vcf.gz" + ".tbi"
-    File stats = "${if defined(outputFilename) then outputFilename else "generated-71d34f04-d5c9-11e9-bfac-f218985ebfa7.vcf.gz"}.stats"
-    File f1f2r_out = if defined(f1r2TarGz_outputFilename) then f1r2TarGz_outputFilename else "generated-71d353e6-d5c9-11e9-bfac-f218985ebfa7.tar.gz"
+    File out = if defined(outputFilename) then outputFilename else "generated-fa91fc2e-e018-11e9-8aa4-a0cec8186c53.vcf.gz"
+    File out_tbi = if defined(outputFilename) then outputFilename else "generated-fa91fc2e-e018-11e9-8aa4-a0cec8186c53.vcf.gz" + ".tbi"
+    File stats = "${if defined(outputFilename) then outputFilename else "generated-fa91fc2e-e018-11e9-8aa4-a0cec8186c53.vcf.gz"}.stats"
+    File f1f2r_out = if defined(f1r2TarGz_outputFilename) then f1r2TarGz_outputFilename else "generated-fa920124-e018-11e9-8aa4-a0cec8186c53.tar.gz"
   }
 }
