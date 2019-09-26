@@ -3,6 +3,7 @@ baseCommand:
 - annotate
 class: CommandLineTool
 cwlVersion: v1.0
+doc: "------------------------------------\n\nAdd or remove annotations."
 id: bcftoolsAnnotate
 inputs:
 - id: file
@@ -10,7 +11,7 @@ inputs:
     position: 100
   label: file
   type: File
-- default: generated-43449466-c3b0-11e9-af7e-f218985ebfa7.vcf
+- default: generated-f247b388-e018-11e9-af76-a0cec8186c53.vcf.gz
   doc: '[-o] see Common Options'
   id: outputFilename
   inputBinding:

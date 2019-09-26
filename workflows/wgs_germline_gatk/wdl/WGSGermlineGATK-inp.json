@@ -1,10 +1,11 @@
 {
+    "WGSGermlineGATK.alignSortedBam_sortsam_tmpDir": ".",
     "WGSGermlineGATK.fastqs": null,
     "WGSGermlineGATK.gatkIntervals": null,
     "WGSGermlineGATK.known_indels": null,
     "WGSGermlineGATK.known_indels_tbi": null,
-    "WGSGermlineGATK.mills_1000gp_indels": null,
-    "WGSGermlineGATK.mills_1000gp_indels_tbi": null,
+    "WGSGermlineGATK.mills_indels": null,
+    "WGSGermlineGATK.mills_indels_tbi": null,
     "WGSGermlineGATK.reference": null,
     "WGSGermlineGATK.reference_amb": null,
     "WGSGermlineGATK.reference_ann": null,

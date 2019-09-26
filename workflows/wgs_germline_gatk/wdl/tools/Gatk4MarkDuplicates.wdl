@@ -6,8 +6,8 @@ task Gatk4MarkDuplicates {
     Int? runtime_memory
     File bam
     File bam_bai
-    String outputFilename = "generated-1cb537f6-c3b0-11e9-917e-f218985ebfa7.bam"
-    String metricsFilename = "generated-1cb538a0-c3b0-11e9-917e-f218985ebfa7.metrics.txt"
+    String outputFilename = "generated-e6b224ea-e018-11e9-b4b3-a0cec8186c53.bam"
+    String metricsFilename = "generated-e6b2254e-e018-11e9-b4b3-a0cec8186c53.metrics.txt"
     Array[File]? argumentsFile
     String? assumeSortOrder
     String? barcodeTag
@@ -24,14 +24,15 @@ task Gatk4MarkDuplicates {
     String? verbosity
   }
   command {
+    if [ $(dirname "${bam_bai}") != $(dirname "bam") ]; then mv ${bam_bai} $(dirname ${bam}); fi
     gatk MarkDuplicates \
       ${"-ASO " + assumeSortOrder} \
       ${"--BARCODE_TAG " + barcodeTag} \
-      ${if defined(comment) then "-CO " else ""}${sep=" -CO " comment} \
+      ${true="-CO " false="" defined(comment)}${sep=" " comment} \
       -I ${bam} \
-      ${"-O " + if defined(outputFilename) then outputFilename else "generated-1cb5428c-c3b0-11e9-917e-f218985ebfa7.bam"} \
-      ${"-M " + if defined(metricsFilename) then metricsFilename else "generated-1cb5434a-c3b0-11e9-917e-f218985ebfa7.metrics.txt"} \
-      ${if defined(argumentsFile) then "--arguments_file " else ""}${sep=" --arguments_file " argumentsFile} \
+      ${"-O " + if defined(outputFilename) then outputFilename else "generated-e6b22d82-e018-11e9-b4b3-a0cec8186c53.bam"} \
+      ${"-M " + if defined(metricsFilename) then metricsFilename else "generated-e6b22e22-e018-11e9-b4b3-a0cec8186c53.metrics.txt"} \
+      ${true="--arguments_file " false="" defined(argumentsFile)}${sep=" " argumentsFile} \
       ${"--COMPRESSION_LEVEL " + compressionLevel} \
       ${true="--CREATE_INDEX" false="" createIndex} \
       ${true="--CREATE_MD5_FILE" false="" createMd5File} \
@@ -44,14 +45,14 @@ task Gatk4MarkDuplicates {
       ${"--verbosity " + verbosity}
   }
   runtime {
-    docker: "broadinstitute/gatk:4.0.12.0"
+    docker: "broadinstitute/gatk:4.1.3.0"
     cpu: if defined(runtime_cpu) then runtime_cpu else 1
     memory: if defined(runtime_memory) then "${runtime_memory}G" else "4G"
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-1cb537f6-c3b0-11e9-917e-f218985ebfa7.bam"
-    File out_bai = sub(if defined(outputFilename) then outputFilename else "generated-1cb537f6-c3b0-11e9-917e-f218985ebfa7.bam", "\\.bam$", ".bai")
-    File metrics = if defined(metricsFilename) then metricsFilename else "generated-1cb538a0-c3b0-11e9-917e-f218985ebfa7.metrics.txt"
+    File out = if defined(outputFilename) then outputFilename else "generated-e6b224ea-e018-11e9-b4b3-a0cec8186c53.bam"
+    File out_bai = sub(if defined(outputFilename) then outputFilename else "generated-e6b224ea-e018-11e9-b4b3-a0cec8186c53.bam", "\\.bam$", ".bai")
+    File metrics = if defined(metricsFilename) then metricsFilename else "generated-e6b2254e-e018-11e9-b4b3-a0cec8186c53.metrics.txt"
   }
 }

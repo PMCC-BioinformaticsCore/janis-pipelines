@@ -1,8 +1,9 @@
 class: Workflow
 cwlVersion: v1.0
 doc: "This is a VariantCaller based on the GATK Best Practice pipelines. It uses the\
-  \ GATK4 toolkit, specifically 4.0.12.0.\n\nIt has the following steps:\n\n1. BaseRecalibrator\n\
-  2. ApplyBQSR\n3. HaplotypeCaller\n4. SplitMultiAllele"
+  \ GATK4 toolkit, specifically 4.0.12.0.\n\n        It has the following steps:\n\
+  \n        1. BaseRecalibrator\n        2. ApplyBQSR\n        3. HaplotypeCaller\n\
+  \        4. SplitMultiAllele"
 id: GATK4_GermlineVariantCaller
 inputs:
   bam:
@@ -11,8 +12,8 @@ inputs:
     - ^.bai
     type: File
   intervals:
-    doc: This optional intervals file supports processing by regions. If this file
-      resolves to null, then GATK will process the whole genome per each tool's spec
+    doc: This optional interval supports processing by regions. If this input resolves
+      to null, then GATK will process the whole genome per each tool's spec
     id: intervals
     type:
     - File
@@ -63,7 +64,7 @@ steps:
     in:
       bam:
         id: bam
-        source: bam
+        source: splitBams/out
       intervals:
         id: intervals
         source: intervals
@@ -80,7 +81,7 @@ steps:
     in:
       bam:
         id: bam
-        source: bam
+        source: splitBams/out
       intervals:
         id: intervals
         source: intervals
@@ -114,6 +115,17 @@ steps:
     out:
     - out
     run: GatkHaplotypeCaller.cwl
+  splitBams:
+    in:
+      bam:
+        id: bam
+        source: bam
+      intervals:
+        id: intervals
+        source: intervals
+    out:
+    - out
+    run: gatk4splitreads.cwl
   splitMultiAllele:
     in:
       reference:

@@ -19,7 +19,7 @@ workflow strelkaGermlineVariantCaller {
     File reference_dict
     File? intervals
     File? intervals_tbi
-    Array[String]? filters
+    Array[String]? bcfview_applyFilters
   }
   call M.manta as manta {
     input:
@@ -53,14 +53,14 @@ workflow strelkaGermlineVariantCaller {
       callRegions_tbi=intervals_tbi,
       callRegions=intervals
   }
-  call B.bcftoolsview as bcf_view {
+  call B.bcftoolsview as bcfview {
     input:
       file=strelka.variants,
-      applyFilters=select_first([filters, ["PASS"]])
+      applyFilters=select_first([bcfview_applyFilters, ["PASS"]])
   }
   call S2.SplitMultiAllele as splitMultiAllele {
     input:
-      vcf=bcf_view.out,
+      vcf=bcfview.out,
       reference_amb=reference_amb,
       reference_ann=reference_ann,
       reference_bwt=reference_bwt,

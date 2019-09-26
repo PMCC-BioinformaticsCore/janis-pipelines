@@ -47,20 +47,29 @@ task GatkHaplotypeCaller {
     File reference_sa
     File reference_fai
     File reference_dict
-    String outputFilename = "generated-1cb59d5e-c3b0-11e9-917e-f218985ebfa7.vcf"
+    String outputFilename = "generated-e6b2a208-e018-11e9-b4b3-a0cec8186c53.vcf.gz"
     File dbsnp
     File dbsnp_tbi
     File? intervals
   }
   command {
+    if [ $(dirname "${inputRead_bai}") != $(dirname "inputRead") ]; then mv ${inputRead_bai} $(dirname ${inputRead}); fi
+    if [ $(dirname "${reference_amb}") != $(dirname "reference") ]; then mv ${reference_amb} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_ann}") != $(dirname "reference") ]; then mv ${reference_ann} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_bwt}") != $(dirname "reference") ]; then mv ${reference_bwt} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_pac}") != $(dirname "reference") ]; then mv ${reference_pac} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_sa}") != $(dirname "reference") ]; then mv ${reference_sa} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_fai}") != $(dirname "reference") ]; then mv ${reference_fai} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_dict}") != $(dirname "reference") ]; then mv ${reference_dict} $(dirname ${reference}); fi
+    if [ $(dirname "${dbsnp_tbi}") != $(dirname "dbsnp") ]; then mv ${dbsnp_tbi} $(dirname ${dbsnp}); fi
     gatk HaplotypeCaller \
       ${"--activity-profile-out " + activityProfileOut} \
       ${"--alleles " + alleles} \
       ${true="--annotate-with-num-discovered-alleles" false="" annotateWithNumDiscoveredAlleles} \
-      ${if defined(annotation) then "--annotation " else ""}${sep=" --annotation " annotation} \
-      ${if defined(annotationGroup) then "--annotation-group " else ""}${sep=" --annotation-group " annotationGroup} \
-      ${if defined(annotationsToExclude) then "--annotations-to-exclude " else ""}${sep=" --annotations-to-exclude " annotationsToExclude} \
-      ${if defined(arguments_file) then "--arguments_file " else ""}${sep=" --arguments_file " arguments_file} \
+      ${true="--annotation " false="" defined(annotation)}${sep=" " annotation} \
+      ${true="--annotation-group " false="" defined(annotationGroup)}${sep=" " annotationGroup} \
+      ${true="--annotations-to-exclude " false="" defined(annotationsToExclude)}${sep=" " annotationsToExclude} \
+      ${true="--arguments_file " false="" defined(arguments_file)}${sep=" " arguments_file} \
       ${"--assembly-region-out " + assemblyRegionOut} \
       ${"--base-quality-score-threshold " + baseQualityScoreThreshold} \
       ${"--cloud-index-prefetch-buffer " + cloudIndexPrefetchBuffer} \
@@ -68,7 +77,7 @@ task GatkHaplotypeCaller {
       ${"--contamination-fraction-to-filter " + contaminationFractionToFilter} \
       ${true="--correct-overlapping-quality" false="" correctOverlappingQuality} \
       ${true="--disable-bam-index-caching" false="" disableBamIndexCaching} \
-      ${if defined(founderId) then "--founder-id " else ""}${sep=" --founder-id " founderId} \
+      ${true="--founder-id " false="" defined(founderId)}${sep=" " founderId} \
       ${"--genotyping-mode " + genotypingMode} \
       ${"--heterozygosity " + heterozygosity} \
       ${"--heterozygosity-stdev " + heterozygosityStdev} \
@@ -91,16 +100,15 @@ task GatkHaplotypeCaller {
       ${"--intervals " + intervals} \
       --reference ${reference} \
       --dbsnp ${dbsnp} \
-      ${"--output " + if defined(outputFilename) then outputFilename else "generated-1cb5b078-c3b0-11e9-917e-f218985ebfa7.vcf"}
+      ${"--output " + if defined(outputFilename) then outputFilename else "generated-e6b2af96-e018-11e9-b4b3-a0cec8186c53.vcf.gz"}
   }
   runtime {
-    docker: "broadinstitute/gatk:4.0.12.0"
+    docker: "broadinstitute/gatk:4.1.3.0"
     cpu: if defined(runtime_cpu) then runtime_cpu else 1
     memory: if defined(runtime_memory) then "${runtime_memory}G" else "4G"
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-1cb59d5e-c3b0-11e9-917e-f218985ebfa7.vcf"
-    File out_idx = if defined(outputFilename) then outputFilename else "generated-1cb59d5e-c3b0-11e9-917e-f218985ebfa7.vcf" + ".idx"
+    File out = if defined(outputFilename) then outputFilename else "generated-e6b2a208-e018-11e9-b4b3-a0cec8186c53.vcf.gz"
   }
 }

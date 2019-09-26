@@ -380,7 +380,7 @@ inputs:
   - .fai
   - ^.dict
   type: File
-- default: generated-1c8f429e-c3b0-11e9-917e-f218985ebfa7.vcf
+- default: generated-9e1646de-d849-11e9-b5a8-f218985ebfa7.vcf
   doc: File to which variants should be written
   id: outputFilename
   inputBinding:
@@ -418,6 +418,6 @@ outputs:
   type: File
 requirements:
   DockerRequirement:
-    dockerPull: broadinstitute/gatk:4.0.12.0
+    dockerPull: broadinstitute/gatk:4.1.3.0
   InlineJavascriptRequirement: {}
   ShellCommandRequirement: {}

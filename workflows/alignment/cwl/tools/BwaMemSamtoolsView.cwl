@@ -30,8 +30,8 @@ arguments:
   valueFrom: -b
 - position: 2
   prefix: -R
-  valueFrom: $("@RG\\tID:{name}\\tSM:{name}\\tLB:{name}\\tPL:ILLUMINA".replace(/\{name\}/g,
-    inputs.sampleName))
+  valueFrom: $("@RG\\tID:{name}\\tSM:{name}\\tLB:{name}\\tPL:{pl}".replace(/\{name\}/g,
+    inputs.sampleName).replace(/\{pl\}/g, inputs.platformTechnology))
 - position: 2
   prefix: -t
   shellQuote: false
@@ -64,6 +64,7 @@ inputs:
     type: array
 - id: mates
   inputBinding:
+    itemSeparator: ' '
     position: 4
     shellQuote: false
   label: mates
@@ -71,7 +72,7 @@ inputs:
   - items: File
     type: array
   - 'null'
-- default: generated-fe623be6-c2d8-11e9-b846-f218985ebfa7.bam
+- default: generated-065d6bc6-d5b8-11e9-b54b-f218985ebfa7.bam
   doc: output file name [stdout]
   id: outputFilename
   inputBinding:
@@ -84,6 +85,11 @@ inputs:
     tSM:{name}\\tLB:{name}\\tPL:ILLUMINA'"
   id: sampleName
   label: sampleName
+  type: string
+- default: ILLUMINA
+  doc: '(ReadGroup: PL) Used to construct the readGroupHeaderLine, defaults: ILLUMINA'
+  id: platformTechnology
+  label: platformTechnology
   type: string
 - doc: 'Matches shorter than INT will be missed. The alignment speed is usually insensitive
     to this value unless it significantly deviates 20. (Default: 19)'
@@ -391,6 +397,7 @@ inputs:
 - doc: only include reads with all of the FLAGs in INT present [0]
   id: includeReadsWithAllFLAGs
   inputBinding:
+    itemSeparator: ' '
     position: 8
     prefix: -f
     shellQuote: false
@@ -402,6 +409,7 @@ inputs:
 - doc: only include reads with none of the FLAGS in INT present [0]
   id: includeReadsWithoutFLAGs
   inputBinding:
+    itemSeparator: ' '
     position: 8
     prefix: -F
     shellQuote: false
@@ -414,6 +422,7 @@ inputs:
     pairs to keep; INT part sets seed)
   id: excludeReadsWithAllFLAGs
   inputBinding:
+    itemSeparator: ' '
     position: 8
     prefix: -G
     shellQuote: false

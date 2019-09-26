@@ -3,37 +3,46 @@ cwlVersion: v1.0
 doc: Align sorted bam with this subworkflow consisting of BWA Mem + SamTools + Gatk4SortSam
 id: BwaAligner
 inputs:
-  adapter:
-    id: adapter
-    type:
-    - string
-    - 'null'
-  adapter_g:
-    id: adapter_g
-    type:
-    - string
-    - 'null'
-  createIndex:
+  bwamem_markShorterSplits:
     default: true
-    id: createIndex
+    id: bwamem_markShorterSplits
     type: boolean
+  cutadapt_adapter:
+    id: cutadapt_adapter
+    type:
+    - string
+    - 'null'
+  cutadapt_adapter_g:
+    id: cutadapt_adapter_g
+    type:
+    - string
+    - 'null'
+  cutadapt_minReadLength:
+    default: 50
+    id: cutadapt_minReadLength
+    type: int
+  cutadapt_qualityCutoff:
+    default: 15
+    id: cutadapt_qualityCutoff
+    type: int
+  cutadapt_removeMiddle3Adapter:
+    id: cutadapt_removeMiddle3Adapter
+    type:
+    - string
+    - 'null'
+  cutadapt_removeMiddle5Adapter:
+    id: cutadapt_removeMiddle5Adapter
+    type:
+    - string
+    - 'null'
   fastq:
     id: fastq
     type:
       items: File
       type: array
-  maxRecordsInRam:
-    default: 5000000
-    id: maxRecordsInRam
-    type: int
-  minReadLength:
-    default: 50
-    id: minReadLength
-    type: int
-  qualityCutoff:
-    default: 15
-    id: qualityCutoff
-    type: int
+  name:
+    id: name
+    type: string
   reference:
     id: reference
     secondaryFiles:
@@ -45,31 +54,25 @@ inputs:
     - .fai
     - ^.dict
     type: File
-  removeMiddle3Adapter:
-    id: removeMiddle3Adapter
-    type:
-    - string
-    - 'null'
-  removeMiddle5Adapter:
-    id: removeMiddle5Adapter
-    type:
-    - string
-    - 'null'
-  sampleName:
-    id: sampleName
-    type: string
-  sortOrder:
+  sortsam_createIndex:
+    default: true
+    id: sortsam_createIndex
+    type: boolean
+  sortsam_maxRecordsInRam:
+    default: 5000000
+    id: sortsam_maxRecordsInRam
+    type: int
+  sortsam_sortOrder:
     default: coordinate
-    id: sortOrder
+    id: sortsam_sortOrder
     type: string
-  sortSamTmpDir:
-    id: sortSamTmpDir
-    type:
-    - string
-    - 'null'
-  validationStringency:
+  sortsam_tmpDir:
+    default: .
+    id: sortsam_tmpDir
+    type: string
+  sortsam_validationStringency:
     default: SILENT
-    id: validationStringency
+    id: sortsam_validationStringency
     type: string
 label: Align and sort reads
 outputs:
@@ -79,16 +82,15 @@ outputs:
     secondaryFiles:
     - ^.bai
     type: File
-  out_bwa:
-    id: out_bwa
-    outputSource: bwa_sam/out
-    type: File
 requirements:
   InlineJavascriptRequirement: {}
   StepInputExpressionRequirement: {}
 steps:
-  bwa_sam:
+  bwamem:
     in:
+      markShorterSplits:
+        id: markShorterSplits
+        source: bwamem_markShorterSplits
       reads:
         id: reads
         source: cutadapt/out
@@ -97,7 +99,7 @@ steps:
         source: reference
       sampleName:
         id: sampleName
-        source: sampleName
+        source: name
     out:
     - out
     run: BwaMemSamtoolsView.cwl
@@ -105,25 +107,25 @@ steps:
     in:
       adapter:
         id: adapter
-        source: adapter
+        source: cutadapt_adapter
       adapter_g:
         id: adapter_g
-        source: adapter_g
+        source: cutadapt_adapter_g
       fastq:
         id: fastq
         source: fastq
       minReadLength:
         id: minReadLength
-        source: minReadLength
+        source: cutadapt_minReadLength
       qualityCutoff:
         id: qualityCutoff
-        source: qualityCutoff
+        source: cutadapt_qualityCutoff
       removeMiddle3Adapter:
         id: removeMiddle3Adapter
-        source: removeMiddle3Adapter
+        source: cutadapt_removeMiddle3Adapter
       removeMiddle5Adapter:
         id: removeMiddle5Adapter
-        source: removeMiddle5Adapter
+        source: cutadapt_removeMiddle5Adapter
     out:
     - out
     run: cutadapt.cwl
@@ -131,22 +133,22 @@ steps:
     in:
       bam:
         id: bam
-        source: bwa_sam/out
+        source: bwamem/out
       createIndex:
         id: createIndex
-        source: createIndex
+        source: sortsam_createIndex
       maxRecordsInRam:
         id: maxRecordsInRam
-        source: maxRecordsInRam
+        source: sortsam_maxRecordsInRam
       sortOrder:
         id: sortOrder
-        source: sortOrder
+        source: sortsam_sortOrder
       tmpDir:
         id: tmpDir
-        source: sortSamTmpDir
+        source: sortsam_tmpDir
       validationStringency:
         id: validationStringency
-        source: validationStringency
+        source: sortsam_validationStringency
     out:
     - out
     run: gatk4sortsam.cwl

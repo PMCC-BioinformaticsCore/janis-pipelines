@@ -9,6 +9,10 @@ workflow GATK4_SomaticVariantCaller {
   input {
     File normalBam
     File normalBam_bai
+    File tumorBam
+    File tumorBam_bai
+    String normalName
+    String tumorName
     File? intervals
     File reference
     File reference_amb
@@ -26,15 +30,27 @@ workflow GATK4_SomaticVariantCaller {
     File knownIndels_tbi
     File millsIndels
     File millsIndels_tbi
-    File tumorBam
-    File tumorBam_bai
-    String normalName
-    String tumorName
   }
   call G.Gatk4BaseRecalibrator as baseRecalibrator_normal {
     input:
       bam_bai=normalBam_bai,
       bam=normalBam,
+      knownSites=[snps_dbsnp, snps_1000gp, knownIndels, millsIndels],
+      knownSites_tbi=[snps_dbsnp_tbi, snps_1000gp_tbi, knownIndels_tbi, millsIndels_tbi],
+      reference_amb=reference_amb,
+      reference_ann=reference_ann,
+      reference_bwt=reference_bwt,
+      reference_pac=reference_pac,
+      reference_sa=reference_sa,
+      reference_fai=reference_fai,
+      reference_dict=reference_dict,
+      reference=reference,
+      intervals=intervals
+  }
+  call G.Gatk4BaseRecalibrator as baseRecalibrator_tumor {
+    input:
+      bam_bai=tumorBam_bai,
+      bam=tumorBam,
       knownSites=[snps_dbsnp, snps_1000gp, knownIndels, millsIndels],
       knownSites_tbi=[snps_dbsnp_tbi, snps_1000gp_tbi, knownIndels_tbi, millsIndels_tbi],
       reference_amb=reference_amb,
@@ -62,22 +78,6 @@ workflow GATK4_SomaticVariantCaller {
       recalFile=baseRecalibrator_normal.out,
       intervals=intervals
   }
-  call G.Gatk4BaseRecalibrator as baseRecalibrator_tumor {
-    input:
-      bam_bai=tumorBam_bai,
-      bam=tumorBam,
-      knownSites=[snps_dbsnp, snps_1000gp, knownIndels, millsIndels],
-      knownSites_tbi=[snps_dbsnp_tbi, snps_1000gp_tbi, knownIndels_tbi, millsIndels_tbi],
-      reference_amb=reference_amb,
-      reference_ann=reference_ann,
-      reference_bwt=reference_bwt,
-      reference_pac=reference_pac,
-      reference_sa=reference_sa,
-      reference_fai=reference_fai,
-      reference_dict=reference_dict,
-      reference=reference,
-      intervals=intervals
-  }
   call G2.GATK4ApplyBQSR as applyBQSR_tumor {
     input:
       bam_bai=tumorBam_bai,
@@ -95,13 +95,11 @@ workflow GATK4_SomaticVariantCaller {
   }
   call G3.gatkmutect2 as mutect2 {
     input:
-      tumor_bai=applyBQSR_tumor.out_bai,
-      tumor=applyBQSR_tumor.out,
-      tumorName=tumorName,
-      normal_bai=applyBQSR_normal.out_bai,
-      normal=applyBQSR_normal.out,
-      normalName=normalName,
-      intervals=intervals,
+      tumorBams_bai=[applyBQSR_tumor.out_bai],
+      tumorBams=[applyBQSR_tumor.out],
+      normalBams_bai=[applyBQSR_normal.out_bai],
+      normalBams=[applyBQSR_normal.out],
+      normalSample=normalName,
       reference_amb=reference_amb,
       reference_ann=reference_ann,
       reference_bwt=reference_bwt,
@@ -109,7 +107,8 @@ workflow GATK4_SomaticVariantCaller {
       reference_sa=reference_sa,
       reference_fai=reference_fai,
       reference_dict=reference_dict,
-      reference=reference
+      reference=reference,
+      intervals=intervals
   }
   call S.SplitMultiAllele as splitMultiAllele {
     input:

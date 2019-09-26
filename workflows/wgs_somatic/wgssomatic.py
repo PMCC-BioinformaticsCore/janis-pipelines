@@ -1,181 +1,185 @@
-from janis_bioinformatics.data_types import FastaWithDict, Fastq, VcfTabix, Bed, BedTabix
+from janis_bioinformatics.data_types import (
+    FastaWithDict,
+    FastqGzPair,
+    VcfTabix,
+    Bed,
+    BedTabix,
+)
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
 from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
-from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_0
-from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_0
+from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
+from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
 from janis_bioinformatics.tools.pmac import CombineVariants_0_0_4
-from janis_bioinformatics.tools.variantcallers.gatksomatic_variants import GatkSomaticVariantCaller
-from janis_bioinformatics.tools.variantcallers.illuminasomatic_strelka import IlluminaSomaticVariantCaller
-from janis_bioinformatics.tools.variantcallers.vardictsomatic_variants import VardictSomaticVariantCaller
-from janis_core import Input, String, Step, Workflow, File, Array, Output, Float
+from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
+from janis_bioinformatics.tools.variantcallers.illuminasomatic_strelka import (
+    IlluminaSomaticVariantCaller,
+)
+from janis_bioinformatics.tools.variantcallers.vardictsomatic_variants import (
+    VardictSomaticVariantCaller,
+)
+from janis_core import String, WorkflowBuilder, File, Array, Float
 
 
 class WGSSomaticMultiCallers(BioinformaticsWorkflow):
+    def id(self):
+        return "WGSSomaticMultiCallers"
 
-    def __init__(self):
-        BioinformaticsWorkflow.__init__(self, "WGSSomaticMultiCallers", "WGS Somatic (Multi callers)")
+    def friendly_name(self):
+        return "WGS Somatic (Multi callers)"
 
-        normalInputs = Input('normalInputs', Array(Fastq()))
-        tumorInputs = Input('tumorInputs', Array(Fastq()))
+    def constructor(self):
+        self.input("normalInputs", Array(FastqGzPair))
+        self.input("tumorInputs", Array(FastqGzPair))
 
-        normalName = Input("normalName", String(), "NA24385_normal")
-        tumorName = Input("tumorName", String(), "NA24385_tumour")
+        self.input("normalName", String(), default="NA24385_normal")
+        self.input("tumorName", String(), default="NA24385_tumour")
 
-        gatk_intervals = Input("gatkIntervals", Array(Bed()))
+        self.input("gatkIntervals", Array(Bed))
 
-        vardict_intervals = Input("vardictIntervals", Array(Bed()))
-        strelka_intervals = Input("strelkaIntervals", BedTabix(optional=True))
+        self.input("vardictIntervals", Array(Bed))
+        self.input("strelkaIntervals", BedTabix(optional=True))
 
-        header_lines = Input("vardictHeaderLines", File())
-        allele_freq_threshold = Input("allelFreqThreshold", Float(), 0.05)
+        self.input("vardictHeaderLines", File)
+        self.input("alleleFreqThreshold", Float, default=0.05)
 
-        reference = Input('reference', FastaWithDict())
-        snps_dbsnp = Input("snps_dbsnp", VcfTabix())
-        snps_1000gp = Input("snps_1000gp", VcfTabix())
-        known_indels = Input("known_indels", VcfTabix())
-        mills_indels = Input("mills_1000gp_indels", VcfTabix())
+        self.input("reference", FastaWithDict)
+        self.input("snps_dbsnp", VcfTabix)
+        self.input("snps_1000gp", VcfTabix)
+        self.input("known_indels", VcfTabix)
+        self.input("mills_indels", VcfTabix)
 
-        s_norm = Step("normal", self.process_subpipeline())
-        s_tum = Step("tumor", self.process_subpipeline())
+        self.step(
+            "normal",
+            self.process_subpipeline(
+                reads=self.tumorInputs,
+                sampleName=self.tumorName,
+                reference=self.reference,
+            ),
+        )
+        self.step(
+            "tumor",
+            self.process_subpipeline(
+                reads=self.normalInputs,
+                sampleName=self.normalName,
+                reference=self.reference,
+            ),
+        )
 
-        vc_gatkVariantCaller = Step("GATK_VariantCaller", GatkSomaticVariantCaller())
-        vc_strelkaVariantCaller = Step("Strelka_VariantCaller", IlluminaSomaticVariantCaller())
-        vc_vardictVariantcaller = Step("VarDict_VariantCaller", VardictSomaticVariantCaller())
+        self.step(
+            "variantCaller_GATK",
+            GatkSomaticVariantCaller_4_1_3(
+                normalBam=self.tumor.out,
+                tumorBam=self.normal.out,
+                normalName=self.normalName,
+                tumorName=self.tumorName,
+                intervals=self.gatkIntervals,
+                reference=self.reference,
+                snps_dbsnp=self.snps_dbsnp,
+                snps_1000gp=self.snps_1000gp,
+                knownIndels=self.known_indels,
+                millsIndels=self.mills_indels,
+            ),
+            scatter="intervals",
+        )
 
-        vc_merged_gatk = Step("variantCaller_merge_GATK", Gatk4GatherVcfs_4_0())
-        vc_merged_vardict = Step("variantCaller_merge_Vardict", Gatk4GatherVcfs_4_0())
+        self.step(
+            "variantCaller_merge_GATK",
+            Gatk4GatherVcfs_4_1_3(vcfs=self.variantCaller_GATK),
+        )
 
-        combine_vcs = Step("combineVariants", CombineVariants_0_0_4())
-        sort_combined_vcfs = Step("sortCombined", BcfToolsSort_1_9())
-        sortsam_tmpdir = Input("sortSamTmpDir", String(optional=True), "/tmp")
+        self.step(
+            "variantCaller_Strelka",
+            IlluminaSomaticVariantCaller(
+                normalBam=self.normal.out,
+                tumorBam=self.tumor.out,
+                intervals=self.strelkaIntervals,
+                reference=self.reference,
+            ),
+        )
+        self.step(
+            "variantCaller_VarDict",
+            VardictSomaticVariantCaller(
+                normalBam=self.tumor.out,
+                tumorBam=self.normal.out,
+                normalName=self.normalName,
+                tumorName=self.tumorName,
+                headerLines=self.vardictHeaderLines,
+                intervals=self.vardictIntervals,
+                reference=self.reference,
+                alleleFreqThreshold=self.alleleFreqThreshold,
+            ),
+            scatter="intervals",
+        )
 
-        self.add_edges([
-            (normalInputs, s_norm.inputs),
-            (normalName, s_norm.sampleName),
-            (reference, s_norm.reference),
-            (sortsam_tmpdir, s_norm.sortSamTmpDir)
-        ])
+        self.step(
+            "variantCaller_merge_VarDict",
+            Gatk4GatherVcfs_4_1_3(vcfs=self.variantCaller_VarDict.out),
+        )
 
-        self.add_edges([
-            (tumorInputs, s_tum.inputs),
-            (tumorName, s_tum.sampleName),
-            (reference, s_tum.reference),
-            (sortsam_tmpdir, s_tum.sortSamTmpDir)
-        ])
-
-
-        # GATK Variant Caller
-
-        self.add_edges([
-            (s_norm.out, vc_gatkVariantCaller.normalBam),
-            (s_tum.out, vc_gatkVariantCaller.tumorBam),
-            (normalName, vc_gatkVariantCaller.normalName),
-            (tumorName, vc_gatkVariantCaller.tumorName),
-
-            (gatk_intervals, vc_gatkVariantCaller.intervals),
-            (reference, vc_gatkVariantCaller.reference),
-            (snps_dbsnp, vc_gatkVariantCaller.snps_dbsnp),
-            (snps_1000gp, vc_gatkVariantCaller.snps_1000gp),
-            (known_indels, vc_gatkVariantCaller.knownIndels),
-            (mills_indels, vc_gatkVariantCaller.millsIndels),
-
-            (vc_gatkVariantCaller.out, vc_merged_gatk.vcfs)
-        ])
-
-        # # Strelka VariantCaller
-        #
-        self.add_edges([
-            (s_norm.out, vc_strelkaVariantCaller.normalBam),
-            (s_tum.out, vc_strelkaVariantCaller.tumorBam),
-            (strelka_intervals, vc_strelkaVariantCaller.intervals),
-
-            (reference, vc_strelkaVariantCaller.reference)
-        ])
-
-        # VarDict VariantCaller
-
-        self.add_edges([
-            (s_norm.out, vc_vardictVariantcaller.normalBam),
-            (s_tum.out, vc_vardictVariantcaller.tumorBam),
-            (normalName, vc_vardictVariantcaller.normalName),
-            (tumorName, vc_vardictVariantcaller.tumorName),
-
-            (header_lines, vc_vardictVariantcaller.headerLines),
-            (vardict_intervals, vc_vardictVariantcaller.intervals),
-            (reference, vc_vardictVariantcaller.reference),
-            (allele_freq_threshold, vc_vardictVariantcaller.alleleFreqThreshold),
-
-            (vc_vardictVariantcaller.out, vc_merged_vardict.vcfs)
-        ])
-
-        # Combine
-        self.add_edges([
-            (Input("variant_type", String(), default="somatic", include_in_inputs_file_if_none=False),
-             combine_vcs.type),
-            (Input("columns", Array(String()), default=["AD", "DP", "GT"],
-                   include_in_inputs_file_if_none=False), combine_vcs.columns),
-            (normalName, combine_vcs.normal),
-            (tumorName, combine_vcs.tumor),
-
-            (vc_merged_gatk.out, combine_vcs.vcfs),
-            (vc_strelkaVariantCaller.out, combine_vcs.vcfs),
-            (vc_merged_vardict.out, combine_vcs.vcfs),
-
-
-        ])
-        self.add_edge(combine_vcs.vcf, sort_combined_vcfs.vcf)
+        self.step(
+            "combineVariants",
+            CombineVariants_0_0_4(
+                normal=self.normalName,
+                tumor=self.tumorName,
+                vcfs=[
+                    self.variantCaller_merge_VarDict,
+                    self.variantCaller_Strelka.out,
+                    self.variantCaller_merge_GATK,
+                ],
+                type="somatic",
+                columns=["AD", "DP", "GT"],
+            ),
+        )
+        self.step("sortCombined", BcfToolsSort_1_9(vcf=self.combineVariants.vcf))
 
         # Outputs
 
-        self.add_edges([
-            (s_norm.out, Output("normalBam")),
-            (s_tum.out, Output("tumorBam")),
+        self.output("normalBam", source=self.normal.out)
+        self.output("tumorBam", source=self.tumor.out)
+        self.output("normalReport", source=self.normal.reports)
+        self.output("tumorReport", source=self.tumor.reports)
 
-            (s_norm.fastq, Output("normalReport")),
-            (s_tum.fastq, Output("tumorReport")),
-
-            (vc_strelkaVariantCaller.out, Output("variants_strelka")),
-            (vc_merged_vardict.out, Output("variants_vardict")),
-            (vc_merged_gatk.out, Output("variants_gatk")),
-
-            (sort_combined_vcfs.out, Output("variants_combined"))
-        ])
+        self.output("variants_gatk", source=self.variantCaller_merge_GATK.out)
+        self.output("variants_strelka", source=self.variantCaller_Strelka.out)
+        self.output("variants_vardict", source=self.variantCaller_merge_VarDict.out)
+        self.output("variants_combined", source=self.combineVariants.vcf)
 
     @staticmethod
-    def process_subpipeline():
-        w = Workflow("somatic_subpipeline")
+    def process_subpipeline(**connections):
+        w = WorkflowBuilder("somatic_subpipeline")
 
-        reference = Input('reference', FastaWithDict())
-        inputs = Input('inputs', Array(Fastq()))
+        w.input("reference", FastaWithDict)
+        w.input("reads", Array(FastqGzPair))
 
-        name = Input('sampleName', String())
+        w.input("sampleName", String)
 
-        s1_alignsort = Step('alignAndSort', BwaAligner())
-        s2_process = Step('mergeAndMark', MergeAndMarkBams_4_0())
-        fastqc = Step("fastqc", FastQC_0_11_5())
+        w.step(
+            "alignAndSort",
+            BwaAligner(
+                fastq=w.reads,
+                reference=w.reference,
+                name=w.sampleName,
+                sortsam_tmpDir=None,
+            ),
+            scatter="fastq",
+        )
+        w.step("mergeAndMark", MergeAndMarkBams_4_1_3(bams=w.alignAndSort.out))
+        w.step("fastqc", FastQC_0_11_5(reads=w.reads), scatter="reads")
 
-        # Step 1, alignAndSort
-        w.add_edges([
-            (inputs, s1_alignsort.fastq),
-            (reference, s1_alignsort.reference),
-            (name, s1_alignsort.sampleName),
-            (Input("sortSamTmpDir", String(optional=True)), s1_alignsort.sortSamTmpDir),
-        ])
+        w.output("out", source=w.mergeAndMark.out)
+        w.output("reports", source=w.fastqc)
 
-        # step1 sidestep
-        w.add_edge(inputs, fastqc.reads)
-
-        # step2 - process bam files
-        w.add_edge(s1_alignsort.out, s2_process.bams)
-
-        w.add_edge(s2_process.out, Output("out"))
-        w.add_edge(fastqc.out, Output("fastq"))
-
-        return w
+        return w(**connections)
 
 
 if __name__ == "__main__":
     w = WGSSomaticMultiCallers()
-    w.translate("cwl", to_console=False, to_disk=True, export_path="{language}")
-    w.translate("wdl", to_console=False, to_disk=True, export_path="{language}")
+    args = {
+        "to_console": True,
+        "to_disk": True,
+        "validate": True,
+        "export_path": "{language}",
+    }
+    w.translate("cwl", **args)
+    w.translate("wdl", **args)

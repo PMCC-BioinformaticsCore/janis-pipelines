@@ -33,14 +33,14 @@ task fastqc {
       ${true="--noextract" false="" if defined(noextract) then noextract else true} \
       ${true="--nogroup" false="" nogroup} \
       ${"--format " + format} \
-      ${"--threads " + if defined(threads) then threads else 1} \
+      ${"--threads " + if defined(threads) then threads else if defined(runtime_cpu) then runtime_cpu else 1} \
       ${"--contaminants " + contaminants} \
       ${"--adapters " + adapters} \
       ${"--limits " + limits} \
       ${"--kmers " + kmers} \
       ${true="--quiet" false="" quiet} \
       ${"--dir " + dir} \
-      ${sep=" " prefix("", reads)}
+      ${sep=" " reads}
   }
   runtime {
     docker: "biocontainers/fastqc:v0.11.5_cv3"

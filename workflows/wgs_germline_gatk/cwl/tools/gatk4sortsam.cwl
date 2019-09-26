@@ -13,7 +13,7 @@ inputs:
     prefix: -I
   label: bam
   type: File
-- default: generated-1c8ef500-c3b0-11e9-917e-f218985ebfa7.bam
+- default: generated-9e15d10e-d849-11e9-b5a8-f218985ebfa7.bam
   doc: The sorted SAM/BAM/CRAM output file.
   id: outputFilename
   inputBinding:
@@ -33,10 +33,11 @@ inputs:
   id: argumentsFile
   inputBinding:
     position: 10
-    prefix: --arguments_file
   label: argumentsFile
   type:
-  - items: File
+  - inputBinding:
+      prefix: --arguments_file
+    items: File
     type: array
   - 'null'
 - doc: Compression level for all compressed files created (e.g. BAM and GELI).
@@ -164,6 +165,6 @@ outputs:
   type: File
 requirements:
   DockerRequirement:
-    dockerPull: broadinstitute/gatk:4.0.12.0
+    dockerPull: broadinstitute/gatk:4.1.3.0
   InlineJavascriptRequirement: {}
   ShellCommandRequirement: {}

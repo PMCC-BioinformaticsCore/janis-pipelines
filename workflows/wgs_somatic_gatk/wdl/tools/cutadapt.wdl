@@ -6,8 +6,8 @@ task cutadapt {
     Int? runtime_memory
     Array[File] fastq
     String? adapter
-    String outputFilename = "generated-5012da40-c3b0-11e9-9ec0-f218985ebfa7-R1.fastq.gz"
-    String secondReadFile = "generated-5012da40-c3b0-11e9-9ec0-f218985ebfa7-R2.fastq.gz"
+    String outputFilename = "generated-fa90437a-e018-11e9-8aa4-a0cec8186c53-R1.fastq.gz"
+    String secondReadFile = "generated-fa90437a-e018-11e9-8aa4-a0cec8186c53-R2.fastq.gz"
     Boolean? debug
     Boolean? noIndels
     Boolean? matchReadWildcards
@@ -64,8 +64,8 @@ task cutadapt {
   command {
     cutadapt \
       ${"-a " + adapter} \
-      ${"-o " + if defined(outputFilename) then outputFilename else "generated-5012fb06-c3b0-11e9-9ec0-f218985ebfa7-R1.fastq.gz"} \
-      ${"-p " + if defined(secondReadFile) then secondReadFile else "generated-5012fb06-c3b0-11e9-9ec0-f218985ebfa7-R2.fastq.gz"} \
+      ${"-o " + if defined(outputFilename) then outputFilename else "generated-fa9061c0-e018-11e9-8aa4-a0cec8186c53-R1.fastq.gz"} \
+      ${"-p " + if defined(secondReadFile) then secondReadFile else "generated-fa9061c0-e018-11e9-8aa4-a0cec8186c53-R2.fastq.gz"} \
       ${true="--debug" false="" debug} \
       ${true="--no-indels" false="" noIndels} \
       ${true="--match-read-wildcards" false="" matchReadWildcards} \
@@ -118,7 +118,7 @@ task cutadapt {
       ${true="-d" false="" doubleEncode} \
       ${true="-t" false="" trimPrimer} \
       ${true="-z" false="" zeroCap} \
-      ${sep=" " prefix("", fastq)}
+      ${sep=" " fastq}
   }
   runtime {
     docker: "quay.io/biocontainers/cutadapt:1.18--py37h14c3975_1"

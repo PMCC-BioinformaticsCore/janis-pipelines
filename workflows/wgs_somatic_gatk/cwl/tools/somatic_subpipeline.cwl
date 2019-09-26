@@ -2,8 +2,13 @@ class: Workflow
 cwlVersion: v1.0
 id: somatic_subpipeline
 inputs:
-  inputs:
-    id: inputs
+  alignAndSort_sortsam_tmpDir:
+    id: alignAndSort_sortsam_tmpDir
+    type:
+    - string
+    - 'null'
+  reads:
+    id: reads
     type:
       items:
         items: File
@@ -23,29 +28,23 @@ inputs:
   sampleName:
     id: sampleName
     type: string
-  sortSamTmpDir:
-    id: sortSamTmpDir
-    type:
-    - string
-    - 'null'
 outputs:
-  fastq:
-    id: fastq
-    outputSource: fastqc/out
-    type:
-      items:
-        items: File
-        type: array
-      type: array
   out:
     id: out
     outputSource: mergeAndMark/out
     secondaryFiles:
     - ^.bai
     type: File
+  reports:
+    id: reports
+    outputSource: fastqc/out
+    type:
+      items:
+        items: File
+        type: array
+      type: array
 requirements:
   InlineJavascriptRequirement: {}
-  MultipleInputFeatureRequirement: {}
   ScatterFeatureRequirement: {}
   StepInputExpressionRequirement: {}
   SubworkflowFeatureRequirement: {}
@@ -54,18 +53,17 @@ steps:
     in:
       fastq:
         id: fastq
-        source: inputs
+        source: reads
+      name:
+        id: name
+        source: sampleName
       reference:
         id: reference
         source: reference
-      sampleName:
-        id: sampleName
-        source: sampleName
-      sortSamTmpDir:
-        id: sortSamTmpDir
-        source: sortSamTmpDir
+      sortsam_tmpDir:
+        id: sortsam_tmpDir
+        source: alignAndSort_sortsam_tmpDir
     out:
-    - out_bwa
     - out
     run: BwaAligner.cwl
     scatter:
@@ -74,7 +72,7 @@ steps:
     in:
       reads:
         id: reads
-        source: inputs
+        source: reads
     out:
     - out
     run: fastqc.cwl
@@ -84,9 +82,7 @@ steps:
     in:
       bams:
         id: bams
-        linkMerge: merge_nested
-        source:
-        - alignAndSort/out
+        source: alignAndSort/out
     out:
     - out
     run: mergeAndMarkBams.cwl

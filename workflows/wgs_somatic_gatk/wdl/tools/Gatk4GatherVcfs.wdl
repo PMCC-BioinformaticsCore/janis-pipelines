@@ -5,7 +5,7 @@ task Gatk4GatherVcfs {
     Int? runtime_cpu
     Int? runtime_memory
     Array[File] vcfs
-    String outputFilename = "generated-5014d76e-c3b0-11e9-9ec0-f218985ebfa7.gathered.vcf"
+    String outputFilename = "generated-fa93e656-e018-11e9-8aa4-a0cec8186c53.gathered.vcf"
     Array[File]? argumentsFile
     Int? compressionLevel
     Boolean? createIndex
@@ -23,8 +23,8 @@ task Gatk4GatherVcfs {
   command {
     gatk GatherVcfs \
       ${sep=" " prefix("--INPUT ", vcfs)} \
-      ${"--OUTPUT " + if defined(outputFilename) then outputFilename else "generated-5014def8-c3b0-11e9-9ec0-f218985ebfa7.gathered.vcf"} \
-      ${if defined(argumentsFile) then "--arguments_file " else ""}${sep=" --arguments_file " argumentsFile} \
+      ${"--OUTPUT " + if defined(outputFilename) then outputFilename else "generated-fa93eeda-e018-11e9-8aa4-a0cec8186c53.gathered.vcf"} \
+      ${true="--arguments_file " false="" defined(argumentsFile)}${sep=" " argumentsFile} \
       ${"--COMPRESSION_LEVEL " + compressionLevel} \
       ${true="--CREATE_INDEX" false="" createIndex} \
       ${true="--CREATE_MD5_FILE" false="" createMd5File} \
@@ -39,12 +39,12 @@ task Gatk4GatherVcfs {
       ${true="--VERBOSITY" false="" verbosity}
   }
   runtime {
-    docker: "broadinstitute/gatk:4.0.12.0"
+    docker: "broadinstitute/gatk:4.1.3.0"
     cpu: if defined(runtime_cpu) then runtime_cpu else 1
     memory: if defined(runtime_memory) then "${runtime_memory}G" else "4G"
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-5014d76e-c3b0-11e9-9ec0-f218985ebfa7.gathered.vcf"
+    File out = if defined(outputFilename) then outputFilename else "generated-fa93e656-e018-11e9-8aa4-a0cec8186c53.gathered.vcf"
   }
 }

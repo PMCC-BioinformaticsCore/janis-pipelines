@@ -1,23 +1,29 @@
 arguments:
+- position: 0
+  shellQuote: false
+  valueFrom: zcat
 - position: 1
   shellQuote: false
-  valueFrom: sed 's/ID=AD,Number=./ID=AD,Number=R/' <
-- position: 3
-  shellQuote: false
   valueFrom: '|'
+- position: 2
+  shellQuote: false
+  valueFrom: sed 's/ID=AD,Number=./ID=AD,Number=R/' <
 - position: 4
   shellQuote: false
-  valueFrom: vt decompose -s - -o -
+  valueFrom: '|'
 - position: 5
   shellQuote: false
-  valueFrom: '|'
+  valueFrom: vt decompose -s - -o -
 - position: 6
   shellQuote: false
+  valueFrom: '|'
+- position: 7
+  shellQuote: false
   valueFrom: vt normalize -n -q - -o -
-- position: 8
+- position: 9
   shellQuote: false
   valueFrom: '|'
-- position: 9
+- position: 10
   shellQuote: false
   valueFrom: sed 's/ID=AD,Number=./ID=AD,Number=1/'
 class: CommandLineTool
@@ -26,13 +32,13 @@ id: SplitMultiAllele
 inputs:
 - id: vcf
   inputBinding:
-    position: 2
+    position: 3
     shellQuote: false
   label: vcf
   type: File
 - id: reference
   inputBinding:
-    position: 7
+    position: 8
     prefix: -r
     shellQuote: false
   label: reference
@@ -45,7 +51,7 @@ inputs:
   - .fai
   - ^.dict
   type: File
-- default: generated-3603b05c-c3b0-11e9-81d9-f218985ebfa7.norm.vcf
+- default: generated-d5e103a2-e018-11e9-851b-a0cec8186c53.norm.vcf
   id: outputFilename
   inputBinding:
     position: 10

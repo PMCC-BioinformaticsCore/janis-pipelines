@@ -13,10 +13,19 @@ task SplitMultiAllele {
     File reference_sa
     File reference_fai
     File reference_dict
-    String outputFilename = "generated-5014a8de-c3b0-11e9-9ec0-f218985ebfa7.norm.vcf"
+    String outputFilename = "generated-fa93a902-e018-11e9-8aa4-a0cec8186c53.norm.vcf"
   }
   command {
+    if [ $(dirname "${reference_amb}") != $(dirname "reference") ]; then mv ${reference_amb} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_ann}") != $(dirname "reference") ]; then mv ${reference_ann} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_bwt}") != $(dirname "reference") ]; then mv ${reference_bwt} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_pac}") != $(dirname "reference") ]; then mv ${reference_pac} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_sa}") != $(dirname "reference") ]; then mv ${reference_sa} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_fai}") != $(dirname "reference") ]; then mv ${reference_fai} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_dict}") != $(dirname "reference") ]; then mv ${reference_dict} $(dirname ${reference}); fi
      \
+      zcat \
+      | \
       sed 's/ID=AD,Number=./ID=AD,Number=R/' < \
       ${vcf} \
       | \
@@ -25,8 +34,8 @@ task SplitMultiAllele {
       vt normalize -n -q - -o - \
       -r ${reference} \
       | \
-      sed 's/ID=AD,Number=./ID=AD,Number=1/' \
-      ${"> " + if defined(outputFilename) then outputFilename else "generated-5014ad7a-c3b0-11e9-9ec0-f218985ebfa7.norm.vcf"}
+      ${"> " + if defined(outputFilename) then outputFilename else "generated-fa93b08c-e018-11e9-8aa4-a0cec8186c53.norm.vcf"} \
+      sed 's/ID=AD,Number=./ID=AD,Number=1/'
   }
   runtime {
     docker: "heuermh/vt"
@@ -35,6 +44,6 @@ task SplitMultiAllele {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-5014a8de-c3b0-11e9-9ec0-f218985ebfa7.norm.vcf"
+    File out = if defined(outputFilename) then outputFilename else "generated-fa93a902-e018-11e9-8aa4-a0cec8186c53.norm.vcf"
   }
 }

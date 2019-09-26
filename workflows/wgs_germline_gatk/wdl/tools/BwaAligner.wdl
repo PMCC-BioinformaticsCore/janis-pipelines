@@ -6,14 +6,7 @@ import "gatk4sortsam.wdl" as G
 
 workflow BwaAligner {
   input {
-    Array[File] fastq
-    String? adapter
-    String? adapter_g
-    String? removeMiddle5Adapter
-    String? removeMiddle3Adapter
-    Int? qualityCutoff
-    Int? minReadLength
-    String sampleName
+    String name
     File reference
     File reference_amb
     File reference_ann
@@ -22,23 +15,31 @@ workflow BwaAligner {
     File reference_sa
     File reference_fai
     File reference_dict
-    String? sortOrder
-    Boolean? createIndex
-    String? validationStringency
-    Int? maxRecordsInRam
-    String? sortSamTmpDir
+    Array[File] fastq
+    String? cutadapt_adapter
+    String? cutadapt_adapter_g
+    String? cutadapt_removeMiddle5Adapter
+    String? cutadapt_removeMiddle3Adapter
+    Int? cutadapt_qualityCutoff
+    Int? cutadapt_minReadLength
+    Boolean? bwamem_markShorterSplits
+    String? sortsam_sortOrder
+    Boolean? sortsam_createIndex
+    String? sortsam_validationStringency
+    Int? sortsam_maxRecordsInRam
+    String? sortsam_tmpDir
   }
   call C.cutadapt as cutadapt {
     input:
       fastq=fastq,
-      adapter=adapter,
-      adapter_g=adapter_g,
-      qualityCutoff=select_first([qualityCutoff, 15]),
-      minReadLength=select_first([minReadLength, 50]),
-      removeMiddle3Adapter=removeMiddle3Adapter,
-      removeMiddle5Adapter=removeMiddle5Adapter
+      adapter=cutadapt_adapter,
+      adapter_g=cutadapt_adapter_g,
+      qualityCutoff=select_first([cutadapt_qualityCutoff, 15]),
+      minReadLength=select_first([cutadapt_minReadLength, 50]),
+      removeMiddle3Adapter=cutadapt_removeMiddle3Adapter,
+      removeMiddle5Adapter=cutadapt_removeMiddle5Adapter
   }
-  call B.BwaMemSamtoolsView as bwa_sam {
+  call B.BwaMemSamtoolsView as bwamem {
     input:
       reference_amb=reference_amb,
       reference_ann=reference_ann,
@@ -49,19 +50,19 @@ workflow BwaAligner {
       reference_dict=reference_dict,
       reference=reference,
       reads=cutadapt.out,
-      sampleName=sampleName
+      sampleName=name,
+      markShorterSplits=select_first([bwamem_markShorterSplits, true])
   }
   call G.gatk4sortsam as sortsam {
     input:
-      bam=bwa_sam.out,
-      sortOrder=select_first([sortOrder, "coordinate"]),
-      createIndex=select_first([createIndex, true]),
-      maxRecordsInRam=select_first([maxRecordsInRam, 5000000]),
-      tmpDir=sortSamTmpDir,
-      validationStringency=select_first([validationStringency, "SILENT"])
+      bam=bwamem.out,
+      sortOrder=select_first([sortsam_sortOrder, "coordinate"]),
+      createIndex=select_first([sortsam_createIndex, true]),
+      maxRecordsInRam=select_first([sortsam_maxRecordsInRam, 5000000]),
+      tmpDir=select_first([sortsam_tmpDir, "."]),
+      validationStringency=select_first([sortsam_validationStringency, "SILENT"])
   }
   output {
-    File out_bwa = bwa_sam.out
     File out = sortsam.out
     File out_bai = sortsam.out_bai
   }

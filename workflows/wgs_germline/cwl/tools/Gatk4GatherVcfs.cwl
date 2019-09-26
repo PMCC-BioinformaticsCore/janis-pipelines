@@ -10,13 +10,13 @@ id: Gatk4GatherVcfs
 inputs:
 - doc: '[default: []] (-I) Input VCF file(s).'
   id: vcfs
-  inputBinding:
-    prefix: --INPUT
   label: vcfs
   type:
+    inputBinding:
+      prefix: --INPUT
     items: File
     type: array
-- default: generated-360305b2-c3b0-11e9-81d9-f218985ebfa7.gathered.vcf
+- default: generated-d5e05f38-e018-11e9-851b-a0cec8186c53.gathered.vcf
   doc: '[default: null] (-O) Output VCF file.'
   id: outputFilename
   inputBinding:
@@ -150,6 +150,6 @@ outputs:
   type: File
 requirements:
   DockerRequirement:
-    dockerPull: broadinstitute/gatk:4.0.12.0
+    dockerPull: broadinstitute/gatk:4.1.3.0
   InlineJavascriptRequirement: {}
   ShellCommandRequirement: {}

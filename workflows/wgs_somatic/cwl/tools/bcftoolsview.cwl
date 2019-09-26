@@ -3,6 +3,9 @@ baseCommand:
 - view
 class: CommandLineTool
 cwlVersion: v1.0
+doc: "________________________________\n \n        View, subset and filter VCF or\
+  \ BCF files by position and filtering expression\n        Convert between VCF and\
+  \ BCF. Former bcftools subset."
 id: bcftoolsview
 inputs:
 - id: file
@@ -56,11 +59,11 @@ inputs:
   - boolean
   - 'null'
 - doc: (-o) output file name [stdout]
-  id: outputFile
+  id: outputFilename
   inputBinding:
     position: 1
     prefix: --output-file
-  label: outputFile
+  label: outputFilename
   type:
   - File
   - 'null'

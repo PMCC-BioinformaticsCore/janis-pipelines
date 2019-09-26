@@ -1,11 +1,7 @@
-createIndex: null
-fastq: null
-maxRecordsInRam: null
-minReadLength: null
-qualityCutoff: null
-reference:
-  class: File
-  path: null
-sampleName: null
-sortOrder: null
-validationStringency: null
+cutadapt_minReadLength: 50
+cutadapt_qualityCutoff: 15
+sortsam_createIndex: true
+sortsam_maxRecordsInRam: 5000000
+sortsam_sortOrder: coordinate
+sortsam_tmpDir: .
+sortsam_validationStringency: SILENT

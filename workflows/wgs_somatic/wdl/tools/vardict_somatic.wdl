@@ -14,7 +14,7 @@ task vardict_somatic {
     String tumorName
     String normalName
     Float? alleleFreqThreshold
-    String outputFilename = "generated-4380bd88-c3b0-11e9-af7e-f218985ebfa7.vardict.vcf"
+    String outputFilename = "generated-f5b05b06-e018-11e9-af76-a0cec8186c53.vardict.vcf"
     Boolean? indels3prime
     Float? amplicon
     Int? minReads
@@ -56,6 +56,9 @@ task vardict_somatic {
     Int? zeroBasedCoords
   }
   command {
+    if [ $(dirname "${tumorBam_bai}") != $(dirname "tumorBam") ]; then mv ${tumorBam_bai} $(dirname ${tumorBam}); fi
+    if [ $(dirname "${normalBam_bai}") != $(dirname "normalBam") ]; then mv ${normalBam_bai} $(dirname ${normalBam}); fi
+    if [ $(dirname "${reference_fai}") != $(dirname "reference") ]; then mv ${reference_fai} $(dirname ${reference}); fi
     VarDict \
       -G ${reference} \
       ${true="-3" false="" indels3prime} \
@@ -88,7 +91,7 @@ task vardict_somatic {
       ${"-s " + segStartCol} \
       ${"-T " + minReadsBeforeTrim} \
       ${true="-t" false="" removeDuplicateReads} \
-      ${"-th " + if defined(threads) then threads else 1} \
+      ${"-th " + if defined(threads) then threads else if defined(runtime_cpu) then runtime_cpu else 1} \
       ${"-V " + freq} \
       ${true="-v" false="" vcfFormat} \
       ${"-VS " + vs} \
@@ -105,15 +108,16 @@ task vardict_somatic {
       var2vcf_paired.pl \
       -N '${tumorName}|${normalName}' \
       -f ${alleleFreqThreshold} \
-      ${"> " + if defined(outputFilename) then outputFilename else "generated-4380d930-c3b0-11e9-af7e-f218985ebfa7.vardict.vcf"}
+      | bcftools view -O z \
+      ${"> " + if defined(outputFilename) then outputFilename else "generated-f5b07a78-e018-11e9-af76-a0cec8186c53.vardict.vcf"}
   }
   runtime {
-    docker: "michaelfranklin/vardict:1.5.8"
+    docker: "michaelfranklin/vardict:1.6.0"
     cpu: if defined(runtime_cpu) then runtime_cpu else 1
     memory: if defined(runtime_memory) then "${runtime_memory}G" else "4G"
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-4380bd88-c3b0-11e9-af7e-f218985ebfa7.vardict.vcf"
+    File out = if defined(outputFilename) then outputFilename else "generated-f5b05b06-e018-11e9-af76-a0cec8186c53.vardict.vcf"
   }
 }

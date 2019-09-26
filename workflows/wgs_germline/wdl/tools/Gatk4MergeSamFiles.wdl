@@ -6,7 +6,7 @@ task Gatk4MergeSamFiles {
     Int? runtime_memory
     Array[File] bams
     Array[File] bams_bai
-    String outputFilename = "generated-363ca1dc-c3b0-11e9-81d9-f218985ebfa7.bam"
+    String outputFilename = "generated-d90fb758-e018-11e9-851b-a0cec8186c53.bam"
     Array[File]? argumentsFile
     Boolean? assumeSorted
     Array[String]? comment
@@ -33,14 +33,21 @@ task Gatk4MergeSamFiles {
     String? verbosity
   }
   command {
+    if [ $(dirname "${reference_amb}") != $(dirname "reference") ]; then mv ${reference_amb} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_ann}") != $(dirname "reference") ]; then mv ${reference_ann} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_bwt}") != $(dirname "reference") ]; then mv ${reference_bwt} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_pac}") != $(dirname "reference") ]; then mv ${reference_pac} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_sa}") != $(dirname "reference") ]; then mv ${reference_sa} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_fai}") != $(dirname "reference") ]; then mv ${reference_fai} $(dirname ${reference}); fi
+    if [ $(dirname "${reference_dict}") != $(dirname "reference") ]; then mv ${reference_dict} $(dirname ${reference}); fi
     gatk MergeSamFiles \
       ${true="-AS" false="" assumeSorted} \
-      ${if defined(comment) then "-CO " else ""}${sep=" -CO " comment} \
+      ${true="-CO " false="" defined(comment)}${sep=" " comment} \
       ${true="-MSD" false="" mergeSequenceDictionaries} \
       ${true="--USE_THREADING" false="" useThreading} \
-      ${sep=" " prefix("-I ", bams)} \
-      ${"-O " + if defined(outputFilename) then outputFilename else "generated-363caa42-c3b0-11e9-81d9-f218985ebfa7.bam"} \
-      ${if defined(argumentsFile) then "--arguments_file " else ""}${sep=" --arguments_file " argumentsFile} \
+      -I ${sep=" " bams} \
+      ${"-O " + if defined(outputFilename) then outputFilename else "generated-d90fc450-e018-11e9-851b-a0cec8186c53.bam"} \
+      ${true="--arguments_file " false="" defined(argumentsFile)}${sep=" " argumentsFile} \
       ${"-SO " + sortOrder} \
       ${"--COMPRESSION_LEVEL " + compressionLevel} \
       ${true="--CREATE_INDEX" false="" createIndex} \
@@ -55,13 +62,13 @@ task Gatk4MergeSamFiles {
       ${"--verbosity " + verbosity}
   }
   runtime {
-    docker: "broadinstitute/gatk:4.0.12.0"
+    docker: "broadinstitute/gatk:4.1.3.0"
     cpu: if defined(runtime_cpu) then runtime_cpu else 1
     memory: if defined(runtime_memory) then "${runtime_memory}G" else "4G"
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-363ca1dc-c3b0-11e9-81d9-f218985ebfa7.bam"
-    File out_bai = sub(if defined(outputFilename) then outputFilename else "generated-363ca1dc-c3b0-11e9-81d9-f218985ebfa7.bam", "\\.bam$", ".bai")
+    File out = if defined(outputFilename) then outputFilename else "generated-d90fb758-e018-11e9-851b-a0cec8186c53.bam"
+    File out_bai = sub(if defined(outputFilename) then outputFilename else "generated-d90fb758-e018-11e9-851b-a0cec8186c53.bam", "\\.bam$", ".bai")
   }
 }

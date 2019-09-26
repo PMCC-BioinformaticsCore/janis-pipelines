@@ -15,7 +15,7 @@ inputs:
   type:
     items: File
     type: array
-- default: generated-4fed0018-c3b0-11e9-9ec0-f218985ebfa7.bam
+- default: generated-f7e802fc-e018-11e9-8aa4-a0cec8186c53.bam
   doc: SAM/BAM file to write merged result to
   id: outputFilename
   inputBinding:
@@ -204,6 +204,6 @@ outputs:
   type: File
 requirements:
   DockerRequirement:
-    dockerPull: broadinstitute/gatk:4.0.12.0
+    dockerPull: broadinstitute/gatk:4.1.3.0
   InlineJavascriptRequirement: {}
   ShellCommandRequirement: {}

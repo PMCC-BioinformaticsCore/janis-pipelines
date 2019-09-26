@@ -7,9 +7,12 @@ import "trimIUPAC.wdl" as T
 
 workflow vardictGermlineVariantCaller {
   input {
-    File intervals
     File bam
     File bam_bai
+    File intervals
+    String sampleName
+    Float? alleleFreqThreshold
+    File headerLines
     File reference
     File reference_amb
     File reference_ann
@@ -18,14 +21,11 @@ workflow vardictGermlineVariantCaller {
     File reference_sa
     File reference_fai
     File reference_dict
-    String sampleName
-    Float allelFreqThreshold
-    Boolean? chromNamesAreNumbers
-    Boolean? vcfFormat
-    Int? chromColumn
-    Int? regStartCol
-    Int? geneEndCol
-    File headerLines
+    Boolean? vardict_chromNamesAreNumbers
+    Boolean? vardict_vcfFormat
+    Int? vardict_chromColumn
+    Int? vardict_regStartCol
+    Int? vardict_geneEndCol
   }
   call V.vardict_germline as vardict {
     input:
@@ -34,15 +34,15 @@ workflow vardictGermlineVariantCaller {
       bam=bam,
       reference_fai=reference_fai,
       reference=reference,
-      chromNamesAreNumbers=select_first([chromNamesAreNumbers, true]),
-      chromColumn=select_first([chromColumn, 1]),
-      geneEndCol=select_first([geneEndCol, 3]),
-      alleleFreqThreshold=allelFreqThreshold,
+      chromNamesAreNumbers=select_first([vardict_chromNamesAreNumbers, true]),
+      chromColumn=select_first([vardict_chromColumn, 1]),
+      geneEndCol=select_first([vardict_geneEndCol, 3]),
+      alleleFreqThreshold=select_first([alleleFreqThreshold, 0.5]),
       sampleName=sampleName,
-      regStartCol=select_first([regStartCol, 2]),
-      vcfFormat=select_first([vcfFormat, true]),
+      regStartCol=select_first([vardict_regStartCol, 2]),
+      vcfFormat=select_first([vardict_vcfFormat, true]),
       var2vcfSampleName=sampleName,
-      var2vcfAlleleFreqThreshold=allelFreqThreshold
+      var2vcfAlleleFreqThreshold=select_first([alleleFreqThreshold, 0.5])
   }
   call B.bcftoolsAnnotate as annotate {
     input:

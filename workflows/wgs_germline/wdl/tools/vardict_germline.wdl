@@ -5,7 +5,7 @@ task vardict_germline {
     Int? runtime_cpu
     Int? runtime_memory
     File intervals
-    String outputFilename = "generated-363edfa6-c3b0-11e9-81d9-f218985ebfa7.vardict.vcf"
+    String outputFilename = "generated-d9120cc4-e018-11e9-851b-a0cec8186c53.vardict.vcf.gz"
     File bam
     File bam_bai
     File reference
@@ -55,6 +55,8 @@ task vardict_germline {
     Float var2vcfAlleleFreqThreshold
   }
   command {
+    if [ $(dirname "${bam_bai}") != $(dirname "bam") ]; then mv ${bam_bai} $(dirname ${bam}); fi
+    if [ $(dirname "${reference_fai}") != $(dirname "reference") ]; then mv ${reference_fai} $(dirname ${reference}); fi
     VarDict \
       -b ${bam} \
       -G ${reference} \
@@ -90,7 +92,7 @@ task vardict_germline {
       ${"-s " + segStartCol} \
       ${"-T " + minReadsBeforeTrim} \
       ${true="-t" false="" removeDuplicateReads} \
-      ${"-th " + if defined(threads) then threads else 1} \
+      ${"-th " + if defined(threads) then threads else if defined(runtime_cpu) then runtime_cpu else 1} \
       ${"-V " + freq} \
       ${true="-v" false="" vcfFormat} \
       ${"-VS " + vs} \
@@ -104,15 +106,16 @@ task vardict_germline {
       var2vcf_valid.pl \
       -N ${var2vcfSampleName} \
       -f ${var2vcfAlleleFreqThreshold} \
-      ${"> " + if defined(outputFilename) then outputFilename else "generated-363ef5fe-c3b0-11e9-81d9-f218985ebfa7.vardict.vcf"}
+      | bcftools view -O z \
+      ${"> " + if defined(outputFilename) then outputFilename else "generated-d91223a8-e018-11e9-851b-a0cec8186c53.vardict.vcf.gz"}
   }
   runtime {
-    docker: "michaelfranklin/vardict:1.5.8"
+    docker: "michaelfranklin/vardict:1.6.0"
     cpu: if defined(runtime_cpu) then runtime_cpu else 1
     memory: if defined(runtime_memory) then "${runtime_memory}G" else "4G"
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-363edfa6-c3b0-11e9-81d9-f218985ebfa7.vardict.vcf"
+    File out = if defined(outputFilename) then outputFilename else "generated-d9120cc4-e018-11e9-851b-a0cec8186c53.vardict.vcf.gz"
   }
 }

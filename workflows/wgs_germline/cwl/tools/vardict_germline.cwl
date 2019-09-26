@@ -5,6 +5,9 @@ arguments:
 - position: 4
   shellQuote: false
   valueFrom: var2vcf_valid.pl
+- position: 6
+  shellQuote: false
+  valueFrom: ' | bcftools view -O z'
 baseCommand: VarDict
 class: CommandLineTool
 cwlVersion: v1.0
@@ -16,10 +19,10 @@ inputs:
     shellQuote: false
   label: intervals
   type: File
-- default: generated-360394e6-c3b0-11e9-81d9-f218985ebfa7.vardict.vcf
+- default: generated-d5e0eb92-e018-11e9-851b-a0cec8186c53.vardict.vcf.gz
   id: outputFilename
   inputBinding:
-    position: 6
+    position: 10
     prefix: '>'
     shellQuote: false
   label: outputFilename
@@ -503,6 +506,6 @@ outputs:
   type: File
 requirements:
   DockerRequirement:
-    dockerPull: michaelfranklin/vardict:1.5.8
+    dockerPull: michaelfranklin/vardict:1.6.0
   InlineJavascriptRequirement: {}
   ShellCommandRequirement: {}

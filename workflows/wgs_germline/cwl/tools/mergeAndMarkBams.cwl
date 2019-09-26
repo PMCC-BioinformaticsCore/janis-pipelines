@@ -15,13 +15,13 @@ inputs:
     default: 5000000
     id: maxRecordsInRam
     type: int
-  useThreading:
+  mergeSamFiles_useThreading:
     default: true
-    id: useThreading
+    id: mergeSamFiles_useThreading
     type: boolean
-  validationStringency:
+  mergeSamFiles_validationStringency:
     default: SILENT
-    id: validationStringency
+    id: mergeSamFiles_validationStringency
     type: string
 label: Merge and Mark Duplicates
 outputs:
@@ -63,10 +63,10 @@ steps:
         source: maxRecordsInRam
       useThreading:
         id: useThreading
-        source: useThreading
+        source: mergeSamFiles_useThreading
       validationStringency:
         id: validationStringency
-        source: validationStringency
+        source: mergeSamFiles_validationStringency
     out:
     - out
     run: Gatk4MergeSamFiles.cwl
