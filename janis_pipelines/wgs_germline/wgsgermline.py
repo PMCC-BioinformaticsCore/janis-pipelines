@@ -8,7 +8,8 @@ from janis_bioinformatics.data_types import (
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
 from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
-from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
+from janis_bioinformatics.tools.common import MergeAndMarkBams_4_1_3
+from janis_bioinformatics.tools.common.bwaaligner import BwaAligner
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
 from janis_bioinformatics.tools.pmac import CombineVariants_0_0_4
 from janis_bioinformatics.tools.variantcallers import (
