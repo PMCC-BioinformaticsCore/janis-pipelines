@@ -1,0 +1,19 @@
+{
+    "alignment.cutadapt_minReadLength": 50,
+    "alignment.cutadapt_qualityCutoff": 15,
+    "alignment.fastq": null,
+    "alignment.reference": null,
+    "alignment.reference_amb": null,
+    "alignment.reference_ann": null,
+    "alignment.reference_bwt": null,
+    "alignment.reference_dict": null,
+    "alignment.reference_fai": null,
+    "alignment.reference_pac": null,
+    "alignment.reference_sa": null,
+    "alignment.sampleName": null,
+    "alignment.sortsam_createIndex": true,
+    "alignment.sortsam_maxRecordsInRam": 5000000,
+    "alignment.sortsam_sortOrder": "coordinate",
+    "alignment.sortsam_tmpDir": ".",
+    "alignment.sortsam_validationStringency": "SILENT"
+}
