@@ -1,5 +1,7 @@
 # Janis - Example Pipelines
 
+[![PyPI version](https://badge.fury.io/py/janis-pipelines.pipelines.svg)](https://badge.fury.io/py/janis-pipelines.pipelines)
+
 This repository contains workflows written using [Janis](https://github.com/PMCC-BioinformaticsCore/janis).
 
 It can be installed through PIP with:
