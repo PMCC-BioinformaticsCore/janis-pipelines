@@ -1,3 +1,5 @@
+from datetime import date
+
 from janis_bioinformatics.data_types import (
     FastaWithDict,
     FastqGzPair,
@@ -18,7 +20,7 @@ from janis_bioinformatics.tools.variantcallers.illuminasomatic_strelka import (
 from janis_bioinformatics.tools.variantcallers.vardictsomatic_variants import (
     VardictSomaticVariantCaller,
 )
-from janis_core import String, WorkflowBuilder, File, Array, Float
+from janis_core import String, WorkflowBuilder, File, Array, Float, WorkflowMetadata
 
 
 class WGSSomaticMultiCallers(BioinformaticsWorkflow):
@@ -135,15 +137,15 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
 
         # Outputs
 
-        self.output("normalBam", source=self.normal.out)
-        self.output("tumorBam", source=self.tumor.out)
-        self.output("normalReport", source=self.normal.reports)
-        self.output("tumorReport", source=self.tumor.reports)
+        self.output("normalBam", source=self.normal.out, output_tag="variants")
+        self.output("tumorBam", source=self.tumor.out, output_tag="variants")
+        self.output("normalReport", source=self.normal.reports, output_tag="reports")
+        self.output("tumorReport", source=self.tumor.reports, output_tag="reports")
 
-        self.output("variants_gatk", source=self.variantCaller_merge_GATK.out)
-        self.output("variants_strelka", source=self.variantCaller_Strelka.out)
-        self.output("variants_vardict", source=self.variantCaller_merge_VarDict.out)
-        self.output("variants_combined", source=self.combineVariants.vcf)
+        self.output("variants_gatk", source=self.variantCaller_merge_GATK.out, output_tag="variants")
+        self.output("variants_strelka", source=self.variantCaller_Strelka.out, output_tag="variants")
+        self.output("variants_vardict", source=self.variantCaller_merge_VarDict.out, output_tag="variants")
+        self.output("variants_combined", source=self.combineVariants.vcf, output_tag="variants")
 
     @staticmethod
     def process_subpipeline(**connections):
@@ -168,9 +170,25 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
         w.step("fastqc", FastQC_0_11_5(reads=w.reads), scatter="reads")
 
         w.output("out", source=w.mergeAndMark.out)
-        w.output("reports", source=w.fastqc)
+        w.output("reports", source=w.fastqc, output_tag=[w.sampleName, "reports"])
 
         return w(**connections)
+
+    def bind_metadata(self):
+        meta: WorkflowMetadata = self.metadata
+
+        meta.keywords = [
+            "wgs",
+            "cancer",
+            "somatic",
+            "variants",
+            "gatk",
+            "vardict",
+            "strelka",
+        ]
+        meta.contributors = ["Michael Franklin"]
+        meta.dateUpdated = date(2019, 10, 16)
+        meta.short_documentation = "A somatic tumor-normal variant-calling WGS pipeline using GATK, VarDict and Strelka2."
 
 
 if __name__ == "__main__":

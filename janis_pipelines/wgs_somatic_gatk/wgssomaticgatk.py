@@ -1,3 +1,5 @@
+from datetime import date
+
 from janis_bioinformatics.data_types import (
     FastaWithDict,
     Fastq,
@@ -11,7 +13,7 @@ from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWork
 from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
 from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
-from janis_core import String, WorkflowBuilder, Array
+from janis_core import String, WorkflowBuilder, Array, WorkflowMetadata
 
 
 class WGSSomaticGATK(BioinformaticsWorkflow):
@@ -79,12 +81,12 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
 
         # Outputs
 
-        self.output("normalBam", source=self.normal.out)
-        self.output("tumorBam", source=self.tumor.out)
-        self.output("normalReport", source=self.normal.reports)
-        self.output("tumorReport", source=self.tumor.reports)
+        self.output("normalBam", source=self.normal.out, output_tag="bams")
+        self.output("tumorBam", source=self.tumor.out, output_tag="bams")
+        self.output("normalReport", source=self.normal.reports, output_tag="reports")
+        self.output("tumorReport", source=self.tumor.reports, output_tag="reports")
 
-        self.output("variants_gatk", source=self.sorted.out)
+        self.output("variants_gatk", source=self.sorted.out, output_tag="variants")
 
     @staticmethod
     def process_subpipeline(**connections):
@@ -112,6 +114,14 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
         w.output("reports", source=w.fastqc)
 
         return w(**connections)
+
+    def bind_metadata(self):
+        meta: WorkflowMetadata = self.metadata
+
+        meta.keywords = ["wgs", "cancer", "somatic", "variants", "gatk"]
+        meta.contributors = ["Michael Franklin"]
+        meta.dateUpdated = date(2019, 10, 16)
+        meta.short_documentation = "A somatic tumor-normal variant-calling WGS pipeline using only GATK Mutect2"
 
 
 if __name__ == "__main__":

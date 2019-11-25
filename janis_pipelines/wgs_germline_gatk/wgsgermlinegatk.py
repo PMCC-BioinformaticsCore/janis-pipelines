@@ -1,4 +1,6 @@
-from janis_core import String, Array, InputSelector
+from datetime import date
+
+from janis_core import String, Array, InputSelector, WorkflowMetadata
 
 from janis_bioinformatics.data_types import (
     FastaWithDict,
@@ -35,7 +37,7 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
 
         self.input("sampleName", String(), default="NA12878")
 
-        self.input("snps_dbsnp", VcfTabix)
+        self.input("snps_dbsnp", VcfTabix, doc="")
         self.input("snps_1000gp", VcfTabix)
         self.input("known_indels", VcfTabix)
         self.input("mills_indels", VcfTabix)
@@ -83,16 +85,25 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
         )
 
         self.output(
-            "bam",
-            source=self.processBamFiles.out,
-            output_tag="bams",
-            output_prefix=self.sampleName,
+            "bam", source=self.processBamFiles.out, output_tag=["bams", self.sampleName]
         )
         self.output(
             "reports", source=self.fastqc, output_tag=["reports", self.sampleName]
         )
         self.output("variants", source=self.sortCombined.out, output_tag="variants")
-        self.output("variants_split", source=self.variantCaller_GATK.out)
+        self.output(
+            "variants_split",
+            source=self.variantCaller_GATK.out,
+            output_tag=["variants", "byInterval"],
+        )
+
+    def bind_metadata(self):
+        meta: WorkflowMetadata = self.metadata
+
+        meta.keywords = ["wgs", "cancer", "germline", "variants", "gatk"]
+        meta.contributors = ["Michael Franklin"]
+        meta.dateUpdated = date(2019, 10, 16)
+        meta.short_documentation = "A variant-calling WGS pipeline using only the GATK Haplotype variant caller."
 
 
 if __name__ == "__main__":

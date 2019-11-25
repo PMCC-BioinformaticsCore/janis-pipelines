@@ -1,3 +1,5 @@
+from datetime import date
+
 from janis_bioinformatics.data_types import (
     FastaWithDict,
     VcfTabix,
@@ -5,6 +7,7 @@ from janis_bioinformatics.data_types import (
     Bed,
     BedTabix,
 )
+
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
 from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
@@ -20,7 +23,7 @@ from janis_bioinformatics.tools.variantcallers import (
 from janis_bioinformatics.tools.variantcallers.gridssgermline import (
     GridssGermlineVariantCaller,
 )
-from janis_core import Array, File, String, Float
+from janis_core import Array, File, String, Float, WorkflowMetadata
 
 
 class WGSGermlineMultiCallers(BioinformaticsWorkflow):
@@ -149,26 +152,46 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
         )
         self.step("sortCombined", BcfToolsSort_1_9(vcf=self.combineVariants.vcf))
 
-        self.output("bam", source=self.processBamFiles.out)
-        self.output("reports", source=self.fastqc)
-        self.output("combinedVariants", source=self.sortCombined.out)
-        self.output("variants_gatk_split", source=self.variantCaller_GATK.out)
+        self.output("bam", source=self.processBamFiles.out, output_tag="bams")
+        self.output("reports", source=self.fastqc, output_tag="reports")
+        self.output("combinedVariants", source=self.sortCombined.out, output_tag="variants")
+        self.output("variants_gatk_split", source=self.variantCaller_GATK.out, output_tag=["variants", "gatk"])
         self.output(
-            "variants_vardict_split", source=self.variantCaller_merge_Vardict.out
+            "variants_vardict_split", source=self.variantCaller_merge_Vardict.out, output_tag=["variants", "vardict"]
         )
         self.output(
             "variants_strelka",
             source=self.variantCaller_Strelka.out,
+            output_tag="variants"
             # prefix_source=self.tumorName,
             # output_tag="vcf",
         )
         self.output(
             "variants_gatk",
             source=self.variantCaller_merge_GATK.out,
+            output_tag="variants"
             # prefix_source=self.normalName,
         )
-        self.output("variants_vardict", source=self.variantCaller_Vardict.out)
+        self.output("variants_vardict", source=self.variantCaller_Vardict.out, output_tag="variants")
         # self.output("variants_gridss", source=self.variantCaller_GRIDSS.out)
+
+    def bind_metadata(self):
+        meta: WorkflowMetadata = self.metadata
+
+        meta.keywords = [
+            "wgs",
+            "cancer",
+            "germline",
+            "variants",
+            "gatk",
+            "vardict",
+            "strelka",
+        ]
+        meta.contributors = ["Michael Franklin"]
+        meta.dateUpdated = date(2019, 10, 16)
+        meta.short_documentation = (
+            "A variant-calling WGS pipeline using GATK, VarDict and Strelka2."
+        )
 
 
 if __name__ == "__main__":
