@@ -24,6 +24,7 @@ setup(
     entry_points={
         "janis.extension": ["pipelines=janis_pipelines"],
         "janis.tools": ["pipelines=janis_pipelines"],
+        "janis.pipelines": ["bioinformatics=janis_pipelines"],
     },
     install_requires=["janis-pipelines>=0.6.0"],
     zip_safe=False,
