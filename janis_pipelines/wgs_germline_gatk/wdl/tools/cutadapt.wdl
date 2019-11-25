@@ -6,8 +6,8 @@ task cutadapt {
     Int? runtime_memory
     Array[File] fastq
     String? adapter
-    String outputFilename = "generated-62ecc076-ea17-11e9-aa6c-acde48001122-R1.fastq.gz"
-    String secondReadFile = "generated-62ecc076-ea17-11e9-aa6c-acde48001122-R2.fastq.gz"
+    String outputFilename = "generated-69f8713e-0fca-11ea-926e-acde48001122-R1.fastq.gz"
+    String secondReadFile = "generated-69f8713e-0fca-11ea-926e-acde48001122-R2.fastq.gz"
     Boolean? debug
     Boolean? noIndels
     Boolean? matchReadWildcards
@@ -64,8 +64,8 @@ task cutadapt {
   command {
     cutadapt \
       ${"-a " + adapter} \
-      ${"-o " + if defined(outputFilename) then outputFilename else "generated-62ecdcc8-ea17-11e9-aa6c-acde48001122-R1.fastq.gz"} \
-      ${"-p " + if defined(secondReadFile) then secondReadFile else "generated-62ecdcc8-ea17-11e9-aa6c-acde48001122-R2.fastq.gz"} \
+      ${"-o " + if defined(outputFilename) then outputFilename else "generated-69f88b88-0fca-11ea-926e-acde48001122-R1.fastq.gz"} \
+      ${"-p " + if defined(secondReadFile) then secondReadFile else "generated-69f88b88-0fca-11ea-926e-acde48001122-R2.fastq.gz"} \
       ${true="--debug" false="" debug} \
       ${true="--no-indels" false="" noIndels} \
       ${true="--match-read-wildcards" false="" matchReadWildcards} \

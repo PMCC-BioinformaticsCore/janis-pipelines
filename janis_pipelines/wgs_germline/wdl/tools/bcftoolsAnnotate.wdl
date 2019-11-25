@@ -5,7 +5,7 @@ task bcftoolsAnnotate {
     Int? runtime_cpu
     Int? runtime_memory
     File file
-    String outputFilename = "generated-5bd17cbe-ea17-11e9-821d-acde48001122.vcf.gz"
+    String outputFilename = "generated-5769034e-0fca-11ea-99c5-acde48001122.vcf.gz"
     File? annotations
     String? collapse
     Array[String]? columns
@@ -26,7 +26,7 @@ task bcftoolsAnnotate {
   }
   command {
     bcftools annotate \
-      ${"--output " + if defined(outputFilename) then outputFilename else "generated-5bd1874a-ea17-11e9-821d-acde48001122.vcf.gz"} \
+      ${"--output " + if defined(outputFilename) then outputFilename else "generated-57690c90-0fca-11ea-99c5-acde48001122.vcf.gz"} \
       ${"--annotations " + annotations} \
       ${"--collapse " + collapse} \
       ${true="--columns " false="" defined(columns)}${sep=" " columns} \
@@ -53,6 +53,6 @@ task bcftoolsAnnotate {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-5bd17cbe-ea17-11e9-821d-acde48001122.vcf.gz"
+    File out = if defined(outputFilename) then outputFilename else "generated-5769034e-0fca-11ea-99c5-acde48001122.vcf.gz"
   }
 }

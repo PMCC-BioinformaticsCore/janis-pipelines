@@ -158,8 +158,8 @@ inputs:
   type:
   - File
   - 'null'
-- doc: '--targeted Set options for exome or other targeted input: note in particular
-    that this flag turns off high-depth filters'
+- doc: Set options for exome note in particular that this flag turns off high-depth
+    filters
   id: exome
   inputBinding:
     position: 1
@@ -167,7 +167,18 @@ inputs:
     shellQuote: false
   label: exome
   type:
-  - File
+  - boolean
+  - 'null'
+- doc: 'Set options for other targeted input: note in particular that this flag turns
+    off high-depth filters'
+  id: targeted
+  inputBinding:
+    position: 1
+    prefix: --exome
+    shellQuote: false
+  label: targeted
+  type:
+  - boolean
   - 'null'
 - doc: 'Optionally provide a bgzip-compressed/tabix-indexed BED file containing the
     set of regions to call. No VCF output will be provided outside of these regions.

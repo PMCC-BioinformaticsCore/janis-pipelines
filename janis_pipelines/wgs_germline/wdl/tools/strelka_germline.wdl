@@ -25,7 +25,8 @@ task strelka_germline {
     File? indelCandidates_tbi
     File? forcedGT
     File? forcedGT_tbi
-    File? exome
+    Boolean? exome
+    Boolean? targeted
     File? callRegions
     File? callRegions_tbi
     String? mode
@@ -59,7 +60,8 @@ task strelka_germline {
       ${true="--rna" false="" rna} \
       ${"--indelCandidates " + indelCandidates} \
       ${"--forcedGT " + forcedGT} \
-      ${"--exome " + exome} \
+      ${true="--exome" false="" exome} \
+      ${true="--exome" false="" targeted} \
       ${"--callRegions=" + callRegions} \
       ;${if defined(relativeStrelkaDirectory) then relativeStrelkaDirectory else "strelka_dir"}/runWorkflow.py \
       ${"--mode " + if defined(mode) then mode else "local"} \

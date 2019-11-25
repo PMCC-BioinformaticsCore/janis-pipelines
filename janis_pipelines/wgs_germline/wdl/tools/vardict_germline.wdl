@@ -5,7 +5,7 @@ task vardict_germline {
     Int? runtime_cpu
     Int? runtime_memory
     File intervals
-    String outputFilename = "generated-5bd12a7a-ea17-11e9-821d-acde48001122.vardict.vcf.gz"
+    String outputFilename = "generated-57689896-0fca-11ea-99c5-acde48001122.vardict.vcf.gz"
     File bam
     File bam_bai
     File reference
@@ -107,7 +107,7 @@ task vardict_germline {
       -N ${var2vcfSampleName} \
       -f ${var2vcfAlleleFreqThreshold} \
       | bcftools view -O z \
-      ${"> " + if defined(outputFilename) then outputFilename else "generated-5bd140a0-ea17-11e9-821d-acde48001122.vardict.vcf.gz"}
+      ${"> " + if defined(outputFilename) then outputFilename else "generated-5768ad40-0fca-11ea-99c5-acde48001122.vardict.vcf.gz"}
   }
   runtime {
     docker: "michaelfranklin/vardict:1.6.0"
@@ -116,6 +116,6 @@ task vardict_germline {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-5bd12a7a-ea17-11e9-821d-acde48001122.vardict.vcf.gz"
+    File out = if defined(outputFilename) then outputFilename else "generated-57689896-0fca-11ea-99c5-acde48001122.vardict.vcf.gz"
   }
 }

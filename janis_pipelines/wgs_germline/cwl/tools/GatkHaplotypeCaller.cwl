@@ -380,7 +380,7 @@ inputs:
   - .fai
   - ^.dict
   type: File
-- default: generated-58b044b6-ea17-11e9-821d-acde48001122.vcf.gz
+- default: generated-546cc536-0fca-11ea-99c5-acde48001122.vcf.gz
   doc: File to which variants should be written
   id: outputFilename
   inputBinding:

@@ -19,7 +19,7 @@ inputs:
     shellQuote: false
   label: intervals
   type: File
-- default: generated-58b0f8de-ea17-11e9-821d-acde48001122.vardict.vcf.gz
+- default: generated-546d86e2-0fca-11ea-99c5-acde48001122.vardict.vcf.gz
   id: outputFilename
   inputBinding:
     position: 10

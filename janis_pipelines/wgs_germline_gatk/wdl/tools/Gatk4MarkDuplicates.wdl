@@ -6,8 +6,8 @@ task Gatk4MarkDuplicates {
     Int? runtime_memory
     File bam
     File bam_bai
-    String outputFilename = "generated-62edc854-ea17-11e9-aa6c-acde48001122.bam"
-    String metricsFilename = "generated-62edc8e0-ea17-11e9-aa6c-acde48001122.metrics.txt"
+    String outputFilename = "generated-69f998b6-0fca-11ea-926e-acde48001122.bam"
+    String metricsFilename = "generated-69f99956-0fca-11ea-926e-acde48001122.metrics.txt"
     Array[File]? argumentsFile
     String? assumeSortOrder
     String? barcodeTag
@@ -30,8 +30,8 @@ task Gatk4MarkDuplicates {
       ${"--BARCODE_TAG " + barcodeTag} \
       ${true="-CO " false="" defined(comment)}${sep=" " comment} \
       -I ${bam} \
-      ${"-O " + if defined(outputFilename) then outputFilename else "generated-62edd3d0-ea17-11e9-aa6c-acde48001122.bam"} \
-      ${"-M " + if defined(metricsFilename) then metricsFilename else "generated-62edd47a-ea17-11e9-aa6c-acde48001122.metrics.txt"} \
+      ${"-O " + if defined(outputFilename) then outputFilename else "generated-69f9a3ce-0fca-11ea-926e-acde48001122.bam"} \
+      ${"-M " + if defined(metricsFilename) then metricsFilename else "generated-69f9a478-0fca-11ea-926e-acde48001122.metrics.txt"} \
       ${true="--arguments_file " false="" defined(argumentsFile)}${sep=" " argumentsFile} \
       ${"--COMPRESSION_LEVEL " + compressionLevel} \
       ${true="--CREATE_INDEX" false="" createIndex} \
@@ -51,8 +51,8 @@ task Gatk4MarkDuplicates {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-62edc854-ea17-11e9-aa6c-acde48001122.bam"
-    File out_bai = sub(if defined(outputFilename) then outputFilename else "generated-62edc854-ea17-11e9-aa6c-acde48001122.bam", "\\.bam$", ".bai")
-    File metrics = if defined(metricsFilename) then metricsFilename else "generated-62edc8e0-ea17-11e9-aa6c-acde48001122.metrics.txt"
+    File out = if defined(outputFilename) then outputFilename else "generated-69f998b6-0fca-11ea-926e-acde48001122.bam"
+    File out_bai = sub(if defined(outputFilename) then outputFilename else "generated-69f998b6-0fca-11ea-926e-acde48001122.bam", "\\.bam$", ".bai")
+    File metrics = if defined(metricsFilename) then metricsFilename else "generated-69f99956-0fca-11ea-926e-acde48001122.metrics.txt"
   }
 }

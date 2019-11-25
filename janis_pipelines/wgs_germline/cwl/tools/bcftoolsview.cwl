@@ -1,3 +1,7 @@
+arguments:
+- position: 1
+  prefix: --output-type
+  valueFrom: z
 baseCommand:
 - bcftools
 - view
@@ -57,25 +61,6 @@ inputs:
   label: noVersion
   type:
   - boolean
-  - 'null'
-- doc: (-o) output file name [stdout]
-  id: outputFilename
-  inputBinding:
-    position: 1
-    prefix: --output-file
-  label: outputFilename
-  type:
-  - File
-  - 'null'
-- doc: '(-O) [<b|u|z|v>] b: compressed BCF, u: uncompressed BCF, z: compressed VCF,
-    v: uncompressed VCF [v]'
-  id: outputType
-  inputBinding:
-    position: 1
-    prefix: --output-type
-  label: outputType
-  type:
-  - string
   - 'null'
 - doc: (-r) restrict to comma-separated list of regions
   id: regions

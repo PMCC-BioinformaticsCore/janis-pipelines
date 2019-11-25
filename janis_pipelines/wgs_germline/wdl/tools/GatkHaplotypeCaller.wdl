@@ -47,7 +47,7 @@ task GatkHaplotypeCaller {
     File reference_sa
     File reference_fai
     File reference_dict
-    String outputFilename = "generated-5bcfb190-ea17-11e9-821d-acde48001122.vcf.gz"
+    String outputFilename = "generated-57671516-0fca-11ea-99c5-acde48001122.vcf.gz"
     File dbsnp
     File dbsnp_tbi
     File? intervals
@@ -100,7 +100,7 @@ task GatkHaplotypeCaller {
       ${"--intervals " + intervals} \
       --reference ${reference} \
       --dbsnp ${dbsnp} \
-      ${"--output " + if defined(outputFilename) then outputFilename else "generated-5bcfc4dc-ea17-11e9-821d-acde48001122.vcf.gz"}
+      ${"--output " + if defined(outputFilename) then outputFilename else "generated-57672808-0fca-11ea-99c5-acde48001122.vcf.gz"}
   }
   runtime {
     docker: "broadinstitute/gatk:4.1.3.0"
@@ -109,6 +109,6 @@ task GatkHaplotypeCaller {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-5bcfb190-ea17-11e9-821d-acde48001122.vcf.gz"
+    File out = if defined(outputFilename) then outputFilename else "generated-57671516-0fca-11ea-99c5-acde48001122.vcf.gz"
   }
 }

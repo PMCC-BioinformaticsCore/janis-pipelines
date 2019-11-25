@@ -16,7 +16,7 @@ inputs:
       prefix: --INPUT
     items: File
     type: array
-- default: generated-58b05c76-ea17-11e9-821d-acde48001122.gathered.vcf
+- default: generated-546cdaa8-0fca-11ea-99c5-acde48001122.gathered.vcf
   doc: '[default: null] (-O) Output VCF file.'
   id: outputFilename
   inputBinding:

@@ -10,8 +10,6 @@ task bcftoolsview {
     Boolean? noHeader
     Int? compressionLevel
     Boolean? noVersion
-    File? outputFilename
-    String? outputType
     String? regions
     File? regionsFile
     String? targets
@@ -50,8 +48,6 @@ task bcftoolsview {
       ${true="--no-header" false="" noHeader} \
       ${"--compression-level " + compressionLevel} \
       ${true="--no-version" false="" noVersion} \
-      ${"--output-file " + outputFilename} \
-      ${"--output-type " + outputType} \
       ${"--regions " + regions} \
       ${"--regions-file " + regionsFile} \
       ${"--targets " + targets} \
@@ -82,6 +78,7 @@ task bcftoolsview {
       ${true="--exclude-types " false="" defined(excludeTypes)}${sep=" " excludeTypes} \
       ${true="--private" false="" private} \
       ${true="--exclude-private" false="" excludePrivate} \
+      --output-type 'z' \
       ${file}
   }
   runtime {

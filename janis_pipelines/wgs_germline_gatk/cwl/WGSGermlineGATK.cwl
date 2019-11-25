@@ -49,6 +49,7 @@ inputs:
     - .tbi
     type: File
   snps_dbsnp:
+    doc: ''
     id: snps_dbsnp
     secondaryFiles:
     - .tbi
