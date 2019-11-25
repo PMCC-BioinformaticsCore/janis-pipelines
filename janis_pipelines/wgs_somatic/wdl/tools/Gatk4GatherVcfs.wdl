@@ -5,7 +5,7 @@ task Gatk4GatherVcfs {
     Int? runtime_cpu
     Int? runtime_memory
     Array[File] vcfs
-    String outputFilename = "generated-6c087448-ea17-11e9-bda6-acde48001122.gathered.vcf"
+    String outputFilename = "generated-7ea37dea-0fca-11ea-b0f8-acde48001122.gathered.vcf"
     Array[File]? argumentsFile
     Int? compressionLevel
     Boolean? createIndex
@@ -23,7 +23,7 @@ task Gatk4GatherVcfs {
   command {
     gatk GatherVcfs \
       ${sep=" " prefix("--INPUT ", vcfs)} \
-      ${"--OUTPUT " + if defined(outputFilename) then outputFilename else "generated-6c087cea-ea17-11e9-bda6-acde48001122.gathered.vcf"} \
+      ${"--OUTPUT " + if defined(outputFilename) then outputFilename else "generated-7ea3877c-0fca-11ea-b0f8-acde48001122.gathered.vcf"} \
       ${true="--arguments_file " false="" defined(argumentsFile)}${sep=" " argumentsFile} \
       ${"--COMPRESSION_LEVEL " + compressionLevel} \
       ${true="--CREATE_INDEX" false="" createIndex} \
@@ -45,6 +45,6 @@ task Gatk4GatherVcfs {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-6c087448-ea17-11e9-bda6-acde48001122.gathered.vcf"
+    File out = if defined(outputFilename) then outputFilename else "generated-7ea37dea-0fca-11ea-b0f8-acde48001122.gathered.vcf"
   }
 }

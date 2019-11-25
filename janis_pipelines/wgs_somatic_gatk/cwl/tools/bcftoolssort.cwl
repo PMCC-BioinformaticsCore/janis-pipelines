@@ -12,22 +12,21 @@ inputs:
     position: 1
   label: vcf
   type: File
-- default: generated-7bf2c5d4-ea17-11e9-b34c-acde48001122.sorted.vcf.gz
+- default: generated-87826bd8-0fca-11ea-a7d3-acde48001122.sorted.vcf.gz
   doc: (-o) output file name [stdout]
   id: outputFilename
   inputBinding:
     prefix: --output-file
   label: outputFilename
   type: string
-- doc: '(-O) b: compressed BCF, u: uncompressed BCF, z: compressed VCF, v: uncompressed
+- default: z
+  doc: '(-O) b: compressed BCF, u: uncompressed BCF, z: compressed VCF, v: uncompressed
     VCF [v]'
   id: outputType
   inputBinding:
     prefix: --output-type
   label: outputType
-  type:
-  - string
-  - 'null'
+  type: string
 - doc: (-T) temporary files [/tmp/bcftools-sort.XXXXXX/]
   id: tempDir
   inputBinding:

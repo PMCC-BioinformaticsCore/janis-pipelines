@@ -21,6 +21,7 @@ workflow strelkaSomaticVariantCaller {
     File reference_dict
     File? intervals
     File? intervals_tbi
+    Boolean? isExome
     Array[String]? bcf_view_applyFilters
   }
   call M.manta as manta {
@@ -37,6 +38,7 @@ workflow strelkaSomaticVariantCaller {
       reference=reference,
       tumorBam_bai=tumorBam_bai,
       tumorBam=tumorBam,
+      exome=isExome,
       callRegions_tbi=intervals_tbi,
       callRegions=intervals
   }
@@ -54,8 +56,9 @@ workflow strelkaSomaticVariantCaller {
       reference_fai=reference_fai,
       reference_dict=reference_dict,
       reference=reference,
-      indelCandidates_tbi=manta.candidateSmallIndels_tbi,
-      indelCandidates=manta.candidateSmallIndels,
+      indelCandidates_tbi=[manta.candidateSmallIndels_tbi],
+      indelCandidates=[manta.candidateSmallIndels],
+      exome=isExome,
       callRegions_tbi=intervals_tbi,
       callRegions=intervals
   }

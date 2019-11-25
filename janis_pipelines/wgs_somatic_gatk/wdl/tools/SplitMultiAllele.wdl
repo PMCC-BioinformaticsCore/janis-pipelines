@@ -13,7 +13,7 @@ task SplitMultiAllele {
     File reference_sa
     File reference_fai
     File reference_dict
-    String outputFilename = "generated-7e9aac84-ea17-11e9-b34c-acde48001122.norm.vcf"
+    String outputFilename = "generated-8a499706-0fca-11ea-a7d3-acde48001122.norm.vcf"
   }
   command {
     if [ $(dirname "${reference_amb}") != $(dirname "reference") ]; then mv ${reference_amb} $(dirname ${reference}); fi
@@ -34,7 +34,7 @@ task SplitMultiAllele {
       vt normalize -n -q - -o - \
       -r ${reference} \
       | \
-      ${"> " + if defined(outputFilename) then outputFilename else "generated-7e9ab36e-ea17-11e9-b34c-acde48001122.norm.vcf"} \
+      ${"> " + if defined(outputFilename) then outputFilename else "generated-8a499e68-0fca-11ea-a7d3-acde48001122.norm.vcf"} \
       sed 's/ID=AD,Number=./ID=AD,Number=1/'
   }
   runtime {
@@ -44,6 +44,6 @@ task SplitMultiAllele {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-7e9aac84-ea17-11e9-b34c-acde48001122.norm.vcf"
+    File out = if defined(outputFilename) then outputFilename else "generated-8a499706-0fca-11ea-a7d3-acde48001122.norm.vcf"
   }
 }

@@ -10,12 +10,13 @@ inputs:
   id: bams
   inputBinding:
     position: 10
-    prefix: -I
   label: bams
   type:
+    inputBinding:
+      prefix: -I
     items: File
     type: array
-- default: generated-689aa8c6-ea17-11e9-bda6-acde48001122.bam
+- default: generated-7b43b868-0fca-11ea-b0f8-acde48001122.bam
   doc: SAM/BAM file to write merged result to
   id: outputFilename
   inputBinding:

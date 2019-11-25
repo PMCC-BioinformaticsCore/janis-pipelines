@@ -53,7 +53,7 @@ inputs:
   - .fai
   - ^.dict
   type: File
-- default: generated-689b9574-ea17-11e9-bda6-acde48001122
+- default: generated-7b44e67a-0fca-11ea-b0f8-acde48001122
   doc: 'Name of directory to be created where all workflow scripts and output will
     be written. Each analysis requires a separate directory. (default: StrelkaSomaticWorkflow)'
   id: rundir
@@ -73,11 +73,12 @@ inputs:
   id: region
   inputBinding:
     position: 1
-    prefix: --region=
-    separate: false
   label: region
   type:
-  - File
+  - inputBinding:
+      prefix: --region
+    items: string
+    type: array
   - 'null'
 - doc: provide a configuration file to override defaults in global config file (/opt/strelka/bin/configureStrelkaSomaticWorkflow.py.ini)
   id: config
@@ -89,7 +90,7 @@ inputs:
   type:
   - File
   - 'null'
-- doc: ' Output a bed file describing somatic callable regions of the genome'
+- doc: Output a bed file describing somatic callable regions of the genome
   id: outputcallableregions
   inputBinding:
     position: 1
@@ -97,7 +98,7 @@ inputs:
     separate: true
   label: outputcallableregions
   type:
-  - File
+  - boolean
   - 'null'
 - doc: 'Specify a VCF of candidate indel alleles. These alleles are always evaluated
     but only reported in the output when they are inferred to exist in the sample.
@@ -107,13 +108,13 @@ inputs:
   id: indelCandidates
   inputBinding:
     position: 1
-    prefix: --indelCandidates=
-    separate: false
   label: indelCandidates
-  secondaryFiles:
-  - .tbi
   type:
-  - File
+  - inputBinding:
+      prefix: --indelCandidates=
+      separate: false
+    items: File
+    type: array
   - 'null'
 - doc: 'Specify a VCF of candidate alleles. These alleles are always evaluated and
     reported even if they are unlikely to exist in the sample. The VCF must be tabix
@@ -125,20 +126,33 @@ inputs:
   id: forcedgt
   inputBinding:
     position: 1
-    prefix: --forcedGT=
-    separate: false
   label: forcedgt
   type:
-  - File
+  - inputBinding:
+      prefix: --forcedGT=
+      separate: false
+    items: File
+    type: array
   - 'null'
-- doc: '(--exome)  Set options for exome or other targeted input: note in particular
-    that this flag turns off high-depth filters'
+- doc: 'Set options for other targeted input: note in particular that this flag turns
+    off high-depth filters'
   id: targeted
   inputBinding:
     position: 1
     prefix: --targeted
     separate: true
   label: targeted
+  type:
+  - boolean
+  - 'null'
+- doc: 'Set options for exome: note in particular that this flag turns off high-depth
+    filters'
+  id: exome
+  inputBinding:
+    position: 1
+    prefix: --exome
+    separate: true
+  label: exome
   type:
   - boolean
   - 'null'
@@ -165,6 +179,8 @@ inputs:
     prefix: --noiseVcf=
     separate: false
   label: noisevcf
+  secondaryFiles:
+  - .tbi
   type:
   - File
   - 'null'

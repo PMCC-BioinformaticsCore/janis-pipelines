@@ -31,7 +31,7 @@ inputs:
     prefix: --normal-sample
   label: normalSample
   type: string
-- default: generated-7bf27dcc-ea17-11e9-b34c-acde48001122.vcf.gz
+- default: generated-8782251a-0fca-11ea-a7d3-acde48001122.vcf.gz
   id: outputFilename
   inputBinding:
     position: 20
@@ -299,7 +299,7 @@ inputs:
   type:
   - int
   - 'null'
-- default: generated-7bf2813c-ea17-11e9-b34c-acde48001122.tar.gz
+- default: generated-8782288a-0fca-11ea-a7d3-acde48001122.tar.gz
   doc: 'If specified, collect F1R2 counts and output files into this tar.gz file Default
     value: null. '
   id: f1r2TarGz_outputFilename

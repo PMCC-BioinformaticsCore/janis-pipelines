@@ -9,7 +9,7 @@ task gatkmutect2 {
     Array[File] normalBams
     Array[File] normalBams_bai
     String normalSample
-    String outputFilename = "generated-7e990028-ea17-11e9-b34c-acde48001122.vcf.gz"
+    String outputFilename = "generated-8a4629f4-0fca-11ea-a7d3-acde48001122.vcf.gz"
     File reference
     File reference_amb
     File reference_ann
@@ -44,7 +44,7 @@ task gatkmutect2 {
     Int? f1r2MaxDepth
     Int? f1r2MedianMq
     Int? f1r2MinBq
-    String f1r2TarGz_outputFilename = "generated-7e99051e-ea17-11e9-b34c-acde48001122.tar.gz"
+    String f1r2TarGz_outputFilename = "generated-8a462ef4-0fca-11ea-a7d3-acde48001122.tar.gz"
     String? founderId
     String? gatkConfigFile
     Int? gcsRetries
@@ -189,7 +189,7 @@ task gatkmutect2 {
       ${"--f1r2-max-depth " + f1r2MaxDepth} \
       ${"--f1r2-median-mq " + f1r2MedianMq} \
       ${"--f1r2-min-bq " + f1r2MinBq} \
-      ${"--f1r2-tar-gz " + if defined(f1r2TarGz_outputFilename) then f1r2TarGz_outputFilename else "generated-7e995c3a-ea17-11e9-b34c-acde48001122.tar.gz"} \
+      ${"--f1r2-tar-gz " + if defined(f1r2TarGz_outputFilename) then f1r2TarGz_outputFilename else "generated-8a467b66-0fca-11ea-a7d3-acde48001122.tar.gz"} \
       ${"-founder-id " + founderId} \
       ${"--gatk-config-file " + gatkConfigFile} \
       ${"-gcs-retries " + gcsRetries} \
@@ -290,7 +290,7 @@ task gatkmutect2 {
       ${"--read-name " + readName} \
       ${true="--keep-reverse-strand-only" false="" keepReverseStrandOnly} \
       ${"-sample " + sample} \
-      ${"-O " + if defined(outputFilename) then outputFilename else "generated-7e9956ea-ea17-11e9-b34c-acde48001122.vcf.gz"}
+      ${"-O " + if defined(outputFilename) then outputFilename else "generated-8a467620-0fca-11ea-a7d3-acde48001122.vcf.gz"}
   }
   runtime {
     docker: "broadinstitute/gatk:4.1.3.0"
@@ -299,9 +299,9 @@ task gatkmutect2 {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-7e990028-ea17-11e9-b34c-acde48001122.vcf.gz"
-    File out_tbi = if defined(outputFilename) then outputFilename else "generated-7e990028-ea17-11e9-b34c-acde48001122.vcf.gz" + ".tbi"
-    File stats = "${if defined(outputFilename) then outputFilename else "generated-7e990028-ea17-11e9-b34c-acde48001122.vcf.gz"}.stats"
-    File f1f2r_out = if defined(f1r2TarGz_outputFilename) then f1r2TarGz_outputFilename else "generated-7e99051e-ea17-11e9-b34c-acde48001122.tar.gz"
+    File out = if defined(outputFilename) then outputFilename else "generated-8a4629f4-0fca-11ea-a7d3-acde48001122.vcf.gz"
+    File out_tbi = if defined(outputFilename) then outputFilename else "generated-8a4629f4-0fca-11ea-a7d3-acde48001122.vcf.gz" + ".tbi"
+    File stats = "${if defined(outputFilename) then outputFilename else "generated-8a4629f4-0fca-11ea-a7d3-acde48001122.vcf.gz"}.stats"
+    File f1f2r_out = if defined(f1r2TarGz_outputFilename) then f1r2TarGz_outputFilename else "generated-8a462ef4-0fca-11ea-a7d3-acde48001122.tar.gz"
   }
 }

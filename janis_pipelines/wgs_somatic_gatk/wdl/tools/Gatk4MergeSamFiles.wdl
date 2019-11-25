@@ -6,7 +6,7 @@ task Gatk4MergeSamFiles {
     Int? runtime_memory
     Array[File] bams
     Array[File] bams_bai
-    String outputFilename = "generated-7e982888-ea17-11e9-b34c-acde48001122.bam"
+    String outputFilename = "generated-8a454908-0fca-11ea-a7d3-acde48001122.bam"
     Array[File]? argumentsFile
     Boolean? assumeSorted
     Array[String]? comment
@@ -45,8 +45,8 @@ task Gatk4MergeSamFiles {
       ${true="-CO " false="" defined(comment)}${sep=" " comment} \
       ${true="-MSD" false="" mergeSequenceDictionaries} \
       ${true="--USE_THREADING" false="" useThreading} \
-      -I ${sep=" " bams} \
-      ${"-O " + if defined(outputFilename) then outputFilename else "generated-7e983580-ea17-11e9-b34c-acde48001122.bam"} \
+      ${sep=" " prefix("-I ", bams)} \
+      ${"-O " + if defined(outputFilename) then outputFilename else "generated-8a455556-0fca-11ea-a7d3-acde48001122.bam"} \
       ${true="--arguments_file " false="" defined(argumentsFile)}${sep=" " argumentsFile} \
       ${"-SO " + sortOrder} \
       ${"--COMPRESSION_LEVEL " + compressionLevel} \
@@ -68,7 +68,7 @@ task Gatk4MergeSamFiles {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-7e982888-ea17-11e9-b34c-acde48001122.bam"
-    File out_bai = sub(if defined(outputFilename) then outputFilename else "generated-7e982888-ea17-11e9-b34c-acde48001122.bam", "\\.bam$", ".bai")
+    File out = if defined(outputFilename) then outputFilename else "generated-8a454908-0fca-11ea-a7d3-acde48001122.bam"
+    File out_bai = sub(if defined(outputFilename) then outputFilename else "generated-8a454908-0fca-11ea-a7d3-acde48001122.bam", "\\.bam$", ".bai")
   }
 }

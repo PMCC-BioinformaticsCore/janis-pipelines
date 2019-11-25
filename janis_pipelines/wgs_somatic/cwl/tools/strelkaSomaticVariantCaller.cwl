@@ -16,6 +16,11 @@ inputs:
     type:
     - File
     - 'null'
+  isExome:
+    id: isExome
+    type:
+    - boolean
+    - 'null'
   normalBam:
     id: normalBam
     secondaryFiles:
@@ -57,6 +62,7 @@ outputs:
     type: File
 requirements:
   InlineJavascriptRequirement: {}
+  MultipleInputFeatureRequirement: {}
   StepInputExpressionRequirement: {}
 steps:
   bcf_view:
@@ -78,6 +84,9 @@ steps:
       callRegions:
         id: callRegions
         source: intervals
+      exome:
+        id: exome
+        source: isExome
       reference:
         id: reference
         source: reference
@@ -110,9 +119,14 @@ steps:
       callRegions:
         id: callRegions
         source: intervals
+      exome:
+        id: exome
+        source: isExome
       indelCandidates:
         id: indelCandidates
-        source: manta/candidateSmallIndels
+        linkMerge: merge_nested
+        source:
+        - manta/candidateSmallIndels
       normalBam:
         id: normalBam
         source: normalBam

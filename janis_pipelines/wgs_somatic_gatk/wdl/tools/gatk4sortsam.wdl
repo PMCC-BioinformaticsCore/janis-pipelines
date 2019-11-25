@@ -5,7 +5,7 @@ task gatk4sortsam {
     Int? runtime_cpu
     Int? runtime_memory
     File bam
-    String outputFilename = "generated-7e97e418-ea17-11e9-b34c-acde48001122.bam"
+    String outputFilename = "generated-8a450e52-0fca-11ea-a7d3-acde48001122.bam"
     String sortOrder
     Array[File]? argumentsFile
     Int? compressionLevel
@@ -37,7 +37,7 @@ task gatk4sortsam {
     if [ $(dirname "${reference_dict}") != $(dirname "reference") ]; then mv ${reference_dict} $(dirname ${reference}); fi
     gatk SortSam \
       -I ${bam} \
-      ${"-O " + if defined(outputFilename) then outputFilename else "generated-7e97ee36-ea17-11e9-b34c-acde48001122.bam"} \
+      ${"-O " + if defined(outputFilename) then outputFilename else "generated-8a45183e-0fca-11ea-a7d3-acde48001122.bam"} \
       -SO ${sortOrder} \
       ${if defined(argumentsFile) then "--arguments_file " else ""}${sep=" --arguments_file " argumentsFile} \
       ${"--COMPRESSION_LEVEL " + compressionLevel} \
@@ -59,7 +59,7 @@ task gatk4sortsam {
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-7e97e418-ea17-11e9-b34c-acde48001122.bam"
-    File out_bai = sub(if defined(outputFilename) then outputFilename else "generated-7e97e418-ea17-11e9-b34c-acde48001122.bam", "\\.bam$", ".bai")
+    File out = if defined(outputFilename) then outputFilename else "generated-8a450e52-0fca-11ea-a7d3-acde48001122.bam"
+    File out_bai = sub(if defined(outputFilename) then outputFilename else "generated-8a450e52-0fca-11ea-a7d3-acde48001122.bam", "\\.bam$", ".bai")
   }
 }

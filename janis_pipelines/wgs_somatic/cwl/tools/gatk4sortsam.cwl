@@ -13,7 +13,7 @@ inputs:
     prefix: -I
   label: bam
   type: File
-- default: generated-689a999e-ea17-11e9-bda6-acde48001122.bam
+- default: generated-7b43a8a0-0fca-11ea-b0f8-acde48001122.bam
   doc: The sorted SAM/BAM/CRAM output file.
   id: outputFilename
   inputBinding:
