@@ -35,7 +35,7 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
 
     @staticmethod
     def version():
-        return "1.0.0"
+        return "1.0.1"
 
     def constructor(self):
 
@@ -154,25 +154,38 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
 
         self.output("bam", source=self.processBamFiles.out, output_tag="bams")
         self.output("reports", source=self.fastqc, output_tag="reports")
-        self.output("combinedVariants", source=self.sortCombined.out, output_tag="variants")
-        self.output("variants_gatk_split", source=self.variantCaller_GATK.out, output_tag=["variants", "gatk"])
+
         self.output(
-            "variants_vardict_split", source=self.variantCaller_merge_Vardict.out, output_tag=["variants", "vardict"]
+            "combinedVariants", source=self.sortCombined.out, output_tag="variants"
+        )
+
+        self.output(
+            "variants_gatk",
+            source=self.variantCaller_merge_GATK.out,
+            output_tag="variants",
+        )
+        self.output(
+            "variants_vardict",
+            source=self.variantCaller_merge_Vardict.out,
+            output_tag=["variants"],
         )
         self.output(
             "variants_strelka",
             source=self.variantCaller_Strelka.out,
-            output_tag="variants"
-            # prefix_source=self.tumorName,
-            # output_tag="vcf",
+            output_tag="variants",
+        )
+
+        self.output(
+            "variants_gatk_split",
+            source=self.variantCaller_GATK.out,
+            output_tag=["variants", "gatk"],
         )
         self.output(
-            "variants_gatk",
-            source=self.variantCaller_merge_GATK.out,
-            output_tag="variants"
-            # prefix_source=self.normalName,
+            "variants_vardict_split",
+            source=self.variantCaller_Vardict.out,
+            output_tag=["variants", "variants"],
         )
-        self.output("variants_vardict", source=self.variantCaller_Vardict.out, output_tag="variants")
+
         # self.output("variants_gridss", source=self.variantCaller_GRIDSS.out)
 
     def bind_metadata(self):
