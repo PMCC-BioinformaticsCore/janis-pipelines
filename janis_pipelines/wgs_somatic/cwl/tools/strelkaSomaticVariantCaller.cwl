@@ -24,7 +24,7 @@ inputs:
   normalBam:
     id: normalBam
     secondaryFiles:
-    - ^.bai
+    - .bai
     type: File
   reference:
     id: reference
@@ -40,7 +40,7 @@ inputs:
   tumorBam:
     id: tumorBam
     secondaryFiles:
-    - ^.bai
+    - .bai
     type: File
 label: Strelka Somatic Variant Caller
 outputs:

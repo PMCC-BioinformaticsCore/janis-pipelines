@@ -1,9 +1,9 @@
 version development
 
-import "gatk4splitreads.wdl" as G
+import "Gatk4SplitReads.wdl" as G
 import "Gatk4BaseRecalibrator.wdl" as G2
-import "GATK4ApplyBQSR.wdl" as G3
-import "GatkHaplotypeCaller.wdl" as G4
+import "Gatk4ApplyBQSR.wdl" as G3
+import "Gatk4HaplotypeCaller.wdl" as G4
 import "SplitMultiAllele.wdl" as S
 
 workflow GATK4_GermlineVariantCaller {
@@ -28,7 +28,7 @@ workflow GATK4_GermlineVariantCaller {
     File millsIndels
     File millsIndels_tbi
   }
-  call G.gatk4splitreads as splitBams {
+  call G.Gatk4SplitReads as splitBams {
     input:
       bam_bai=bam_bai,
       bam=bam,
@@ -50,7 +50,7 @@ workflow GATK4_GermlineVariantCaller {
       reference=reference,
       intervals=intervals
   }
-  call G3.GATK4ApplyBQSR as applyBQSR {
+  call G3.Gatk4ApplyBQSR as applyBQSR {
     input:
       bam_bai=splitBams.out_bai,
       bam=splitBams.out,
@@ -65,7 +65,7 @@ workflow GATK4_GermlineVariantCaller {
       recalFile=baseRecalibrator.out,
       intervals=intervals
   }
-  call G4.GatkHaplotypeCaller as haplotypeCaller {
+  call G4.Gatk4HaplotypeCaller as haplotypeCaller {
     input:
       inputRead_bai=applyBQSR.out_bai,
       inputRead=applyBQSR.out,

@@ -1,7 +1,8 @@
 version development
 
-import "tools/BwaAligner.wdl" as B
 import "tools/fastqc.wdl" as F
+import "tools/ParseFastqcAdaptors.wdl" as P
+import "tools/BwaAligner.wdl" as B
 import "tools/mergeAndMarkBams.wdl" as M
 import "tools/GATK4_GermlineVariantCaller.wdl" as G
 import "tools/Gatk4GatherVcfs.wdl" as G2
@@ -21,6 +22,7 @@ workflow WGSGermlineMultiCallers {
     File reference_sa
     File reference_fai
     File reference_dict
+    File cutadapt_adapters
     Array[File] gatkIntervals
     Array[File] vardictIntervals
     File strelkaIntervals
@@ -41,6 +43,19 @@ workflow WGSGermlineMultiCallers {
     Array[String]? combineVariants_columns
   }
   scatter (f in fastqs) {
+     call F.fastqc as fastqc {
+      input:
+        reads=f
+    }
+  }
+  scatter (d in fastqc.datafile) {
+     call P.ParseFastqcAdaptors as getfastqc_adapters {
+      input:
+        fastqc_datafiles=d,
+        cutadapt_adaptors_lookup=cutadapt_adapters
+    }
+  }
+  scatter (Q in zip(fastqs, zip(getfastqc_adapters.adaptor_sequences, getfastqc_adapters.adaptor_sequences))) {
      call B.BwaAligner as alignSortedBam {
       input:
         sampleName=select_first([sampleName, "NA12878"]),
@@ -52,14 +67,10 @@ workflow WGSGermlineMultiCallers {
         reference_fai=reference_fai,
         reference_dict=reference_dict,
         reference=reference,
-        fastq=f,
+        fastq=Q.left,
+        cutadapt_adapter=Q.right.right,
+        cutadapt_removeMiddle3Adapter=Q.right.right,
         sortsam_tmpDir=select_first([alignSortedBam_sortsam_tmpDir, "./tmp"])
-    }
-  }
-  scatter (f in fastqs) {
-     call F.fastqc as fastqc {
-      input:
-        reads=f
     }
   }
   call M.mergeAndMarkBams as processBamFiles {
@@ -148,10 +159,10 @@ workflow WGSGermlineMultiCallers {
     File bam_bai = processBamFiles.out_bai
     Array[Array[File]] reports = fastqc.out
     File combinedVariants = sortCombined.out
-    Array[File] variants_gatk_split = variantCaller_GATK.out
-    File variants_vardict_split = variantCaller_merge_Vardict.out
-    File variants_strelka = variantCaller_Strelka.out
     File variants_gatk = variantCaller_merge_GATK.out
-    Array[File] variants_vardict = variantCaller_Vardict.out
+    File variants_vardict = variantCaller_merge_Vardict.out
+    File variants_strelka = variantCaller_Strelka.out
+    Array[File] variants_gatk_split = variantCaller_GATK.out
+    Array[File] variants_vardict_split = variantCaller_Vardict.out
   }
 }

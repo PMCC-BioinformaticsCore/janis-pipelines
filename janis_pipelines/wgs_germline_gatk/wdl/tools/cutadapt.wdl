@@ -5,125 +5,111 @@ task cutadapt {
     Int? runtime_cpu
     Int? runtime_memory
     Array[File] fastq
-    String? adapter
-    String outputFilename = "generated-69f8713e-0fca-11ea-926e-acde48001122-R1.fastq.gz"
-    String secondReadFile = "generated-69f8713e-0fca-11ea-926e-acde48001122-R2.fastq.gz"
-    Boolean? debug
+    Array[String]? adapter
+    String outputFilename = "generated--R1.fastq.gz"
+    String secondReadFile = "generated--R2.fastq.gz"
+    Int? cores
+    String? front
+    String? anywhere
+    Float? errorRate
     Boolean? noIndels
+    Int? times
+    Int? overlap
     Boolean? matchReadWildcards
-    Boolean? trimN
-    Boolean? discardCasava
-    Boolean? quiet
-    Boolean? stripF3
-    Boolean? noZeroCap
-    Boolean? interleaved
+    Boolean? noMatchAdapterWildcards
+    String? action
+    Int? cut
+    String? nextseqTrim
+    Int? qualityCutoff
+    Boolean? qualityBase
+    Int? length
+    Int? trimN
+    Int? lengthTag
+    String? stripSuffix
+    String? prefix
+    String? suffix
+    Boolean? zeroCap
+    Int? minimumLength
+    Int? maximumLength
+    Float? maxN
     Boolean? discardTrimmed
     Boolean? discardUntrimmed
-    Boolean? maq
-    String? pairFilter
-    String? nextseqTrim
-    String? action
-    String? qualityBase
-    String? lengthTag
-    String? stripSuffix
-    Int? maxN
-    String? report
+    Boolean? discardCasava
+    Boolean? quiet
+    String? compressionLevel
     String? infoFile
+    String? restFile
     String? wildcardFile
     String? tooShortOutput
     String? tooLongOutput
     String? untrimmedOutput
+    Array[String]? removeMiddle3Adapter
+    String? removeMiddle5Adapter
+    String? removeMiddleBothAdapter
+    String? removeNBasesFromSecondRead
+    String? pairAdapters
+    String? pairFilter
+    Boolean? interleaved
     String? untrimmedPairedOutput
     String? tooShortPairedOutput
     String? tooLongPairedOutput
-    String? inputFileFormat
-    Int? cores
-    String? adapter_g
-    String? adapter_both
-    Float? maximumErrorRate
-    Int? removeNAdapters
-    Int? overlapRequirement
-    Int? removeNBases
-    Int? qualityCutoff
-    Int? shortenReadsToLength
-    String? readNamesPrefix
-    String? readNamesSuffix
-    Int? minReadLength
-    Int? maxReadsLength
-    String? middleReadMatchFile
-    String? removeMiddle3Adapter
-    String? removeMiddle5Adapter
-    String? removeMiddleBothAdapter
-    Int? removeNBasesFromSecondRead
-    Boolean? noMatchAdapterWildcards
-    Boolean? colorspace
-    Boolean? doubleEncode
-    Boolean? trimPrimer
-    Boolean? zeroCap
   }
-  command {
+  command <<<
     cutadapt \
-      ${"-a " + adapter} \
-      ${"-o " + if defined(outputFilename) then outputFilename else "generated-69f88b88-0fca-11ea-926e-acde48001122-R1.fastq.gz"} \
-      ${"-p " + if defined(secondReadFile) then secondReadFile else "generated-69f88b88-0fca-11ea-926e-acde48001122-R2.fastq.gz"} \
-      ${true="--debug" false="" debug} \
-      ${true="--no-indels" false="" noIndels} \
-      ${true="--match-read-wildcards" false="" matchReadWildcards} \
-      ${true="--trim-n" false="" trimN} \
-      ${true="--discard-casava" false="" discardCasava} \
-      ${true="--quiet" false="" quiet} \
-      ${true="--strip-f3" false="" stripF3} \
-      ${true="--no-zero-cap" false="" noZeroCap} \
-      ${true="--interleaved" false="" interleaved} \
-      ${true="--discard-trimmed" false="" discardTrimmed} \
-      ${true="--discard-untrimmed" false="" discardUntrimmed} \
-      ${true="--maq" false="" maq} \
-      ${"--pair-filter= " + pairFilter} \
-      ${"--nextseq-trim= " + nextseqTrim} \
-      ${"--action= " + action} \
-      ${"--quality-base= " + qualityBase} \
-      ${"--length-tag= " + lengthTag} \
-      ${"--strip-suffix= " + stripSuffix} \
-      ${"--max-n= " + maxN} \
-      ${"--report= " + report} \
-      ${"--info-file= " + infoFile} \
-      ${"--wildcard-file= " + wildcardFile} \
-      ${"--too-short-output= " + tooShortOutput} \
-      ${"--too-long-output= " + tooLongOutput} \
-      ${"--untrimmed-output= " + untrimmedOutput} \
-      ${"--untrimmed-paired-output= " + untrimmedPairedOutput} \
-      ${"--too-short-paired-output= " + tooShortPairedOutput} \
-      ${"--too-long-paired-output= " + tooLongPairedOutput} \
-      ${"-f " + inputFileFormat} \
-      ${"-j " + cores} \
-      ${"-g " + adapter_g} \
-      ${"-b " + adapter_both} \
-      ${"-e " + maximumErrorRate} \
-      ${"-n " + removeNAdapters} \
-      ${"-O " + overlapRequirement} \
-      ${"-u " + removeNBases} \
-      ${"-q " + qualityCutoff} \
-      ${"-l " + shortenReadsToLength} \
-      ${"-x " + readNamesPrefix} \
-      ${"-y " + readNamesSuffix} \
-      ${"-m " + minReadLength} \
-      ${"-M " + maxReadsLength} \
-      ${"-r " + middleReadMatchFile} \
-      ${"-A " + removeMiddle3Adapter} \
-      ${"-G " + removeMiddle5Adapter} \
-      ${"-B " + removeMiddleBothAdapter} \
-      ${"-U " + removeNBasesFromSecondRead} \
-      ${true="-N" false="" noMatchAdapterWildcards} \
-      ${true="-c" false="" colorspace} \
-      ${true="-d" false="" doubleEncode} \
-      ${true="-t" false="" trimPrimer} \
-      ${true="-z" false="" zeroCap} \
-      ${sep=" " fastq}
-  }
+      ~{if defined(adapter) && length(select_first([adapter, []])) > 0 then "-a " else ""}~{sep=" -a " adapter} \
+      ~{"-o " + if defined(outputFilename) then outputFilename else "generated--R1.fastq.gz"} \
+      ~{"-p " + if defined(secondReadFile) then secondReadFile else "generated--R2.fastq.gz"} \
+      ~{"--cores " + cores} \
+      ~{"--front " + front} \
+      ~{"--anywhere " + anywhere} \
+      ~{"--error-rate " + errorRate} \
+      ~{true="--no-indels" false="" noIndels} \
+      ~{"--times " + times} \
+      ~{"--overlap " + overlap} \
+      ~{true="--match-read-wildcards" false="" matchReadWildcards} \
+      ~{true="--no-match-adapter-wildcards" false="" noMatchAdapterWildcards} \
+      ~{"--action " + action} \
+      ~{"--cut " + cut} \
+      ~{"--nextseq-trim " + nextseqTrim} \
+      ~{"--quality-cutoff " + qualityCutoff} \
+      ~{true="--quality-base" false="" qualityBase} \
+      ~{"--length " + length} \
+      ~{"--trim-n " + trimN} \
+      ~{"--length-tag " + lengthTag} \
+      ~{"--strip-suffix " + stripSuffix} \
+      ~{"--prefix " + prefix} \
+      ~{"--suffix " + suffix} \
+      ~{true="--zero-cap" false="" zeroCap} \
+      ~{"--minimum-length " + minimumLength} \
+      ~{"--maximum-length " + maximumLength} \
+      ~{"--max-n " + maxN} \
+      ~{true="--discard-trimmed" false="" discardTrimmed} \
+      ~{true="--discard-untrimmed" false="" discardUntrimmed} \
+      ~{true="--discard-casava" false="" discardCasava} \
+      ~{true="--quiet" false="" quiet} \
+      ~{"-Z " + compressionLevel} \
+      ~{"--info-file " + infoFile} \
+      ~{"--rest-file " + restFile} \
+      ~{"--wildcard-file " + wildcardFile} \
+      ~{"--too-short-output " + tooShortOutput} \
+      ~{"--too-long-output " + tooLongOutput} \
+      ~{"--untrimmed-output " + untrimmedOutput} \
+      ~{if defined(removeMiddle3Adapter) && length(select_first([removeMiddle3Adapter, []])) > 0 then "-A " else ""}~{sep=" -A " removeMiddle3Adapter} \
+      ~{"-G " + removeMiddle5Adapter} \
+      ~{"-B " + removeMiddleBothAdapter} \
+      ~{"-U " + removeNBasesFromSecondRead} \
+      ~{"--pair-adapters " + pairAdapters} \
+      ~{"--pair-filter " + pairFilter} \
+      ~{true="--interleaved" false="" interleaved} \
+      ~{"--untrimmed-paired-output " + untrimmedPairedOutput} \
+      ~{"--too-short-paired-output " + tooShortPairedOutput} \
+      ~{"--too-long-paired-output " + tooLongPairedOutput} \
+      ~{sep=" " fastq}
+  >>>
   runtime {
-    docker: "quay.io/biocontainers/cutadapt:1.18--py37h14c3975_1"
+    docker: "quay.io/biocontainers/cutadapt:2.6--py36h516909a_0"
     cpu: if defined(runtime_cpu) then runtime_cpu else 1
-    memory: if defined(runtime_memory) then "${runtime_memory}G" else "4G"
+    memory: if defined(runtime_memory) then "~{runtime_memory}G" else "4G"
     preemptible: 2
   }
   output {

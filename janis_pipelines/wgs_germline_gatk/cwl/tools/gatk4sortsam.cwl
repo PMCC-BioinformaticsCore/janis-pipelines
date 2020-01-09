@@ -4,7 +4,7 @@ baseCommand:
 class: CommandLineTool
 cwlVersion: v1.0
 doc: Sorts a SAM/BAM/CRAM file.
-id: gatk4sortsam
+id: Gatk4SortSam
 inputs:
 - doc: The SAM/BAM/CRAM file to sort.
   id: bam
@@ -13,7 +13,7 @@ inputs:
     prefix: -I
   label: bam
   type: File
-- default: generated-67f9257c-0fca-11ea-926e-acde48001122.bam
+- default: generated.bam
   doc: The sorted SAM/BAM/CRAM output file.
   id: outputFilename
   inputBinding:
@@ -154,14 +154,20 @@ inputs:
   type:
   - string
   - 'null'
-label: gatk4sortsam
+label: Gatk4SortSam
 outputs:
 - id: out
   label: out
   outputBinding:
     glob: $(inputs.outputFilename)
-  secondaryFiles:
-  - ^.bai
+  secondaryFiles: "${\n\n        function resolveSecondary(base, secPattern) {\n \
+    \         if (secPattern[0] == \"^\") {\n            var spl = base.split(\".\"\
+    );\n            var endIndex = spl.length > 1 ? spl.length - 1 : 1;\n        \
+    \    return resolveSecondary(spl.slice(undefined, endIndex).join(\".\"), secPattern.slice(1));\n\
+    \          }\n          return base + secPattern\n        }\n        return [\n\
+    \                {\n                    path: resolveSecondary(self.path, \"^.bai\"\
+    ),\n                    basename: resolveSecondary(self.basename, \".bai\")\n\
+    \                }\n        ];\n\n}"
   type: File
 requirements:
   DockerRequirement:

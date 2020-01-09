@@ -25,7 +25,7 @@ inputs:
   normalBam:
     id: normalBam
     secondaryFiles:
-    - ^.bai
+    - .bai
     type: File
   normalName:
     id: normalName
@@ -54,7 +54,7 @@ inputs:
   tumorBam:
     id: tumorBam
     secondaryFiles:
-    - ^.bai
+    - .bai
     type: File
   tumorName:
     id: tumorName
@@ -86,7 +86,7 @@ steps:
         source: reference
     out:
     - out
-    run: GATK4ApplyBQSR.cwl
+    run: Gatk4ApplyBQSR.cwl
   applyBQSR_tumor:
     in:
       bam:
@@ -103,7 +103,7 @@ steps:
         source: reference
     out:
     - out
-    run: GATK4ApplyBQSR.cwl
+    run: Gatk4ApplyBQSR.cwl
   baseRecalibrator_normal:
     in:
       bam:
@@ -171,7 +171,7 @@ steps:
     - out
     - stats
     - f1f2r_out
-    run: gatkmutect2.cwl
+    run: Gatk4Mutect2.cwl
   splitMultiAllele:
     in:
       reference:

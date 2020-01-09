@@ -9,7 +9,7 @@ inputs:
     position: 0
   label: vcf
   type: File
-- default: generated-546da88e-0fca-11ea-99c5-acde48001122.trimmed.vcf
+- default: generated-.trimmed.vcf
   id: outputFilename
   inputBinding:
     position: 2

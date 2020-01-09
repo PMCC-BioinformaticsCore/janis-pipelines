@@ -39,13 +39,13 @@ inputs:
   id: tumorBam
   label: tumorBam
   secondaryFiles:
-  - ^.bai
+  - .bai
   type: File
 - doc: The indexed BAM file
   id: normalBam
   label: normalBam
   secondaryFiles:
-  - ^.bai
+  - .bai
   type: File
 - id: intervals
   inputBinding:
@@ -77,7 +77,7 @@ inputs:
   type:
   - float
   - 'null'
-- default: generated-7b4529aa-0fca-11ea-b0f8-acde48001122.vardict.vcf
+- default: generated-.vardict.vcf
   id: outputFilename
   inputBinding:
     position: 10

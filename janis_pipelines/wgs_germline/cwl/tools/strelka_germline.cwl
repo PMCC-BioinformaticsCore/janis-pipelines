@@ -48,7 +48,7 @@ inputs:
     shellQuote: false
   label: bam
   secondaryFiles:
-  - ^.bai
+  - .bai
   type: File
 - doc: samtools-indexed reference fasta file [required]
   id: reference

@@ -1,8 +1,8 @@
 version development
 
 import "Gatk4BaseRecalibrator.wdl" as G
-import "GATK4ApplyBQSR.wdl" as G2
-import "gatkmutect2.wdl" as G3
+import "Gatk4ApplyBQSR.wdl" as G2
+import "Gatk4Mutect2.wdl" as G3
 import "SplitMultiAllele.wdl" as S
 
 workflow GATK4_SomaticVariantCaller {
@@ -63,7 +63,7 @@ workflow GATK4_SomaticVariantCaller {
       reference=reference,
       intervals=intervals
   }
-  call G2.GATK4ApplyBQSR as applyBQSR_normal {
+  call G2.Gatk4ApplyBQSR as applyBQSR_normal {
     input:
       bam_bai=normalBam_bai,
       bam=normalBam,
@@ -78,7 +78,7 @@ workflow GATK4_SomaticVariantCaller {
       recalFile=baseRecalibrator_normal.out,
       intervals=intervals
   }
-  call G2.GATK4ApplyBQSR as applyBQSR_tumor {
+  call G2.Gatk4ApplyBQSR as applyBQSR_tumor {
     input:
       bam_bai=tumorBam_bai,
       bam=tumorBam,
@@ -93,7 +93,7 @@ workflow GATK4_SomaticVariantCaller {
       recalFile=baseRecalibrator_tumor.out,
       intervals=intervals
   }
-  call G3.gatkmutect2 as mutect2 {
+  call G3.Gatk4Mutect2 as mutect2 {
     input:
       tumorBams_bai=[applyBQSR_tumor.out_bai],
       tumorBams=[applyBQSR_tumor.out],

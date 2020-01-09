@@ -1,4 +1,5 @@
 {
+    "WGSSomaticGATK.cutadapt_adapters": null,
     "WGSSomaticGATK.gatkIntervals": null,
     "WGSSomaticGATK.known_indels": null,
     "WGSSomaticGATK.known_indels_tbi": null,

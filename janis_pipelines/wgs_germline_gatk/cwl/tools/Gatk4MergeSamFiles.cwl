@@ -16,7 +16,7 @@ inputs:
       prefix: -I
     items: File
     type: array
-- default: generated-67f934d6-0fca-11ea-926e-acde48001122.bam
+- default: generated.bam
   doc: SAM/BAM file to write merged result to
   id: outputFilename
   inputBinding:
@@ -200,8 +200,14 @@ outputs:
   label: out
   outputBinding:
     glob: $(inputs.outputFilename)
-  secondaryFiles:
-  - ^.bai
+  secondaryFiles: "${\n\n        function resolveSecondary(base, secPattern) {\n \
+    \         if (secPattern[0] == \"^\") {\n            var spl = base.split(\".\"\
+    );\n            var endIndex = spl.length > 1 ? spl.length - 1 : 1;\n        \
+    \    return resolveSecondary(spl.slice(undefined, endIndex).join(\".\"), secPattern.slice(1));\n\
+    \          }\n          return base + secPattern\n        }\n        return [\n\
+    \                {\n                    path: resolveSecondary(self.path, \"^.bai\"\
+    ),\n                    basename: resolveSecondary(self.basename, \".bai\")\n\
+    \                }\n        ];\n\n}"
   type: File
 requirements:
   DockerRequirement:

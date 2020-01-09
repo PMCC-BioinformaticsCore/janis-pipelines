@@ -5,7 +5,7 @@ inputs:
   bam:
     id: bam
     secondaryFiles:
-    - ^.bai
+    - .bai
     type: File
   bcfview_applyFilters:
     default:

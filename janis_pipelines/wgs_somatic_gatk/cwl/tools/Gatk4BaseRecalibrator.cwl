@@ -29,8 +29,14 @@ inputs:
     position: 6
     prefix: -I
   label: bam
-  secondaryFiles:
-  - ^.bai
+  secondaryFiles: "${\n\n        function resolveSecondary(base, secPattern) {\n \
+    \         if (secPattern[0] == \"^\") {\n            var spl = base.split(\".\"\
+    );\n            var endIndex = spl.length > 1 ? spl.length - 1 : 1;\n        \
+    \    return resolveSecondary(spl.slice(undefined, endIndex).join(\".\"), secPattern.slice(1));\n\
+    \          }\n          return base + secPattern\n        }\n\n        return\
+    \ [\n                {\n                    location: resolveSecondary(self.location,\
+    \ \"^.bai\"),\n                    basename: resolveSecondary(self.basename, \"\
+    .bai\")\n                }\n        ];\n\n}"
   type: File
 - doc: '**One or more databases of known polymorphic sites used to exclude regions
     around known polymorphisms from analysis.** This algorithm treats every reference
@@ -66,7 +72,7 @@ inputs:
   - .fai
   - ^.dict
   type: File
-- default: generated-8782049a-0fca-11ea-a7d3-acde48001122.table
+- default: generated.table
   doc: "**The output recalibration table filename to create.** After the header, data\
     \ records occur one per line until the end of the file. The first several items\
     \ on a line are the values of the individual covariates and will change depending\

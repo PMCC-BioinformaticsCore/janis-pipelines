@@ -5,7 +5,7 @@ task Gatk4GatherVcfs {
     Int? runtime_cpu
     Int? runtime_memory
     Array[File] vcfs
-    String outputFilename = "generated-576775ba-0fca-11ea-99c5-acde48001122.gathered.vcf"
+    String outputFilename = "generated-.gathered.vcf"
     Array[File]? argumentsFile
     Int? compressionLevel
     Boolean? createIndex
@@ -20,31 +20,31 @@ task Gatk4GatherVcfs {
     String? validationStringency
     Boolean? verbosity
   }
-  command {
+  command <<<
     gatk GatherVcfs \
-      ${sep=" " prefix("--INPUT ", vcfs)} \
-      ${"--OUTPUT " + if defined(outputFilename) then outputFilename else "generated-57677ef2-0fca-11ea-99c5-acde48001122.gathered.vcf"} \
-      ${true="--arguments_file " false="" defined(argumentsFile)}${sep=" " argumentsFile} \
-      ${"--COMPRESSION_LEVEL " + compressionLevel} \
-      ${true="--CREATE_INDEX" false="" createIndex} \
-      ${true="--CREATE_MD5_FILE" false="" createMd5File} \
-      ${"--GA4GH_CLIENT_SECRETS " + ga4ghClientSecrets} \
-      ${"--MAX_RECORDS_IN_RAM " + maxRecordsInRam} \
-      ${true="--QUIET" false="" quiet} \
-      ${"--REFERENCE_SEQUENCE " + referenceSequence} \
-      ${"--TMP_DIR " + if defined(tmpDir) then tmpDir else "/tmp"} \
-      ${true="--USE_JDK_DEFLATER" false="" useJdkDeflater} \
-      ${true="--USE_JDK_INFLATER" false="" useJdkInflater} \
-      ${"--VALIDATION_STRINGENCY " + validationStringency} \
-      ${true="--VERBOSITY" false="" verbosity}
-  }
+      ~{sep=" " prefix("--INPUT ", vcfs)} \
+      ~{"--OUTPUT " + if defined(outputFilename) then outputFilename else "generated-.gathered.vcf"} \
+      ~{true="--arguments_file " false="" defined(argumentsFile)}~{sep=" " argumentsFile} \
+      ~{"--COMPRESSION_LEVEL " + compressionLevel} \
+      ~{true="--CREATE_INDEX" false="" createIndex} \
+      ~{true="--CREATE_MD5_FILE" false="" createMd5File} \
+      ~{"--GA4GH_CLIENT_SECRETS " + ga4ghClientSecrets} \
+      ~{"--MAX_RECORDS_IN_RAM " + maxRecordsInRam} \
+      ~{true="--QUIET" false="" quiet} \
+      ~{"--REFERENCE_SEQUENCE " + referenceSequence} \
+      ~{"--TMP_DIR " + if defined(tmpDir) then tmpDir else "/tmp"} \
+      ~{true="--USE_JDK_DEFLATER" false="" useJdkDeflater} \
+      ~{true="--USE_JDK_INFLATER" false="" useJdkInflater} \
+      ~{"--VALIDATION_STRINGENCY " + validationStringency} \
+      ~{true="--VERBOSITY" false="" verbosity}
+  >>>
   runtime {
     docker: "broadinstitute/gatk:4.1.3.0"
     cpu: if defined(runtime_cpu) then runtime_cpu else 1
-    memory: if defined(runtime_memory) then "${runtime_memory}G" else "4G"
+    memory: if defined(runtime_memory) then "~{runtime_memory}G" else "4G"
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-576775ba-0fca-11ea-99c5-acde48001122.gathered.vcf"
+    File out = if defined(outputFilename) then outputFilename else "generated-.gathered.vcf"
   }
 }

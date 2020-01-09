@@ -49,9 +49,9 @@ inputs:
     shellQuote: false
   label: bam
   secondaryFiles:
-  - ^.bai
+  - .bai
   type: File
-- default: generated-5465da5a-0fca-11ea-99c5-acde48001122
+- default: generated
   doc: 'Run script and run output will be written to this directory [required] (default:
     MantaWorkflow)'
   id: runDir
@@ -85,7 +85,7 @@ inputs:
     shellQuote: false
   label: tumorBam
   secondaryFiles:
-  - ^.bai
+  - .bai
   type:
   - File
   - 'null'

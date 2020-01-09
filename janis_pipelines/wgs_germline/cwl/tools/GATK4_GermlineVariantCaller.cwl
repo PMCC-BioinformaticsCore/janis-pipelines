@@ -9,7 +9,7 @@ inputs:
   bam:
     id: bam
     secondaryFiles:
-    - ^.bai
+    - .bai
     type: File
   intervals:
     doc: This optional interval supports processing by regions. If this input resolves
@@ -76,7 +76,7 @@ steps:
         source: reference
     out:
     - out
-    run: GATK4ApplyBQSR.cwl
+    run: Gatk4ApplyBQSR.cwl
   baseRecalibrator:
     in:
       bam:
@@ -114,7 +114,7 @@ steps:
         source: reference
     out:
     - out
-    run: GatkHaplotypeCaller.cwl
+    run: Gatk4HaplotypeCaller.cwl
   splitBams:
     in:
       bam:
@@ -125,7 +125,7 @@ steps:
         source: intervals
     out:
     - out
-    run: gatk4splitreads.cwl
+    run: Gatk4SplitReads.cwl
   splitMultiAllele:
     in:
       reference:

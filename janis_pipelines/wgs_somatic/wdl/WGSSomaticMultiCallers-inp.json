@@ -6,6 +6,7 @@
         "GT"
     ],
     "WGSSomaticMultiCallers.combineVariants_type": "somatic",
+    "WGSSomaticMultiCallers.cutadapt_adapters": null,
     "WGSSomaticMultiCallers.gatkIntervals": null,
     "WGSSomaticMultiCallers.known_indels": null,
     "WGSSomaticMultiCallers.known_indels_tbi": null,

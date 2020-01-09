@@ -10,16 +10,16 @@ inputs:
   cutadapt_adapter:
     id: cutadapt_adapter
     type:
-    - string
-    - 'null'
-  cutadapt_adapter_g:
-    id: cutadapt_adapter_g
+      items: string
+      type: array
+  cutadapt_front:
+    id: cutadapt_front
     type:
     - string
     - 'null'
-  cutadapt_minReadLength:
+  cutadapt_minimumLength:
     default: 50
-    id: cutadapt_minReadLength
+    id: cutadapt_minimumLength
     type: int
   cutadapt_qualityCutoff:
     default: 15
@@ -28,8 +28,8 @@ inputs:
   cutadapt_removeMiddle3Adapter:
     id: cutadapt_removeMiddle3Adapter
     type:
-    - string
-    - 'null'
+      items: string
+      type: array
   cutadapt_removeMiddle5Adapter:
     id: cutadapt_removeMiddle5Adapter
     type:
@@ -80,7 +80,7 @@ outputs:
     id: out
     outputSource: sortsam/out
     secondaryFiles:
-    - ^.bai
+    - .bai
     type: File
 requirements:
   InlineJavascriptRequirement: {}
@@ -108,15 +108,15 @@ steps:
       adapter:
         id: adapter
         source: cutadapt_adapter
-      adapter_g:
-        id: adapter_g
-        source: cutadapt_adapter_g
       fastq:
         id: fastq
         source: fastq
-      minReadLength:
-        id: minReadLength
-        source: cutadapt_minReadLength
+      front:
+        id: front
+        source: cutadapt_front
+      minimumLength:
+        id: minimumLength
+        source: cutadapt_minimumLength
       qualityCutoff:
         id: qualityCutoff
         source: cutadapt_qualityCutoff
@@ -151,4 +151,4 @@ steps:
         source: sortsam_validationStringency
     out:
     - out
-    run: gatk4sortsam.cwl
+    run: Gatk4SortSam.cwl

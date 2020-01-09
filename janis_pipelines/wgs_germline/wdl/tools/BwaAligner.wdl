@@ -2,7 +2,7 @@ version development
 
 import "cutadapt.wdl" as C
 import "BwaMemSamtoolsView.wdl" as B
-import "gatk4sortsam.wdl" as G
+import "Gatk4SortSam.wdl" as G
 
 workflow BwaAligner {
   input {
@@ -16,12 +16,12 @@ workflow BwaAligner {
     File reference_fai
     File reference_dict
     Array[File] fastq
-    String? cutadapt_adapter
-    String? cutadapt_adapter_g
+    Array[String] cutadapt_adapter
+    Array[String] cutadapt_removeMiddle3Adapter
+    String? cutadapt_front
     String? cutadapt_removeMiddle5Adapter
-    String? cutadapt_removeMiddle3Adapter
     Int? cutadapt_qualityCutoff
-    Int? cutadapt_minReadLength
+    Int? cutadapt_minimumLength
     Boolean? bwamem_markShorterSplits
     String? sortsam_sortOrder
     Boolean? sortsam_createIndex
@@ -33,9 +33,9 @@ workflow BwaAligner {
     input:
       fastq=fastq,
       adapter=cutadapt_adapter,
-      adapter_g=cutadapt_adapter_g,
+      front=cutadapt_front,
       qualityCutoff=select_first([cutadapt_qualityCutoff, 15]),
-      minReadLength=select_first([cutadapt_minReadLength, 50]),
+      minimumLength=select_first([cutadapt_minimumLength, 50]),
       removeMiddle3Adapter=cutadapt_removeMiddle3Adapter,
       removeMiddle5Adapter=cutadapt_removeMiddle5Adapter
   }
@@ -53,7 +53,7 @@ workflow BwaAligner {
       sampleName=sampleName,
       markShorterSplits=select_first([bwamem_markShorterSplits, true])
   }
-  call G.gatk4sortsam as sortsam {
+  call G.Gatk4SortSam as sortsam {
     input:
       bam=bwamem.out,
       sortOrder=select_first([sortsam_sortOrder, "coordinate"]),

@@ -5,7 +5,7 @@ task vardict_germline {
     Int? runtime_cpu
     Int? runtime_memory
     File intervals
-    String outputFilename = "generated-57689896-0fca-11ea-99c5-acde48001122.vardict.vcf.gz"
+    String outputFilename = "generated-.vardict.vcf.gz"
     File bam
     File bam_bai
     File reference
@@ -54,68 +54,66 @@ task vardict_germline {
     String var2vcfSampleName
     Float var2vcfAlleleFreqThreshold
   }
-  command {
-    if [ $(dirname "${bam_bai}") != $(dirname "bam") ]; then mv ${bam_bai} $(dirname ${bam}); fi
-    if [ $(dirname "${reference_fai}") != $(dirname "reference") ]; then mv ${reference_fai} $(dirname ${reference}); fi
+  command <<<
     VarDict \
-      -b ${bam} \
-      -G ${reference} \
-      ${true="-3" false="" indels3prime} \
-      ${"-a " + amplicon} \
-      ${"-B " + minReads} \
-      ${true="-C" false="" chromNamesAreNumbers} \
-      ${"-c " + chromColumn} \
-      ${true="-D" false="" debug} \
-      ${"-d " + splitDelimeter} \
-      ${"-E " + geneEndCol} \
-      ${"-e " + segEndCol} \
-      ${"-F " + filter} \
-      ${"-f " + alleleFreqThreshold} \
-      ${"-g " + geneNameCol} \
-      ${true="-h" false="" printHeaderRow} \
-      ${"-I " + indelSize} \
-      ${true="-i" false="" outputSplice} \
-      ${"-k " + performLocalRealignment} \
-      ${"-M " + minMatches} \
-      ${"-m " + maxMismatches} \
-      -N ${sampleName} \
-      ${"-n " + regexSampleName} \
-      ${"-O " + mapq} \
-      ${"-o " + qratio} \
-      ${"-P " + readPosition} \
-      ${true="-p" false="" pileup} \
-      ${"-Q " + minMappingQual} \
-      ${"-q " + phredScore} \
-      ${"-R " + region} \
-      ${"-r " + minVariantReads} \
-      ${"-S " + regStartCol} \
-      ${"-s " + segStartCol} \
-      ${"-T " + minReadsBeforeTrim} \
-      ${true="-t" false="" removeDuplicateReads} \
-      ${"-th " + if defined(threads) then threads else if defined(runtime_cpu) then runtime_cpu else 1} \
-      ${"-V " + freq} \
-      ${true="-v" false="" vcfFormat} \
-      ${"-VS " + vs} \
-      ${"-X " + bp} \
-      ${"-x " + extensionNucleotide} \
-      ${true="-y" false="" yy} \
-      ${"-Z " + downsamplingFraction} \
-      ${"-z " + zeroBasedCoords} \
-      ${intervals} \
+      -b ~{bam} \
+      -G ~{reference} \
+      ~{true="-3" false="" indels3prime} \
+      ~{"-a " + amplicon} \
+      ~{"-B " + minReads} \
+      ~{true="-C" false="" chromNamesAreNumbers} \
+      ~{"-c " + chromColumn} \
+      ~{true="-D" false="" debug} \
+      ~{"-d " + splitDelimeter} \
+      ~{"-E " + geneEndCol} \
+      ~{"-e " + segEndCol} \
+      ~{"-F " + filter} \
+      ~{"-f " + alleleFreqThreshold} \
+      ~{"-g " + geneNameCol} \
+      ~{true="-h" false="" printHeaderRow} \
+      ~{"-I " + indelSize} \
+      ~{true="-i" false="" outputSplice} \
+      ~{"-k " + performLocalRealignment} \
+      ~{"-M " + minMatches} \
+      ~{"-m " + maxMismatches} \
+      -N ~{sampleName} \
+      ~{"-n " + regexSampleName} \
+      ~{"-O " + mapq} \
+      ~{"-o " + qratio} \
+      ~{"-P " + readPosition} \
+      ~{true="-p" false="" pileup} \
+      ~{"-Q " + minMappingQual} \
+      ~{"-q " + phredScore} \
+      ~{"-R " + region} \
+      ~{"-r " + minVariantReads} \
+      ~{"-S " + regStartCol} \
+      ~{"-s " + segStartCol} \
+      ~{"-T " + minReadsBeforeTrim} \
+      ~{true="-t" false="" removeDuplicateReads} \
+      ~{"-th " + if defined(threads) then threads else if defined(runtime_cpu) then runtime_cpu else 1} \
+      ~{"-V " + freq} \
+      ~{true="-v" false="" vcfFormat} \
+      ~{"-VS " + vs} \
+      ~{"-X " + bp} \
+      ~{"-x " + extensionNucleotide} \
+      ~{true="-y" false="" yy} \
+      ~{"-Z " + downsamplingFraction} \
+      ~{"-z " + zeroBasedCoords} \
+      ~{intervals} \
       | teststrandbias.R | \
       var2vcf_valid.pl \
-      -N ${var2vcfSampleName} \
-      -f ${var2vcfAlleleFreqThreshold} \
+      -N ~{var2vcfSampleName} \
+      -f ~{var2vcfAlleleFreqThreshold} \
       | bcftools view -O z \
-      ${"> " + if defined(outputFilename) then outputFilename else "generated-5768ad40-0fca-11ea-99c5-acde48001122.vardict.vcf.gz"}
-  }
+      ~{"> " + if defined(outputFilename) then outputFilename else "generated-.vardict.vcf.gz"}
+  >>>
   runtime {
     docker: "michaelfranklin/vardict:1.6.0"
     cpu: if defined(runtime_cpu) then runtime_cpu else 1
-    memory: if defined(runtime_memory) then "${runtime_memory}G" else "4G"
+    memory: if defined(runtime_memory) then "~{runtime_memory}G" else "4G"
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-57689896-0fca-11ea-99c5-acde48001122.vardict.vcf.gz"
+    File out = if defined(outputFilename) then outputFilename else "generated-.vardict.vcf.gz"
   }
 }

@@ -7,6 +7,9 @@ inputs:
     type:
     - string
     - 'null'
+  cutadapt_adapters:
+    id: cutadapt_adapters
+    type: File
   reads:
     id: reads
     type:
@@ -33,7 +36,7 @@ outputs:
     id: out
     outputSource: mergeAndMark/out
     secondaryFiles:
-    - ^.bai
+    - .bai
     type: File
   reports:
     id: reports
@@ -51,6 +54,12 @@ requirements:
 steps:
   alignAndSort:
     in:
+      cutadapt_adapter:
+        id: cutadapt_adapter
+        source: getfastqc_adapters/adaptor_sequences
+      cutadapt_removeMiddle3Adapter:
+        id: cutadapt_removeMiddle3Adapter
+        source: getfastqc_adapters/adaptor_sequences
       fastq:
         id: fastq
         source: reads
@@ -68,6 +77,9 @@ steps:
     run: BwaAligner.cwl
     scatter:
     - fastq
+    - cutadapt_adapter
+    - cutadapt_removeMiddle3Adapter
+    scatterMethod: dotproduct
   fastqc:
     in:
       reads:
@@ -75,9 +87,23 @@ steps:
         source: reads
     out:
     - out
+    - datafile
     run: fastqc.cwl
     scatter:
     - reads
+  getfastqc_adapters:
+    in:
+      cutadapt_adaptors_lookup:
+        id: cutadapt_adaptors_lookup
+        source: cutadapt_adapters
+      fastqc_datafiles:
+        id: fastqc_datafiles
+        source: fastqc/datafile
+    out:
+    - adaptor_sequences
+    run: ParseFastqcAdaptors.cwl
+    scatter:
+    - fastqc_datafiles
   mergeAndMark:
     in:
       bams:

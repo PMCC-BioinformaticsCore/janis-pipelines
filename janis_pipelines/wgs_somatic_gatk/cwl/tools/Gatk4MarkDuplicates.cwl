@@ -51,10 +51,16 @@ inputs:
     position: 10
     prefix: -I
   label: bam
-  secondaryFiles:
-  - ^.bai
+  secondaryFiles: "${\n\n        function resolveSecondary(base, secPattern) {\n \
+    \         if (secPattern[0] == \"^\") {\n            var spl = base.split(\".\"\
+    );\n            var endIndex = spl.length > 1 ? spl.length - 1 : 1;\n        \
+    \    return resolveSecondary(spl.slice(undefined, endIndex).join(\".\"), secPattern.slice(1));\n\
+    \          }\n          return base + secPattern\n        }\n\n        return\
+    \ [\n                {\n                    location: resolveSecondary(self.location,\
+    \ \"^.bai\"),\n                    basename: resolveSecondary(self.basename, \"\
+    .bai\")\n                }\n        ];\n\n}"
   type: File
-- default: generated-8781c886-0fca-11ea-a7d3-acde48001122.bam
+- default: generated.bam
   doc: File to write duplication metrics to
   id: outputFilename
   inputBinding:
@@ -62,7 +68,7 @@ inputs:
     prefix: -O
   label: outputFilename
   type: string
-- default: generated-8781c8d6-0fca-11ea-a7d3-acde48001122.metrics.txt
+- default: generated.metrics.txt
   doc: The output file to write marked records to.
   id: metricsFilename
   inputBinding:
@@ -212,8 +218,14 @@ outputs:
   label: out
   outputBinding:
     glob: $(inputs.outputFilename)
-  secondaryFiles:
-  - ^.bai
+  secondaryFiles: "${\n\n        function resolveSecondary(base, secPattern) {\n \
+    \         if (secPattern[0] == \"^\") {\n            var spl = base.split(\".\"\
+    );\n            var endIndex = spl.length > 1 ? spl.length - 1 : 1;\n        \
+    \    return resolveSecondary(spl.slice(undefined, endIndex).join(\".\"), secPattern.slice(1));\n\
+    \          }\n          return base + secPattern\n        }\n        return [\n\
+    \                {\n                    path: resolveSecondary(self.path, \"^.bai\"\
+    ),\n                    basename: resolveSecondary(self.basename, \".bai\")\n\
+    \                }\n        ];\n\n}"
   type: File
 - id: metrics
   label: metrics

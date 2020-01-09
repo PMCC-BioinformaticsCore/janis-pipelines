@@ -10,6 +10,7 @@
         "GT"
     ],
     "WGSGermlineMultiCallers.combineVariants_type": "germline",
+    "WGSGermlineMultiCallers.cutadapt_adapters": null,
     "WGSGermlineMultiCallers.fastqs": null,
     "WGSGermlineMultiCallers.gatkIntervals": null,
     "WGSGermlineMultiCallers.known_indels": null,

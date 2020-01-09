@@ -14,6 +14,7 @@ workflow WGSSomaticMultiCallers {
     Array[Array[File]] tumorInputs
     String? normalName
     String? tumorName
+    File cutadapt_adapters
     Array[File] gatkIntervals
     Array[File] vardictIntervals
     File? strelkaIntervals
@@ -50,6 +51,7 @@ workflow WGSSomaticMultiCallers {
       reference_dict=reference_dict,
       reference=reference,
       reads=tumorInputs,
+      cutadapt_adapters=cutadapt_adapters,
       sampleName=select_first([tumorName, "NA24385_tumour"])
   }
   call S.somatic_subpipeline as tumor {
@@ -63,6 +65,7 @@ workflow WGSSomaticMultiCallers {
       reference_dict=reference_dict,
       reference=reference,
       reads=normalInputs,
+      cutadapt_adapters=cutadapt_adapters,
       sampleName=select_first([normalName, "NA24385_normal"])
   }
   scatter (g in gatkIntervals) {

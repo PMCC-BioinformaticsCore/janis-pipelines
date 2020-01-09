@@ -29,7 +29,7 @@ outputs:
     id: out
     outputSource: markDuplicates/out
     secondaryFiles:
-    - ^.bai
+    - .bai
     type: File
 requirements:
   InlineJavascriptRequirement: {}

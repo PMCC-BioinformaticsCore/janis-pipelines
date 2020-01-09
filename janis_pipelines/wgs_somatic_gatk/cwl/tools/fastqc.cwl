@@ -59,16 +59,15 @@ inputs:
   type:
   - boolean
   - 'null'
-- doc: If set then the zipped output file will be uncompressed in the same directory
+- default: true
+  doc: If set then the zipped output file will be uncompressed in the same directory
     after it has been created.  By default this option will be set if fastqc is run
     in non-interactive mode.
   id: extract
   inputBinding:
     prefix: --extract
   label: extract
-  type:
-  - boolean
-  - 'null'
+  type: boolean
 - doc: (-j) Provides the full path to the java binary you want to use to launch fastqc.
     If not supplied then java is assumed to be in your path.
   id: java
@@ -78,15 +77,16 @@ inputs:
   type:
   - string
   - 'null'
-- default: true
-  doc: 'Do not uncompress the output file after creating it.  You should set this
+- doc: 'Do not uncompress the output file after creating it.  You should set this
     option if you donot wish to uncompress the output when running in non-interactive
     mode. '
   id: noextract
   inputBinding:
     prefix: --noextract
   label: noextract
-  type: boolean
+  type:
+  - boolean
+  - 'null'
 - doc: 'Disable grouping of bases for reads >50bp. All reports will show data for
     every base in the read. WARNING: Using this option will cause fastqc to crash
     and burn if you use it on really long reads, and your plots may end up a ridiculous
@@ -131,10 +131,10 @@ inputs:
   type:
   - File
   - 'null'
-- doc: '(-a) Specifies a non-default file which contains the list of adapter sequences
+- doc: (-a) Specifies a non-default file which contains the list of adapter sequences
     which will be explicity searched against the library. The file must contain sets
-    of named adapters in the form name[tab]sequence.  Lines prefixed with a hash will
-    be ignored. '
+    of named adapters in the form name[tab]sequence. Lines prefixed with a hash will
+    be ignored.
   id: adapters
   inputBinding:
     prefix: --adapters
@@ -186,6 +186,13 @@ outputs:
   label: out
   outputBinding:
     glob: '*.zip'
+  type:
+    items: File
+    type: array
+- id: datafile
+  label: datafile
+  outputBinding:
+    glob: '*/fastqc_data.txt'
   type:
     items: File
     type: array

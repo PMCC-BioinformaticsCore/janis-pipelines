@@ -19,7 +19,7 @@ inputs:
     shellQuote: false
   label: intervals
   type: File
-- default: generated-546d86e2-0fca-11ea-99c5-acde48001122.vardict.vcf.gz
+- default: generated-.vardict.vcf.gz
   id: outputFilename
   inputBinding:
     position: 10
@@ -35,7 +35,7 @@ inputs:
     shellQuote: false
   label: bam
   secondaryFiles:
-  - ^.bai
+  - .bai
   type: File
 - doc: 'The reference fasta. Should be indexed (.fai). Defaults to: /ngs/reference_data/genomes/Hsapiens/hg19/seq/hg19.fa'
   id: reference

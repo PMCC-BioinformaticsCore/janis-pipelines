@@ -15,7 +15,7 @@ inputs:
   normalBam:
     id: normalBam
     secondaryFiles:
-    - ^.bai
+    - .bai
     type: File
   normalName:
     id: normalName
@@ -34,7 +34,7 @@ inputs:
   tumorBam:
     id: tumorBam
     secondaryFiles:
-    - ^.bai
+    - .bai
     type: File
   tumorName:
     id: tumorName

@@ -19,6 +19,9 @@ inputs:
     default: somatic
     id: combineVariants_type
     type: string
+  cutadapt_adapters:
+    id: cutadapt_adapters
+    type: File
   gatkIntervals:
     id: gatkIntervals
     type:
@@ -98,7 +101,7 @@ outputs:
     id: normalBam
     outputSource: normal/out
     secondaryFiles:
-    - ^.bai
+    - .bai
     type: File
   normalReport:
     id: normalReport
@@ -112,7 +115,7 @@ outputs:
     id: tumorBam
     outputSource: tumor/out
     secondaryFiles:
-    - ^.bai
+    - .bai
     type: File
   tumorReport:
     id: tumorReport
@@ -171,6 +174,9 @@ steps:
     run: tools/combinevariants.cwl
   normal:
     in:
+      cutadapt_adapters:
+        id: cutadapt_adapters
+        source: cutadapt_adapters
       reads:
         id: reads
         source: tumorInputs
@@ -194,6 +200,9 @@ steps:
     run: tools/bcftoolssort.cwl
   tumor:
     in:
+      cutadapt_adapters:
+        id: cutadapt_adapters
+        source: cutadapt_adapters
       reads:
         id: reads
         source: normalInputs

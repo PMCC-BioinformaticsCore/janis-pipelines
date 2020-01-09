@@ -21,7 +21,7 @@ doc: "Apply base quality score recalibration: This tool performs the second pass
   \ or CRAM file(s).\n- Original qualities can be retained in the output file under\
   \ the \"OQ\" tag if desired. \n    See the `--emit-original-quals` argument for\
   \ details."
-id: GATK4ApplyBQSR
+id: Gatk4ApplyBQSR
 inputs:
 - doc: The SAM/BAM/CRAM file containing reads.
   id: bam
@@ -29,8 +29,14 @@ inputs:
     position: 10
     prefix: -I
   label: bam
-  secondaryFiles:
-  - ^.bai
+  secondaryFiles: "${\n\n        function resolveSecondary(base, secPattern) {\n \
+    \         if (secPattern[0] == \"^\") {\n            var spl = base.split(\".\"\
+    );\n            var endIndex = spl.length > 1 ? spl.length - 1 : 1;\n        \
+    \    return resolveSecondary(spl.slice(undefined, endIndex).join(\".\"), secPattern.slice(1));\n\
+    \          }\n          return base + secPattern\n        }\n\n        return\
+    \ [\n                {\n                    location: resolveSecondary(self.location,\
+    \ \"^.bai\"),\n                    basename: resolveSecondary(self.basename, \"\
+    .bai\")\n                }\n        ];\n\n}"
   type: File
 - doc: Reference sequence
   id: reference
@@ -46,7 +52,7 @@ inputs:
   - .fai
   - ^.dict
   type: File
-- default: generated-87820be8-0fca-11ea-a7d3-acde48001122.bam
+- default: generated.bam
   doc: Write output to this file
   id: outputFilename
   inputBinding:
@@ -77,14 +83,20 @@ inputs:
     prefix: --tmp-dir
   label: tmpDir
   type: string
-label: GATK4ApplyBQSR
+label: Gatk4ApplyBQSR
 outputs:
 - id: out
   label: out
   outputBinding:
     glob: $(inputs.outputFilename)
-  secondaryFiles:
-  - ^.bai
+  secondaryFiles: "${\n\n        function resolveSecondary(base, secPattern) {\n \
+    \         if (secPattern[0] == \"^\") {\n            var spl = base.split(\".\"\
+    );\n            var endIndex = spl.length > 1 ? spl.length - 1 : 1;\n        \
+    \    return resolveSecondary(spl.slice(undefined, endIndex).join(\".\"), secPattern.slice(1));\n\
+    \          }\n          return base + secPattern\n        }\n        return [\n\
+    \                {\n                    path: resolveSecondary(self.path, \"^.bai\"\
+    ),\n                    basename: resolveSecondary(self.basename, \".bai\")\n\
+    \                }\n        ];\n\n}"
   type: File
 requirements:
   DockerRequirement:

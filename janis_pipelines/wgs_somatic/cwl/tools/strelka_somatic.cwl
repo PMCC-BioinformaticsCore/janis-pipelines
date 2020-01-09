@@ -25,7 +25,7 @@ inputs:
     separate: false
   label: normalBam
   secondaryFiles:
-  - ^.bai
+  - .bai
   type: File
 - doc: (--tumorBam)  Tumor sample BAM or CRAM file. [required] (no default)
   id: tumorBam
@@ -35,7 +35,7 @@ inputs:
     separate: false
   label: tumorBam
   secondaryFiles:
-  - ^.bai
+  - .bai
   type: File
 - doc: ' samtools-indexed reference fasta file [required]'
   id: reference
@@ -53,7 +53,7 @@ inputs:
   - .fai
   - ^.dict
   type: File
-- default: generated-7b44e67a-0fca-11ea-b0f8-acde48001122
+- default: generated
   doc: 'Name of directory to be created where all workflow scripts and output will
     be written. Each analysis requires a separate directory. (default: StrelkaSomaticWorkflow)'
   id: rundir

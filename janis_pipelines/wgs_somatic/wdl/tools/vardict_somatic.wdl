@@ -14,7 +14,7 @@ task vardict_somatic {
     String tumorName
     String normalName
     Float? alleleFreqThreshold
-    String outputFilename = "generated-7ea4e5c2-0fca-11ea-b0f8-acde48001122.vardict.vcf"
+    String outputFilename = "generated-.vardict.vcf"
     Boolean? indels3prime
     Float? amplicon
     Int? minReads
@@ -55,69 +55,66 @@ task vardict_somatic {
     Int? downsamplingFraction
     Int? zeroBasedCoords
   }
-  command {
-    if [ $(dirname "${tumorBam_bai}") != $(dirname "tumorBam") ]; then mv ${tumorBam_bai} $(dirname ${tumorBam}); fi
-    if [ $(dirname "${normalBam_bai}") != $(dirname "normalBam") ]; then mv ${normalBam_bai} $(dirname ${normalBam}); fi
-    if [ $(dirname "${reference_fai}") != $(dirname "reference") ]; then mv ${reference_fai} $(dirname ${reference}); fi
+  command <<<
     VarDict \
-      -G ${reference} \
-      ${true="-3" false="" indels3prime} \
-      ${"-a " + amplicon} \
-      ${"-B " + minReads} \
-      ${true="-C" false="" chromNamesAreNumbers} \
-      ${"-c " + chromColumn} \
-      ${true="-D" false="" debug} \
-      ${"-d " + splitDelimeter} \
-      ${"-E " + geneEndCol} \
-      ${"-e " + segEndCol} \
-      ${"-F " + filter} \
-      ${"-g " + geneNameCol} \
-      ${true="-h" false="" printHeaderRow} \
-      ${"-I " + indelSize} \
-      ${true="-i" false="" outputSplice} \
-      ${"-k " + performLocalRealignment} \
-      ${"-M " + minMatches} \
-      ${"-m " + maxMismatches} \
-      ${"-n " + regexSampleName} \
-      ${"-O " + mapq} \
-      ${"-o " + qratio} \
-      ${"-P " + readPosition} \
-      ${true="-p" false="" pileup} \
-      ${"-Q " + minMappingQual} \
-      ${"-q " + phredScore} \
-      ${"-R " + region} \
-      ${"-r " + minVariantReads} \
-      ${"-S " + regStartCol} \
-      ${"-s " + segStartCol} \
-      ${"-T " + minReadsBeforeTrim} \
-      ${true="-t" false="" removeDuplicateReads} \
-      ${"-th " + if defined(threads) then threads else if defined(runtime_cpu) then runtime_cpu else 1} \
-      ${"-V " + freq} \
-      ${true="-v" false="" vcfFormat} \
-      ${"-VS " + vs} \
-      ${"-X " + bp} \
-      ${"-x " + extensionNucleotide} \
-      ${true="-y" false="" yy} \
-      ${"-Z " + downsamplingFraction} \
-      ${"-z " + zeroBasedCoords} \
-      -b '${tumorBam}|${normalBam}' \
-      -N '${tumorName}' \
-      -f ${alleleFreqThreshold} \
-      ${intervals} \
+      -G ~{reference} \
+      ~{true="-3" false="" indels3prime} \
+      ~{"-a " + amplicon} \
+      ~{"-B " + minReads} \
+      ~{true="-C" false="" chromNamesAreNumbers} \
+      ~{"-c " + chromColumn} \
+      ~{true="-D" false="" debug} \
+      ~{"-d " + splitDelimeter} \
+      ~{"-E " + geneEndCol} \
+      ~{"-e " + segEndCol} \
+      ~{"-F " + filter} \
+      ~{"-g " + geneNameCol} \
+      ~{true="-h" false="" printHeaderRow} \
+      ~{"-I " + indelSize} \
+      ~{true="-i" false="" outputSplice} \
+      ~{"-k " + performLocalRealignment} \
+      ~{"-M " + minMatches} \
+      ~{"-m " + maxMismatches} \
+      ~{"-n " + regexSampleName} \
+      ~{"-O " + mapq} \
+      ~{"-o " + qratio} \
+      ~{"-P " + readPosition} \
+      ~{true="-p" false="" pileup} \
+      ~{"-Q " + minMappingQual} \
+      ~{"-q " + phredScore} \
+      ~{"-R " + region} \
+      ~{"-r " + minVariantReads} \
+      ~{"-S " + regStartCol} \
+      ~{"-s " + segStartCol} \
+      ~{"-T " + minReadsBeforeTrim} \
+      ~{true="-t" false="" removeDuplicateReads} \
+      ~{"-th " + if defined(threads) then threads else if defined(runtime_cpu) then runtime_cpu else 1} \
+      ~{"-V " + freq} \
+      ~{true="-v" false="" vcfFormat} \
+      ~{"-VS " + vs} \
+      ~{"-X " + bp} \
+      ~{"-x " + extensionNucleotide} \
+      ~{true="-y" false="" yy} \
+      ~{"-Z " + downsamplingFraction} \
+      ~{"-z " + zeroBasedCoords} \
+      -b '~{tumorBam}|~{normalBam}' \
+      -N '~{tumorName}' \
+      -f ~{alleleFreqThreshold} \
+      ~{intervals} \
       | testsomatic.R | \
       var2vcf_paired.pl \
-      -N '${tumorName}|${normalName}' \
-      -f ${alleleFreqThreshold} \
+      -N '~{tumorName}|~{normalName}' \
+      -f ~{alleleFreqThreshold} \
       | bcftools view -O z \
-      ${"> " + if defined(outputFilename) then outputFilename else "generated-7ea503f4-0fca-11ea-b0f8-acde48001122.vardict.vcf"}
-  }
+      ~{"> " + if defined(outputFilename) then outputFilename else "generated-.vardict.vcf"}
+  >>>
   runtime {
     docker: "michaelfranklin/vardict:1.6.0"
     cpu: if defined(runtime_cpu) then runtime_cpu else 1
-    memory: if defined(runtime_memory) then "${runtime_memory}G" else "4G"
+    memory: if defined(runtime_memory) then "~{runtime_memory}G" else "4G"
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-7ea4e5c2-0fca-11ea-b0f8-acde48001122.vardict.vcf"
+    File out = if defined(outputFilename) then outputFilename else "generated-.vardict.vcf"
   }
 }

@@ -3,7 +3,7 @@ baseCommand:
 - SplitReads
 class: CommandLineTool
 cwlVersion: v1.0
-id: gatk4splitreads
+id: Gatk4SplitReads
 inputs:
 - default: .
   doc: "The directory to output SAM/BAM/CRAM files. Default value: '.' "
@@ -19,8 +19,14 @@ inputs:
     position: 1
     prefix: --input
   label: bam
-  secondaryFiles:
-  - ^.bai
+  secondaryFiles: "${\n\n        function resolveSecondary(base, secPattern) {\n \
+    \         if (secPattern[0] == \"^\") {\n            var spl = base.split(\".\"\
+    );\n            var endIndex = spl.length > 1 ? spl.length - 1 : 1;\n        \
+    \    return resolveSecondary(spl.slice(undefined, endIndex).join(\".\"), secPattern.slice(1));\n\
+    \          }\n          return base + secPattern\n        }\n\n        return\
+    \ [\n                {\n                    location: resolveSecondary(self.location,\
+    \ \"^.bai\"),\n                    basename: resolveSecondary(self.basename, \"\
+    .bai\")\n                }\n        ];\n\n}"
   type: File
 - doc: '(-L:String) One or more genomic intervals over which to operate This argument
     may be specified 0 or more times. Default value: null. '
@@ -583,15 +589,21 @@ inputs:
   type:
   - double
   - 'null'
-label: gatk4splitreads
+label: Gatk4SplitReads
 outputs:
 - doc: Bam
   id: out
   label: out
   outputBinding:
     glob: $(inputs.bam.basename)
-  secondaryFiles:
-  - ^.bai
+  secondaryFiles: "${\n\n        function resolveSecondary(base, secPattern) {\n \
+    \         if (secPattern[0] == \"^\") {\n            var spl = base.split(\".\"\
+    );\n            var endIndex = spl.length > 1 ? spl.length - 1 : 1;\n        \
+    \    return resolveSecondary(spl.slice(undefined, endIndex).join(\".\"), secPattern.slice(1));\n\
+    \          }\n          return base + secPattern\n        }\n        return [\n\
+    \                {\n                    path: resolveSecondary(self.path, \"^.bai\"\
+    ),\n                    basename: resolveSecondary(self.basename, \".bai\")\n\
+    \                }\n        ];\n\n}"
   type: File
 requirements:
   DockerRequirement:

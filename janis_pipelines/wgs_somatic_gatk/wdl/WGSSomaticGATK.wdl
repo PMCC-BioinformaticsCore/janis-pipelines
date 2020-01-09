@@ -12,6 +12,7 @@ workflow WGSSomaticGATK {
     String? normalName
     String? tumorName
     Array[File] gatkIntervals
+    File cutadapt_adapters
     File reference
     File reference_amb
     File reference_ann
@@ -40,6 +41,7 @@ workflow WGSSomaticGATK {
       reference_dict=reference_dict,
       reference=reference,
       reads=tumorInputs,
+      cutadapt_adapters=cutadapt_adapters,
       sampleName=select_first([tumorName, "NA24385_tumour"])
   }
   call S.somatic_subpipeline as tumor {
@@ -53,6 +55,7 @@ workflow WGSSomaticGATK {
       reference_dict=reference_dict,
       reference=reference,
       reads=normalInputs,
+      cutadapt_adapters=cutadapt_adapters,
       sampleName=select_first([normalName, "NA24385_normal"])
   }
   scatter (g in gatkIntervals) {

@@ -9,7 +9,7 @@ inputs:
   bam:
     id: bam
     secondaryFiles:
-    - ^.bai
+    - .bai
     type: File
   headerLines:
     id: headerLines

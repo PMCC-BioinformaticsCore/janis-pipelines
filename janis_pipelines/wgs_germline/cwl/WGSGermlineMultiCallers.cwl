@@ -26,6 +26,9 @@ inputs:
     default: germline
     id: combineVariants_type
     type: string
+  cutadapt_adapters:
+    id: cutadapt_adapters
+    type: File
   fastqs:
     id: fastqs
     type:
@@ -92,7 +95,7 @@ outputs:
     id: bam
     outputSource: processBamFiles/out
     secondaryFiles:
-    - ^.bai
+    - .bai
     type: File
   combinedVariants:
     id: combinedVariants
@@ -122,14 +125,14 @@ outputs:
     type: File
   variants_vardict:
     id: variants_vardict
+    outputSource: variantCaller_merge_Vardict/out
+    type: File
+  variants_vardict_split:
+    id: variants_vardict_split
     outputSource: variantCaller_Vardict/out
     type:
       items: File
       type: array
-  variants_vardict_split:
-    id: variants_vardict_split
-    outputSource: variantCaller_merge_Vardict/out
-    type: File
 requirements:
   InlineJavascriptRequirement: {}
   MultipleInputFeatureRequirement: {}
@@ -139,6 +142,12 @@ requirements:
 steps:
   alignSortedBam:
     in:
+      cutadapt_adapter:
+        id: cutadapt_adapter
+        source: getfastqc_adapters/adaptor_sequences
+      cutadapt_removeMiddle3Adapter:
+        id: cutadapt_removeMiddle3Adapter
+        source: getfastqc_adapters/adaptor_sequences
       fastq:
         id: fastq
         source: fastqs
@@ -156,6 +165,9 @@ steps:
     run: tools/BwaAligner.cwl
     scatter:
     - fastq
+    - cutadapt_adapter
+    - cutadapt_removeMiddle3Adapter
+    scatterMethod: dotproduct
   combineVariants:
     in:
       columns:
@@ -181,9 +193,23 @@ steps:
         source: fastqs
     out:
     - out
+    - datafile
     run: tools/fastqc.cwl
     scatter:
     - reads
+  getfastqc_adapters:
+    in:
+      cutadapt_adaptors_lookup:
+        id: cutadapt_adaptors_lookup
+        source: cutadapt_adapters
+      fastqc_datafiles:
+        id: fastqc_datafiles
+        source: fastqc/datafile
+    out:
+    - adaptor_sequences
+    run: tools/ParseFastqcAdaptors.cwl
+    scatter:
+    - fastqc_datafiles
   processBamFiles:
     in:
       bams:
