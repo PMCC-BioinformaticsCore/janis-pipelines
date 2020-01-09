@@ -23,6 +23,8 @@ from janis_bioinformatics.tools.variantcallers import (
 from janis_bioinformatics.tools.variantcallers.gridssgermline import (
     GridssGermlineVariantCaller,
 )
+from janis_bioinformatics.tools.pmac import ParseFastqcAdaptors
+
 from janis_core import Array, File, String, Float, WorkflowMetadata
 
 
@@ -42,6 +44,8 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
         self.input("fastqs", Array(FastqGzPair))
         self.input("reference", FastaWithDict)
 
+        self.input("cutadapt_adapters", File)
+    
         self.input("gatkIntervals", Array(Bed))
         self.input("vardictIntervals", Array(Bed))
         self.input("strelkaIntervals", BedTabix)
@@ -60,6 +64,17 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
 
         # STEPS
 
+        self.step("fastqc", FastQC_0_11_5(reads=self.fastqs), scatter="reads"),
+        
+        self.step(
+            "getfastqc_adapters", 
+            ParseFastqcAdaptors(
+                fastqc_datafiles=self.fastqc.datafile,
+                cutadapt_adaptors_lookup=self.cutadapt_adapters
+            ),
+            scatter="fastqc_datafiles"
+        )
+
         self.step(
             "alignSortedBam",
             BwaAligner(
@@ -67,10 +82,12 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
                 reference=self.reference,
                 sampleName=self.sampleName,
                 sortsam_tmpDir="./tmp",
+                cutadapt_adapter=self.getfastqc_adapters,
+                cutadapt_removeMiddle3Adapter=self.getfastqc_adapters,
+            
             ),
-            scatter="fastq",
+            scatter=["fastq", "cutadapt_adapter", "cutadapt_removeMiddle3Adapter"]
         )
-        self.step("fastqc", FastQC_0_11_5(reads=self.fastqs), scatter="reads"),
         self.step(
             "processBamFiles", MergeAndMarkBams_4_1_3(bams=self.alignSortedBam.out)
         )
@@ -152,38 +169,38 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
         )
         self.step("sortCombined", BcfToolsSort_1_9(vcf=self.combineVariants.vcf))
 
-        self.output("bam", source=self.processBamFiles.out, output_tag="bams")
-        self.output("reports", source=self.fastqc, output_tag="reports")
+        self.output("bam", source=self.processBamFiles.out, output_folder="bams")
+        self.output("reports", source=self.fastqc.out, output_folder="reports")
 
         self.output(
-            "combinedVariants", source=self.sortCombined.out, output_tag="variants"
+            "combinedVariants", source=self.sortCombined.out, output_folder="variants"
         )
 
         self.output(
             "variants_gatk",
             source=self.variantCaller_merge_GATK.out,
-            output_tag="variants",
+            output_folder="variants",
         )
         self.output(
             "variants_vardict",
             source=self.variantCaller_merge_Vardict.out,
-            output_tag=["variants"],
+            output_folder=["variants"],
         )
         self.output(
             "variants_strelka",
             source=self.variantCaller_Strelka.out,
-            output_tag="variants",
+            output_folder="variants",
         )
 
         self.output(
             "variants_gatk_split",
             source=self.variantCaller_GATK.out,
-            output_tag=["variants", "gatk"],
+            output_folder=["variants", "gatk"],
         )
         self.output(
             "variants_vardict_split",
             source=self.variantCaller_Vardict.out,
-            output_tag=["variants", "variants"],
+            output_folder=["variants", "variants"],
         )
 
         # self.output("variants_gridss", source=self.variantCaller_GRIDSS.out)

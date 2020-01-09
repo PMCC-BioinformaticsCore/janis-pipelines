@@ -20,6 +20,8 @@ from janis_bioinformatics.tools.variantcallers.illuminasomatic_strelka import (
 from janis_bioinformatics.tools.variantcallers.vardictsomatic_variants import (
     VardictSomaticVariantCaller,
 )
+from janis_bioinformatics.tools.pmac import ParseFastqcAdaptors
+
 from janis_core import String, WorkflowBuilder, File, Array, Float, WorkflowMetadata
 
 
@@ -37,6 +39,7 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
         self.input("normalName", String(), default="NA24385_normal")
         self.input("tumorName", String(), default="NA24385_tumour")
 
+        self.input("cutadapt_adapters", File)
         self.input("gatkIntervals", Array(Bed))
 
         self.input("vardictIntervals", Array(Bed))
@@ -57,6 +60,7 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
                 reads=self.tumorInputs,
                 sampleName=self.tumorName,
                 reference=self.reference,
+                cutadapt_adapters=self.cutadapt_adapters,
             ),
         )
         self.step(
@@ -65,6 +69,7 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
                 reads=self.normalInputs,
                 sampleName=self.normalName,
                 reference=self.reference,
+                cutadapt_adapters=self.cutadapt_adapters,
             ),
         )
 
@@ -137,15 +142,15 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
 
         # Outputs
 
-        self.output("normalBam", source=self.normal.out, output_tag="variants")
-        self.output("tumorBam", source=self.tumor.out, output_tag="variants")
-        self.output("normalReport", source=self.normal.reports, output_tag="reports")
-        self.output("tumorReport", source=self.tumor.reports, output_tag="reports")
+        self.output("normalBam", source=self.normal.out, output_folder="variants")
+        self.output("tumorBam", source=self.tumor.out, output_folder="variants")
+        self.output("normalReport", source=self.normal.reports, output_folder="reports")
+        self.output("tumorReport", source=self.tumor.reports, output_folder="reports")
 
-        self.output("variants_gatk", source=self.variantCaller_merge_GATK.out, output_tag="variants")
-        self.output("variants_strelka", source=self.variantCaller_Strelka.out, output_tag="variants")
-        self.output("variants_vardict", source=self.variantCaller_merge_VarDict.out, output_tag="variants")
-        self.output("variants_combined", source=self.combineVariants.vcf, output_tag="variants")
+        self.output("variants_gatk", source=self.variantCaller_merge_GATK.out, output_folder="variants")
+        self.output("variants_strelka", source=self.variantCaller_Strelka.out, output_folder="variants")
+        self.output("variants_vardict", source=self.variantCaller_merge_VarDict.out, output_folder="variants")
+        self.output("variants_combined", source=self.combineVariants.vcf, output_folder="variants")
 
     @staticmethod
     def process_subpipeline(**connections):
@@ -153,8 +158,20 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
 
         w.input("reference", FastaWithDict)
         w.input("reads", Array(FastqGzPair))
+        w.input("cutadapt_adapters", File)
 
         w.input("sampleName", String)
+
+        w.step("fastqc", FastQC_0_11_5(reads=w.reads), scatter="reads")
+
+        w.step(
+            "getfastqc_adapters", 
+            ParseFastqcAdaptors(
+                fastqc_datafiles=w.fastqc.datafile,
+                cutadapt_adaptors_lookup=w.cutadapt_adapters
+            ),
+            scatter="fastqc_datafiles"
+        )
 
         w.step(
             "alignAndSort",
@@ -163,14 +180,15 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
                 reference=w.reference,
                 sampleName=w.sampleName,
                 sortsam_tmpDir=None,
+                cutadapt_adapter=w.getfastqc_adapters,
+                cutadapt_removeMiddle3Adapter=w.getfastqc_adapters,
             ),
-            scatter="fastq",
+            scatter=["fastq", "cutadapt_adapter", "cutadapt_removeMiddle3Adapter"]
         )
         w.step("mergeAndMark", MergeAndMarkBams_4_1_3(bams=w.alignAndSort.out))
-        w.step("fastqc", FastQC_0_11_5(reads=w.reads), scatter="reads")
 
         w.output("out", source=w.mergeAndMark.out)
-        w.output("reports", source=w.fastqc, output_tag=[w.sampleName, "reports"])
+        w.output("reports", source=w.fastqc.out, output_folder=[w.sampleName, "reports"])
 
         return w(**connections)
 

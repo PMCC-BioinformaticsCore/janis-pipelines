@@ -1,6 +1,6 @@
 from datetime import date
 
-from janis_core import String, Array, InputSelector, WorkflowMetadata
+from janis_core import File, String, Array, InputSelector, WorkflowMetadata, ScatterDescription, ScatterMethods
 
 from janis_bioinformatics.data_types import (
     FastaWithDict,
@@ -16,6 +16,7 @@ from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWork
 from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_0, Gatk4SortSam_4_1_3
 from janis_bioinformatics.tools.variantcallers import GatkGermlineVariantCaller_4_1_3
+from janis_bioinformatics.tools.pmac import ParseFastqcAdaptors
 
 
 class WGSGermlineGATK(BioinformaticsWorkflow):
@@ -33,6 +34,7 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
 
         self.input("fastqs", Array(FastqGzPair))
         self.input("reference", FastaWithDict)
+        self.input("cutadapt_adapters", File)
         self.input("gatkIntervals", Array(Bed))
 
         self.input("sampleName", String(), default="NA12878")
@@ -46,15 +48,27 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
 
         self.step("fastqc", FastQC_0_11_5(reads=self.fastqs), scatter="reads")
         self.step(
+            "getfastqc_adapters", 
+            ParseFastqcAdaptors(
+                fastqc_datafiles=self.fastqc.datafile,
+                cutadapt_adaptors_lookup=self.cutadapt_adapters
+            ),
+            scatter="fastqc_datafiles"
+        )
+
+        self.step(
             "alignSortedBam",
             BwaAligner(
                 fastq=self.fastqs,
                 reference=self.reference,
                 sampleName=self.sampleName,
                 sortsam_tmpDir=".",
+                cutadapt_adapter=self.getfastqc_adapters,
+                cutadapt_removeMiddle3Adapter=self.getfastqc_adapters
             ),
-            scatter="fastq",
+            scatter=["fastq", "cutadapt_adapter", "cutadapt_removeMiddle3Adapter"]
         )
+
         self.step("processBamFiles", MergeAndMarkBams_4_1_3(bams=self.alignSortedBam))
 
         # VARIANT CALLERS
@@ -85,16 +99,16 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
         )
 
         self.output(
-            "bam", source=self.processBamFiles.out, output_tag=["bams", self.sampleName]
+            "bam", source=self.processBamFiles.out, output_folder=["bams", self.sampleName]
         )
         self.output(
-            "reports", source=self.fastqc, output_tag=["reports", self.sampleName]
+            "reports", source=self.fastqc.out, output_folder=["reports", self.sampleName]
         )
-        self.output("variants", source=self.sortCombined.out, output_tag="variants")
+        self.output("variants", source=self.sortCombined.out, output_folder="variants")
         self.output(
             "variants_split",
             source=self.variantCaller_GATK.out,
-            output_tag=["variants", "byInterval"],
+            output_folder=["variants", "byInterval"],
         )
 
     def bind_metadata(self):

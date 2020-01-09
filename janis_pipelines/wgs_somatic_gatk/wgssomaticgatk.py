@@ -6,6 +6,7 @@ from janis_bioinformatics.data_types import (
     VcfTabix,
     Bed,
     FastqGzPair,
+    File
 )
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
@@ -13,6 +14,7 @@ from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWork
 from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
 from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
+from janis_bioinformatics.tools.pmac import ParseFastqcAdaptors
 from janis_core import String, WorkflowBuilder, Array, WorkflowMetadata
 
 
@@ -32,6 +34,7 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
         self.input("tumorName", String, default="NA24385_tumour")
 
         self.input("gatkIntervals", Array(Bed))
+        self.input("cutadapt_adapters", File)
 
         self.input("reference", FastaWithDict)
         self.input("snps_dbsnp", VcfTabix)
@@ -45,6 +48,7 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
                 reads=self.tumorInputs,
                 sampleName=self.tumorName,
                 reference=self.reference,
+                cutadapt_adapters=self.cutadapt_adapters,
             ),
         )
         self.step(
@@ -53,6 +57,7 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
                 reads=self.normalInputs,
                 sampleName=self.normalName,
                 reference=self.reference,
+                cutadapt_adapters=self.cutadapt_adapters,
             ),
         )
 
@@ -81,12 +86,12 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
 
         # Outputs
 
-        self.output("normalBam", source=self.normal.out, output_tag="bams")
-        self.output("tumorBam", source=self.tumor.out, output_tag="bams")
-        self.output("normalReport", source=self.normal.reports, output_tag="reports")
-        self.output("tumorReport", source=self.tumor.reports, output_tag="reports")
+        self.output("normalBam", source=self.normal.out, output_folder="bams")
+        self.output("tumorBam", source=self.tumor.out, output_folder="bams")
+        self.output("normalReport", source=self.normal.reports, output_folder="reports")
+        self.output("tumorReport", source=self.tumor.reports, output_folder="reports")
 
-        self.output("variants_gatk", source=self.sorted.out, output_tag="variants")
+        self.output("variants_gatk", source=self.sorted.out, output_folder="variants")
 
     @staticmethod
     def process_subpipeline(**connections):
@@ -94,8 +99,20 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
 
         w.input("reference", FastaWithDict)
         w.input("reads", Array(FastqGzPair))
+        w.input("cutadapt_adapters", File)
 
         w.input("sampleName", String)
+
+        w.step("fastqc", FastQC_0_11_5(reads=w.reads), scatter="reads")
+
+        w.step(
+            "getfastqc_adapters", 
+            ParseFastqcAdaptors(
+                fastqc_datafiles=w.fastqc.datafile,
+                cutadapt_adaptors_lookup=w.cutadapt_adapters
+            ),
+            scatter="fastqc_datafiles"
+        )
 
         w.step(
             "alignAndSort",
@@ -104,14 +121,16 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
                 reference=w.reference,
                 sampleName=w.sampleName,
                 sortsam_tmpDir=None,
+                cutadapt_adapter=w.getfastqc_adapters,
+                cutadapt_removeMiddle3Adapter=w.getfastqc_adapters,
             ),
-            scatter="fastq",
+            scatter=["fastq", "cutadapt_adapter", "cutadapt_removeMiddle3Adapter"]
         )
+
         w.step("mergeAndMark", MergeAndMarkBams_4_1_3(bams=w.alignAndSort.out))
-        w.step("fastqc", FastQC_0_11_5(reads=w.reads), scatter="reads")
 
         w.output("out", source=w.mergeAndMark.out)
-        w.output("reports", source=w.fastqc)
+        w.output("reports", source=w.fastqc.out)
 
         return w(**connections)
 
