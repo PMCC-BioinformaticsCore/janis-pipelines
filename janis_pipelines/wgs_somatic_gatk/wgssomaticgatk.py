@@ -25,6 +25,10 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
     def friendly_name(self):
         return "WGS Somatic (GATK only)"
 
+    @staticmethod
+    def version():
+        return "1.1.0"
+        
     def constructor(self):
 
         self.input("normalInputs", Array(FastqGzPair))

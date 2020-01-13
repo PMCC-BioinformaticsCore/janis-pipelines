@@ -32,6 +32,10 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
     def friendly_name(self):
         return "WGS Somatic (Multi callers)"
 
+    @staticmethod
+    def version():
+        return "1.1.0"
+
     def constructor(self):
         self.input("normalInputs", Array(FastqGzPair))
         self.input("tumorInputs", Array(FastqGzPair))
