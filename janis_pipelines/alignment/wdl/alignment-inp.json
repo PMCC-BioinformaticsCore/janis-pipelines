@@ -1,5 +1,5 @@
 {
-    "alignment.cutadapt_minReadLength": 50,
+    "alignment.cutadapt_minimumLength": 50,
     "alignment.cutadapt_qualityCutoff": 15,
     "alignment.fastq": null,
     "alignment.reference": null,

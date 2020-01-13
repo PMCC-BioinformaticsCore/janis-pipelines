@@ -10,8 +10,9 @@ inputs:
   cutadapt_adapter:
     id: cutadapt_adapter
     type:
-      items: string
+    - items: string
       type: array
+    - 'null'
   cutadapt_front:
     id: cutadapt_front
     type:
@@ -28,8 +29,9 @@ inputs:
   cutadapt_removeMiddle3Adapter:
     id: cutadapt_removeMiddle3Adapter
     type:
-      items: string
+    - items: string
       type: array
+    - 'null'
   cutadapt_removeMiddle5Adapter:
     id: cutadapt_removeMiddle5Adapter
     type:

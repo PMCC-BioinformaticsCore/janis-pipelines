@@ -10,3 +10,4 @@
 **/**/cromwell-workflow-logs/
 **/**/cromwell-executions/
 **-runner.py
+janis_pipelines/test_workflows/

@@ -16,8 +16,8 @@ workflow BwaAligner {
     File reference_fai
     File reference_dict
     Array[File] fastq
-    Array[String] cutadapt_adapter
-    Array[String] cutadapt_removeMiddle3Adapter
+    Array[String]? cutadapt_adapter
+    Array[String]? cutadapt_removeMiddle3Adapter
     String? cutadapt_front
     String? cutadapt_removeMiddle5Adapter
     Int? cutadapt_qualityCutoff

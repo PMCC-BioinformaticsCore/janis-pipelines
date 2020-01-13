@@ -1,9 +1,10 @@
 from datetime import date
 
+from janis_core import Array
 from janis_bioinformatics.data_types import FastqGzPair, FastaWithDict
 from janis_bioinformatics.tools import BioinformaticsWorkflow
 from janis_bioinformatics.tools.common.bwamem_samtoolsview import BwaMem_SamToolsView
-from janis_bioinformatics.tools.cutadapt.cutadapt_1_18 import CutAdapt_1_18
+from janis_bioinformatics.tools.cutadapt import CutAdapt_2_6
 from janis_bioinformatics.tools.gatk4 import Gatk4SortSam_4_1_2
 
 
@@ -29,17 +30,21 @@ class BwaAlignment(BioinformaticsWorkflow):
         self.input("reference", FastaWithDict)
         self.input("fastq", FastqGzPair)
 
+        # pipe adapters
+        self.input("cutadapt_adapter", Array(str, optional=True))
+        self.input("cutadapt_removeMiddle3Adapter", Array(str, optional=True))
+
         # Steps
         self.step(
             "cutadapt",
-            CutAdapt_1_18(
+            CutAdapt_2_6(
                 fastq=self.fastq,
-                adapter=None,
-                adapter_g=None,
+                adapter=self.cutadapt_adapter,
+                front=None,
                 removeMiddle5Adapter=None,
-                removeMiddle3Adapter=None,
+                removeMiddle3Adapter=self.cutadapt_removeMiddle3Adapter,
                 qualityCutoff=15,
-                minReadLength=50,
+                minimumLength=50,
             ),
         )
 
@@ -78,12 +83,13 @@ class BwaAlignment(BioinformaticsWorkflow):
 
 
 if __name__ == "__main__":
+    import os.path
     w = BwaAlignment()
     args = {
         "to_console": False,
         "to_disk": True,
         "validate": True,
-        "export_path": "{language}",
+        "export_path": os.path.join(os.path.dirname(os.path.realpath(__file__)), "{language}"),
     }
     w.translate("cwl", **args)
     w.translate("wdl", **args)
