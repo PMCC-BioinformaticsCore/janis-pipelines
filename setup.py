@@ -26,7 +26,7 @@ setup(
         "janis.tools": ["pipelines=janis_pipelines"],
         "janis.pipelines": ["bioinformatics=janis_pipelines"],
     },
-    install_requires=["janis-pipelines>=0.6.0"],
+    install_requires=["janis-core>=0.9.0", "janis-bioinformatics>=0.9.0"],
     zip_safe=False,
     long_description=long_description,
     long_description_content_type="text/markdown",
