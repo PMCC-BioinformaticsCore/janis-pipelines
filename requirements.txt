@@ -1,2 +1,2 @@
-janis-core>=v0.9.0
-janis-bioinformatics>=v0.9.0
+janis-pipelines.core>=v0.9.0
+janis-pipelines.bioinformatics>=v0.9.0
