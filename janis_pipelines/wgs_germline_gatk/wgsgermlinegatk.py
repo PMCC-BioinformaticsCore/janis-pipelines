@@ -28,16 +28,16 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
 
     @staticmethod
     def version():
-        return "1.1.0"
+        return "1.2.0"
 
     def constructor(self):
 
         self.input("fastqs", Array(FastqGzPair))
         self.input("reference", FastaWithDict)
         self.input("cutadapt_adapters", File)
-        self.input("gatkIntervals", Array(Bed))
+        self.input("gatk_intervals", Array(Bed))
 
-        self.input("sampleName", String(), default="NA12878")
+        self.input("sample_name", String(), default="NA12878")
 
         self.input("snps_dbsnp", VcfTabix, doc="")
         self.input("snps_1000gp", VcfTabix)
@@ -47,6 +47,7 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
         # STEPS
 
         self.step("fastqc", FastQC_0_11_5(reads=self.fastqs), scatter="reads")
+        
         self.step(
             "getfastqc_adapters", 
             ParseFastqcAdaptors(
@@ -57,11 +58,11 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
         )
 
         self.step(
-            "alignSortedBam",
+            "align_and_sort",
             BwaAligner(
                 fastq=self.fastqs,
                 reference=self.reference,
-                sampleName=self.sampleName,
+                sample_name=self.sample_name,
                 sortsam_tmpDir=".",
                 cutadapt_adapter=self.getfastqc_adapters,
                 cutadapt_removeMiddle3Adapter=self.getfastqc_adapters
@@ -69,45 +70,46 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
             scatter=["fastq", "cutadapt_adapter", "cutadapt_removeMiddle3Adapter"]
         )
 
-        self.step("processBamFiles", MergeAndMarkBams_4_1_3(bams=self.alignSortedBam))
+        self.step("merge_and_mark", MergeAndMarkBams_4_1_3(bams=self.align_and_sort))
 
         # VARIANT CALLERS
 
         # GATK
         self.step(
-            "variantCaller_GATK",
+            "vc_gatk",
             GatkGermlineVariantCaller_4_1_3(
-                bam=self.processBamFiles,
-                intervals=self.gatkIntervals,
+                bam=self.merge_and_mark,
+                intervals=self.gatk_intervals,
                 reference=self.reference,
                 snps_dbsnp=self.snps_dbsnp,
                 snps_1000gp=self.snps_1000gp,
-                knownIndels=self.known_indels,
-                millsIndels=self.mills_indels,
+                known_indels=self.known_indels,
+                mills_indels=self.mills_indels,
             ),
             scatter="intervals",
         )
 
         self.step(
-            "variantCaller_merge_GATK",
-            Gatk4GatherVcfs_4_0(vcfs=self.variantCaller_GATK.out),
+            "vc_gatk_merge",
+            Gatk4GatherVcfs_4_0(vcfs=self.vc_gatk.out),
         )
         # sort
 
         self.step(
-            "sortCombined", BcfToolsSort_1_9(vcf=self.variantCaller_merge_GATK.out)
+            "sort_combined", BcfToolsSort_1_9(vcf=self.vc_gatk_merge.out)
         )
 
+
         self.output(
-            "bam", source=self.processBamFiles.out, output_folder=["bams", self.sampleName]
+            "bam", source=self.merge_and_mark.out, output_folder=["bams", self.sample_name]
         )
         self.output(
-            "reports", source=self.fastqc.out, output_folder=["reports", self.sampleName]
+            "reports", source=self.fastqc.out, output_folder=["reports", self.sample_name]
         )
-        self.output("variants", source=self.sortCombined.out, output_folder="variants")
+        self.output("variants", source=self.sort_combined.out, output_folder="variants")
         self.output(
             "variants_split",
-            source=self.variantCaller_GATK.out,
+            source=self.vc_gatk.out,
             output_folder=["variants", "byInterval"],
         )
 

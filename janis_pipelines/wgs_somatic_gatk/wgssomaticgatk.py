@@ -27,17 +27,17 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
 
     @staticmethod
     def version():
-        return "1.1.0"
+        return "1.2.0"
         
     def constructor(self):
 
-        self.input("normalInputs", Array(FastqGzPair))
-        self.input("tumorInputs", Array(FastqGzPair))
+        self.input("normal_inputs", Array(FastqGzPair))
+        self.input("tumor_inputs", Array(FastqGzPair))
 
-        self.input("normalName", String, default="NA24385_normal")
-        self.input("tumorName", String, default="NA24385_tumour")
+        self.input("normal_name", String, default="NA24385_normal")
+        self.input("tumor_name", String, default="NA24385_tumour")
 
-        self.input("gatkIntervals", Array(Bed))
+        self.input("gatk_intervals", Array(Bed))
         self.input("cutadapt_adapters", File)
 
         self.input("reference", FastaWithDict)
@@ -49,8 +49,8 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
         self.step(
             "normal",
             self.process_subpipeline(
-                reads=self.tumorInputs,
-                sampleName=self.tumorName,
+                reads=self.tumor_inputs,
+                sample_name=self.tumor_name,
                 reference=self.reference,
                 cutadapt_adapters=self.cutadapt_adapters,
             ),
@@ -58,42 +58,42 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
         self.step(
             "tumor",
             self.process_subpipeline(
-                reads=self.normalInputs,
-                sampleName=self.normalName,
+                reads=self.normal_inputs,
+                sample_name=self.normal_name,
                 reference=self.reference,
                 cutadapt_adapters=self.cutadapt_adapters,
             ),
         )
 
         self.step(
-            "variantCaller_GATK",
+            "vc_gatk",
             GatkSomaticVariantCaller_4_1_3(
-                normalBam=self.tumor.out,
-                tumorBam=self.normal.out,
-                normalName=self.normalName,
-                tumorName=self.tumorName,
-                intervals=self.gatkIntervals,
+                normal_bam=self.tumor.out,
+                tumor_bam=self.normal.out,
+                normal_name=self.normal_name,
+                tumor_name=self.tumor_name,
+                intervals=self.gatk_intervals,
                 reference=self.reference,
                 snps_dbsnp=self.snps_dbsnp,
                 snps_1000gp=self.snps_1000gp,
-                knownIndels=self.known_indels,
-                millsIndels=self.mills_indels,
+                known_indels=self.known_indels,
+                mills_indels=self.mills_indels,
             ),
             scatter="intervals",
         )
 
         self.step(
-            "variantCaller_GATK_merge",
-            Gatk4GatherVcfs_4_1_3(vcfs=self.variantCaller_GATK),
+            "vc_gatk_merge",
+            Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk),
         )
-        self.step("sorted", BcfToolsSort_1_9(vcf=self.variantCaller_GATK_merge.out))
+        self.step("sorted", BcfToolsSort_1_9(vcf=self.vc_gatk_merge.out))
 
         # Outputs
 
-        self.output("normalBam", source=self.normal.out, output_folder="bams")
-        self.output("tumorBam", source=self.tumor.out, output_folder="bams")
-        self.output("normalReport", source=self.normal.reports, output_folder="reports")
-        self.output("tumorReport", source=self.tumor.reports, output_folder="reports")
+        self.output("normal_bam", source=self.normal.out, output_folder="bams")
+        self.output("tumor_bam", source=self.tumor.out, output_folder="bams")
+        self.output("normal_report", source=self.normal.reports, output_folder="reports")
+        self.output("tumor_report", source=self.tumor.reports, output_folder="reports")
 
         self.output("variants_gatk", source=self.sorted.out, output_folder="variants")
 
@@ -105,7 +105,7 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
         w.input("reads", Array(FastqGzPair))
         w.input("cutadapt_adapters", File)
 
-        w.input("sampleName", String)
+        w.input("sample_name", String)
 
         w.step("fastqc", FastQC_0_11_5(reads=w.reads), scatter="reads")
 
@@ -119,11 +119,11 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
         )
 
         w.step(
-            "alignAndSort",
+            "align_and_sort",
             BwaAligner(
                 fastq=w.reads,
                 reference=w.reference,
-                sampleName=w.sampleName,
+                sample_name=w.sample_name,
                 sortsam_tmpDir=None,
                 cutadapt_adapter=w.getfastqc_adapters,
                 cutadapt_removeMiddle3Adapter=w.getfastqc_adapters,
@@ -131,9 +131,9 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
             scatter=["fastq", "cutadapt_adapter", "cutadapt_removeMiddle3Adapter"]
         )
 
-        w.step("mergeAndMark", MergeAndMarkBams_4_1_3(bams=w.alignAndSort.out))
+        w.step("merge_and_mark", MergeAndMarkBams_4_1_3(bams=w.align_and_sort.out))
 
-        w.output("out", source=w.mergeAndMark.out)
+        w.output("out", source=w.merge_and_mark.out)
         w.output("reports", source=w.fastqc.out)
 
         return w(**connections)

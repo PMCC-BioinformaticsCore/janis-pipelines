@@ -37,7 +37,7 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
 
     @staticmethod
     def version():
-        return "1.1.0"
+        return "1.2.0"
 
     def constructor(self):
 
@@ -46,14 +46,14 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
 
         self.input("cutadapt_adapters", File)
     
-        self.input("gatkIntervals", Array(Bed))
-        self.input("vardictIntervals", Array(Bed))
+        self.input("gatk_intervals", Array(Bed))
+        self.input("vardict_intervals", Array(Bed))
         self.input("strelkaIntervals", BedTabix)
 
-        self.input("vardictHeaderLines", File)
+        self.input("header_lines", File)
 
-        self.input("sampleName", String, default="NA12878")
-        self.input("alleleFreqThreshold", Float, default=0.05)
+        self.input("sample_name", String, default="NA12878")
+        self.input("allele_freq_threshold", Float, default=0.05)
 
         # self.input("gridssBlacklist", Bed)
 
@@ -76,11 +76,11 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
         )
 
         self.step(
-            "alignSortedBam",
+            "align_and_sort",
             BwaAligner(
                 fastq=self.fastqs,
                 reference=self.reference,
-                sampleName=self.sampleName,
+                sample_name=self.sample_name,
                 sortsam_tmpDir="./tmp",
                 cutadapt_adapter=self.getfastqc_adapters,
                 cutadapt_removeMiddle3Adapter=self.getfastqc_adapters,
@@ -89,36 +89,36 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
             scatter=["fastq", "cutadapt_adapter", "cutadapt_removeMiddle3Adapter"]
         )
         self.step(
-            "processBamFiles", MergeAndMarkBams_4_1_3(bams=self.alignSortedBam.out)
+            "merge_and_mark", MergeAndMarkBams_4_1_3(bams=self.align_and_sort.out)
         )
 
         # VARIANT CALLERS
 
         # GATK
         self.step(
-            "variantCaller_GATK",
+            "vc_gatk",
             GatkGermlineVariantCaller_4_1_3(
-                bam=self.processBamFiles.out,
-                intervals=self.gatkIntervals,
+                bam=self.merge_and_mark.out,
+                intervals=self.gatk_intervals,
                 reference=self.reference,
                 snps_dbsnp=self.snps_dbsnp,
                 snps_1000gp=self.snps_1000gp,
-                knownIndels=self.known_indels,
-                millsIndels=self.mills_indels,
+                known_indels=self.known_indels,
+                mills_indels=self.mills_indels,
             ),
             scatter="intervals",
         )
 
         self.step(
-            "variantCaller_merge_GATK",
-            Gatk4GatherVcfs_4_1_3(vcfs=self.variantCaller_GATK.out),
+            "vc_gatk_merge",
+            Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out),
         )
 
         # Strelka
         self.step(
-            "variantCaller_Strelka",
+            "vc_strelka",
             IlluminaGermlineVariantCaller(
-                bam=self.processBamFiles.out,
+                bam=self.merge_and_mark.out,
                 reference=self.reference,
                 intervals=self.strelkaIntervals,
             ),
@@ -126,27 +126,27 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
 
         # Vardict
         self.step(
-            "variantCaller_Vardict",
+            "vc_vardict",
             VardictGermlineVariantCaller(
-                bam=self.processBamFiles.out,
+                bam=self.merge_and_mark.out,
                 reference=self.reference,
-                intervals=self.vardictIntervals,
-                sampleName=self.sampleName,
-                alleleFreqThreshold=self.alleleFreqThreshold,
-                headerLines=self.vardictHeaderLines,
+                intervals=self.vardict_intervals,
+                sample_name=self.sample_name,
+                allele_freq_threshold=self.allele_freq_threshold,
+                header_lines=self.header_lines,
             ),
             scatter="intervals",
         )
         self.step(
-            "variantCaller_merge_Vardict",
-            Gatk4GatherVcfs_4_1_3(vcfs=self.variantCaller_Vardict.out),
+            "vc_vardict_merge",
+            Gatk4GatherVcfs_4_1_3(vcfs=self.vc_vardict.out),
         )
 
         # GRIDSS
         # self.step(
-        #     "variantCaller_GRIDSS",
+        #     "vc_gridss",
         #     GridssGermlineVariantCaller(
-        #         bam=self.processBamFiles.out,
+        #         bam=self.merge_and_mark.out,
         #         reference=self.reference,
         #         blacklist=self.gridssBlacklist,
         #     ),
@@ -155,55 +155,56 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
         # Combine
 
         self.step(
-            "combineVariants",
+            "combine_variants",
             CombineVariants_0_0_4(
                 vcfs=[
-                    self.variantCaller_merge_GATK.out,
-                    self.variantCaller_Strelka.out,
-                    self.variantCaller_merge_Vardict.out,
-                    # self.variantCaller_GRIDSS.out,
+                    self.vc_gatk_merge.out,
+                    self.vc_strelka.out,
+                    self.vc_vardict_merge.out,
+                    # self.vc_gridss.out,
                 ],
                 type="germline",
                 columns=["AC", "AN", "AF", "AD", "DP", "GT"],
             ),
         )
-        self.step("sortCombined", BcfToolsSort_1_9(vcf=self.combineVariants.vcf))
+        self.step("sort_combined", BcfToolsSort_1_9(vcf=self.combine_variants.vcf))
 
-        self.output("bam", source=self.processBamFiles.out, output_folder="bams")
+
         self.output("reports", source=self.fastqc.out, output_folder="reports")
+        self.output("bam", source=self.merge_and_mark.out, output_folder="bams")
 
         self.output(
-            "combinedVariants", source=self.sortCombined.out, output_folder="variants"
+            "variants_combined", source=self.sort_combined.out, output_folder="variants"
         )
 
         self.output(
             "variants_gatk",
-            source=self.variantCaller_merge_GATK.out,
+            source=self.vc_gatk_merge.out,
             output_folder="variants",
         )
         self.output(
             "variants_vardict",
-            source=self.variantCaller_merge_Vardict.out,
+            source=self.vc_vardict_merge.out,
             output_folder=["variants"],
         )
         self.output(
             "variants_strelka",
-            source=self.variantCaller_Strelka.out,
+            source=self.vc_strelka.out,
             output_folder="variants",
         )
 
         self.output(
             "variants_gatk_split",
-            source=self.variantCaller_GATK.out,
+            source=self.vc_gatk.out,
             output_folder=["variants", "gatk"],
         )
         self.output(
             "variants_vardict_split",
-            source=self.variantCaller_Vardict.out,
+            source=self.vc_vardict.out,
             output_folder=["variants", "variants"],
         )
 
-        # self.output("variants_gridss", source=self.variantCaller_GRIDSS.out)
+        # self.output("variants_gridss", source=self.vc_gridss.out)
 
     def bind_metadata(self):
         meta: WorkflowMetadata = self.metadata

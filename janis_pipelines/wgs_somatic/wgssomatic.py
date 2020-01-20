@@ -14,6 +14,7 @@ from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
 from janis_bioinformatics.tools.pmac import CombineVariants_0_0_4
 from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
+from janis_bioinformatics.tools.papenfuss.gridss.gridss import Gridss_2_5_1
 from janis_bioinformatics.tools.variantcallers.illuminasomatic_strelka import (
     IlluminaSomaticVariantCaller,
 )
@@ -34,23 +35,24 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
 
     @staticmethod
     def version():
-        return "1.1.0"
+        return "1.2.0"
 
     def constructor(self):
-        self.input("normalInputs", Array(FastqGzPair))
-        self.input("tumorInputs", Array(FastqGzPair))
+        self.input("normal_inputs", Array(FastqGzPair))
+        self.input("tumor_inputs", Array(FastqGzPair))
 
-        self.input("normalName", String(), default="NA24385_normal")
-        self.input("tumorName", String(), default="NA24385_tumour")
+        self.input("normal_name", String(), default="NA24385_normal")
+        self.input("tumor_name", String(), default="NA24385_tumour")
 
         self.input("cutadapt_adapters", File)
-        self.input("gatkIntervals", Array(Bed))
+        self.input("gridss_blacklist", Bed)
 
-        self.input("vardictIntervals", Array(Bed))
-        self.input("strelkaIntervals", BedTabix(optional=True))
+        self.input("gatk_intervals", Array(Bed))
+        self.input("vardict_intervals", Array(Bed))
+        self.input("strelka_intervals", BedTabix(optional=True))
 
-        self.input("vardictHeaderLines", File)
-        self.input("alleleFreqThreshold", Float, default=0.05)
+        self.input("vardict_header_lines", File)
+        self.input("allele_freq_threshold", Float, default=0.05)
 
         self.input("reference", FastaWithDict)
         self.input("snps_dbsnp", VcfTabix)
@@ -61,8 +63,8 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
         self.step(
             "normal",
             self.process_subpipeline(
-                reads=self.tumorInputs,
-                sampleName=self.tumorName,
+                reads=self.tumor_inputs,
+                sample_name=self.tumor_name,
                 reference=self.reference,
                 cutadapt_adapters=self.cutadapt_adapters,
             ),
@@ -70,91 +72,104 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
         self.step(
             "tumor",
             self.process_subpipeline(
-                reads=self.normalInputs,
-                sampleName=self.normalName,
+                reads=self.normal_inputs,
+                sample_name=self.normal_name,
                 reference=self.reference,
                 cutadapt_adapters=self.cutadapt_adapters,
             ),
         )
 
         self.step(
-            "variantCaller_GATK",
+            "vc_gatk",
             GatkSomaticVariantCaller_4_1_3(
-                normalBam=self.tumor.out,
-                tumorBam=self.normal.out,
-                normalName=self.normalName,
-                tumorName=self.tumorName,
-                intervals=self.gatkIntervals,
+                normal_bam=self.tumor.out,
+                tumor_bam=self.normal.out,
+                normal_name=self.normal_name,
+                tumor_name=self.tumor_name,
+                intervals=self.gatk_intervals,
                 reference=self.reference,
                 snps_dbsnp=self.snps_dbsnp,
                 snps_1000gp=self.snps_1000gp,
-                knownIndels=self.known_indels,
-                millsIndels=self.mills_indels,
+                known_indels=self.known_indels,
+                mills_indels=self.mills_indels,
             ),
             scatter="intervals",
         )
 
         self.step(
-            "variantCaller_merge_GATK",
-            Gatk4GatherVcfs_4_1_3(vcfs=self.variantCaller_GATK),
+            "vc_gatk_merge",
+            Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk),
         )
 
         self.step(
-            "variantCaller_Strelka",
+            "vc_strelka",
             IlluminaSomaticVariantCaller(
-                normalBam=self.normal.out,
-                tumorBam=self.tumor.out,
-                intervals=self.strelkaIntervals,
+                normal_bam=self.normal.out,
+                tumor_bam=self.tumor.out,
+                intervals=self.strelka_intervals,
                 reference=self.reference,
             ),
         )
+
         self.step(
-            "variantCaller_VarDict",
-            VardictSomaticVariantCaller(
-                normalBam=self.tumor.out,
-                tumorBam=self.normal.out,
-                normalName=self.normalName,
-                tumorName=self.tumorName,
-                headerLines=self.vardictHeaderLines,
-                intervals=self.vardictIntervals,
+            "vc_gridss",
+            Gridss_2_5_1(
+                bams=[self.normal.out, self.tumor.out],
                 reference=self.reference,
-                alleleFreqThreshold=self.alleleFreqThreshold,
+                blacklist=self.gridss_blacklist
+            )
+        )
+
+        self.step(
+            "vc_vardict",
+            VardictSomaticVariantCaller(
+                normal_bam=self.tumor.out,
+                tumor_bam=self.normal.out,
+                normal_name=self.normal_name,
+                tumor_name=self.tumor_name,
+                header_lines=self.vardict_header_lines,
+                intervals=self.vardict_intervals,
+                reference=self.reference,
+                allele_freq_threshold=self.allele_freq_threshold,
             ),
             scatter="intervals",
         )
 
         self.step(
-            "variantCaller_merge_VarDict",
-            Gatk4GatherVcfs_4_1_3(vcfs=self.variantCaller_VarDict.out),
+            "vc_vardict_merge",
+            Gatk4GatherVcfs_4_1_3(vcfs=self.vc_vardict.out),
         )
 
         self.step(
-            "combineVariants",
+            "combine_variants",
             CombineVariants_0_0_4(
-                normal=self.normalName,
-                tumor=self.tumorName,
+                normal=self.normal_name,
+                tumor=self.tumor_name,
                 vcfs=[
-                    self.variantCaller_merge_VarDict,
-                    self.variantCaller_Strelka.out,
-                    self.variantCaller_merge_GATK,
+                    self.vc_gatk_merge.out,
+                    self.vc_strelka.out,
+                    self.vc_vardict_merge.out,
                 ],
                 type="somatic",
                 columns=["AD", "DP", "GT"],
             ),
         )
-        self.step("sortCombined", BcfToolsSort_1_9(vcf=self.combineVariants.vcf))
+        self.step("sortCombined", BcfToolsSort_1_9(vcf=self.combine_variants.vcf))
 
         # Outputs
 
-        self.output("normalBam", source=self.normal.out, output_folder="variants")
-        self.output("tumorBam", source=self.tumor.out, output_folder="variants")
-        self.output("normalReport", source=self.normal.reports, output_folder="reports")
-        self.output("tumorReport", source=self.tumor.reports, output_folder="reports")
+        self.output("normal_report", source=self.normal.reports, output_folder="reports")
+        self.output("tumor_report", source=self.tumor.reports, output_folder="reports")
+        
+        self.output("normal_bam", source=self.normal.out, output_folder="bams")
+        self.output("tumor_bam", source=self.tumor.out, output_folder="bams")
+        self.output("gridss_assembly", source=self.vc_gridss.out, output_folder="bams")
 
-        self.output("variants_gatk", source=self.variantCaller_merge_GATK.out, output_folder="variants")
-        self.output("variants_strelka", source=self.variantCaller_Strelka.out, output_folder="variants")
-        self.output("variants_vardict", source=self.variantCaller_merge_VarDict.out, output_folder="variants")
-        self.output("variants_combined", source=self.combineVariants.vcf, output_folder="variants")
+        self.output("variants_gatk", source=self.vc_gatk_merge.out, output_folder="variants")
+        self.output("variants_strelka", source=self.vc_strelka.out, output_folder="variants")
+        self.output("variants_vardict", source=self.vc_vardict_merge.out, output_folder="variants")
+        self.output("variants_gridss", source=self.vc_gridss.out, output_folder="variants")
+        self.output("variants_combined", source=self.combine_variants.vcf, output_folder="variants")
 
     @staticmethod
     def process_subpipeline(**connections):
@@ -164,7 +179,7 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
         w.input("reads", Array(FastqGzPair))
         w.input("cutadapt_adapters", File)
 
-        w.input("sampleName", String)
+        w.input("sample_name", String)
 
         w.step("fastqc", FastQC_0_11_5(reads=w.reads), scatter="reads")
 
@@ -178,21 +193,21 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
         )
 
         w.step(
-            "alignAndSort",
+            "align_and_sort",
             BwaAligner(
                 fastq=w.reads,
                 reference=w.reference,
-                sampleName=w.sampleName,
+                sample_name=w.sample_name,
                 sortsam_tmpDir=None,
                 cutadapt_adapter=w.getfastqc_adapters,
                 cutadapt_removeMiddle3Adapter=w.getfastqc_adapters,
             ),
             scatter=["fastq", "cutadapt_adapter", "cutadapt_removeMiddle3Adapter"]
         )
-        w.step("mergeAndMark", MergeAndMarkBams_4_1_3(bams=w.alignAndSort.out))
+        w.step("merge_and_mark", MergeAndMarkBams_4_1_3(bams=w.align_and_sort.out))
 
-        w.output("out", source=w.mergeAndMark.out)
-        w.output("reports", source=w.fastqc.out, output_folder=[w.sampleName, "reports"])
+        w.output("out", source=w.merge_and_mark.out)
+        w.output("reports", source=w.fastqc.out, output_folder=[w.sample_name, "reports"])
 
         return w(**connections)
 
@@ -207,6 +222,7 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
             "gatk",
             "vardict",
             "strelka",
+            "gridss"
         ]
         meta.contributors = ["Michael Franklin"]
         meta.dateUpdated = date(2019, 10, 16)
