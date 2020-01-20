@@ -18,13 +18,13 @@ inputs:
     type:
     - File
     - 'null'
-  knownIndels:
-    id: knownIndels
+  known_indels:
+    id: known_indels
     secondaryFiles:
     - .tbi
     type: File
-  millsIndels:
-    id: millsIndels
+  mills_indels:
+    id: mills_indels
     secondaryFiles:
     - .tbi
     type: File
@@ -53,35 +53,35 @@ label: GATK4 Germline Variant Caller
 outputs:
   out:
     id: out
-    outputSource: splitMultiAllele/out
+    outputSource: split_multi_allele/out
     type: File
 requirements:
   InlineJavascriptRequirement: {}
   MultipleInputFeatureRequirement: {}
   StepInputExpressionRequirement: {}
 steps:
-  applyBQSR:
+  apply_bqsr:
     in:
       bam:
         id: bam
-        source: splitBams/out
+        source: split_bam/out
       intervals:
         id: intervals
         source: intervals
       recalFile:
         id: recalFile
-        source: baseRecalibrator/out
+        source: base_recalibrator/out
       reference:
         id: reference
         source: reference
     out:
     - out
     run: Gatk4ApplyBQSR.cwl
-  baseRecalibrator:
+  base_recalibrator:
     in:
       bam:
         id: bam
-        source: splitBams/out
+        source: split_bam/out
       intervals:
         id: intervals
         source: intervals
@@ -90,22 +90,22 @@ steps:
         source:
         - snps_dbsnp
         - snps_1000gp
-        - knownIndels
-        - millsIndels
+        - known_indels
+        - mills_indels
       reference:
         id: reference
         source: reference
     out:
     - out
     run: Gatk4BaseRecalibrator.cwl
-  haplotypeCaller:
+  haplotype_caller:
     in:
       dbsnp:
         id: dbsnp
         source: snps_dbsnp
       inputRead:
         id: inputRead
-        source: applyBQSR/out
+        source: apply_bqsr/out
       intervals:
         id: intervals
         source: intervals
@@ -115,7 +115,7 @@ steps:
     out:
     - out
     run: Gatk4HaplotypeCaller.cwl
-  splitBams:
+  split_bam:
     in:
       bam:
         id: bam
@@ -126,14 +126,14 @@ steps:
     out:
     - out
     run: Gatk4SplitReads.cwl
-  splitMultiAllele:
+  split_multi_allele:
     in:
       reference:
         id: reference
         source: reference
       vcf:
         id: vcf
-        source: haplotypeCaller/out
+        source: haplotype_caller/out
     out:
     - out
     run: SplitMultiAllele.cwl

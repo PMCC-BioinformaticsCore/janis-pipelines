@@ -1,2 +1,2 @@
-alignSortedBam_sortsam_tmpDir: .
-sampleName: NA12878
+align_and_sort_sortsam_tmpDir: .
+sample_name: NA12878

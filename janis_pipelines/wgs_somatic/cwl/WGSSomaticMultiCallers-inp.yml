@@ -1,8 +1,8 @@
-alleleFreqThreshold: 0.05
-combineVariants_columns:
+allele_freq_threshold: 0.05
+combine_variants_columns:
 - AD
 - DP
 - GT
-combineVariants_type: somatic
-normalName: NA24385_normal
-tumorName: NA24385_tumour
+combine_variants_type: somatic
+normal_name: NA24385_normal
+tumor_name: NA24385_tumour

@@ -3,6 +3,7 @@
 
 
 .idea/
+.vscode/
 
 # Hide incidental running files
 *.conf

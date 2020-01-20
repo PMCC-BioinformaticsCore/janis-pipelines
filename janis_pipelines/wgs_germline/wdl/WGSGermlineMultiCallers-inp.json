@@ -1,7 +1,7 @@
 {
-    "WGSGermlineMultiCallers.alignSortedBam_sortsam_tmpDir": "./tmp",
-    "WGSGermlineMultiCallers.alleleFreqThreshold": 0.05,
-    "WGSGermlineMultiCallers.combineVariants_columns": [
+    "WGSGermlineMultiCallers.align_and_sort_sortsam_tmpDir": "./tmp",
+    "WGSGermlineMultiCallers.allele_freq_threshold": 0.05,
+    "WGSGermlineMultiCallers.combine_variants_columns": [
         "AC",
         "AN",
         "AF",
@@ -9,10 +9,11 @@
         "DP",
         "GT"
     ],
-    "WGSGermlineMultiCallers.combineVariants_type": "germline",
+    "WGSGermlineMultiCallers.combine_variants_type": "germline",
     "WGSGermlineMultiCallers.cutadapt_adapters": null,
     "WGSGermlineMultiCallers.fastqs": null,
-    "WGSGermlineMultiCallers.gatkIntervals": null,
+    "WGSGermlineMultiCallers.gatk_intervals": null,
+    "WGSGermlineMultiCallers.header_lines": null,
     "WGSGermlineMultiCallers.known_indels": null,
     "WGSGermlineMultiCallers.known_indels_tbi": null,
     "WGSGermlineMultiCallers.mills_indels": null,
@@ -25,13 +26,12 @@
     "WGSGermlineMultiCallers.reference_fai": null,
     "WGSGermlineMultiCallers.reference_pac": null,
     "WGSGermlineMultiCallers.reference_sa": null,
-    "WGSGermlineMultiCallers.sampleName": "NA12878",
+    "WGSGermlineMultiCallers.sample_name": "NA12878",
     "WGSGermlineMultiCallers.snps_1000gp": null,
     "WGSGermlineMultiCallers.snps_1000gp_tbi": null,
     "WGSGermlineMultiCallers.snps_dbsnp": null,
     "WGSGermlineMultiCallers.snps_dbsnp_tbi": null,
     "WGSGermlineMultiCallers.strelkaIntervals": null,
     "WGSGermlineMultiCallers.strelkaIntervals_tbi": null,
-    "WGSGermlineMultiCallers.vardictHeaderLines": null,
-    "WGSGermlineMultiCallers.vardictIntervals": null
+    "WGSGermlineMultiCallers.vardict_intervals": null
 }

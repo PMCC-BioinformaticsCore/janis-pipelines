@@ -17,8 +17,8 @@ workflow somatic_subpipeline {
     File reference_dict
     Array[Array[File]] reads
     File cutadapt_adapters
-    String sampleName
-    String? alignAndSort_sortsam_tmpDir
+    String sample_name
+    String? align_and_sort_sortsam_tmpDir
   }
   scatter (r in reads) {
      call F.fastqc as fastqc {
@@ -34,9 +34,9 @@ workflow somatic_subpipeline {
     }
   }
   scatter (Q in zip(reads, zip(getfastqc_adapters.adaptor_sequences, getfastqc_adapters.adaptor_sequences))) {
-     call B.BwaAligner as alignAndSort {
+     call B.BwaAligner as align_and_sort {
       input:
-        sampleName=sampleName,
+        sample_name=sample_name,
         reference_amb=reference_amb,
         reference_ann=reference_ann,
         reference_bwt=reference_bwt,
@@ -48,17 +48,17 @@ workflow somatic_subpipeline {
         fastq=Q.left,
         cutadapt_adapter=Q.right.right,
         cutadapt_removeMiddle3Adapter=Q.right.right,
-        sortsam_tmpDir=alignAndSort_sortsam_tmpDir
+        sortsam_tmpDir=align_and_sort_sortsam_tmpDir
     }
   }
-  call M.mergeAndMarkBams as mergeAndMark {
+  call M.mergeAndMarkBams as merge_and_mark {
     input:
-      bams_bai=alignAndSort.out_bai,
-      bams=alignAndSort.out
+      bams_bai=align_and_sort.out_bai,
+      bams=align_and_sort.out
   }
   output {
-    File out = mergeAndMark.out
-    File out_bai = mergeAndMark.out_bai
+    File out = merge_and_mark.out
+    File out_bai = merge_and_mark.out_bai
     Array[Array[File]] reports = fastqc.out
   }
 }

@@ -2,8 +2,8 @@ class: Workflow
 cwlVersion: v1.0
 id: somatic_subpipeline
 inputs:
-  alignAndSort_sortsam_tmpDir:
-    id: alignAndSort_sortsam_tmpDir
+  align_and_sort_sortsam_tmpDir:
+    id: align_and_sort_sortsam_tmpDir
     type:
     - string
     - 'null'
@@ -28,13 +28,13 @@ inputs:
     - .fai
     - ^.dict
     type: File
-  sampleName:
-    id: sampleName
+  sample_name:
+    id: sample_name
     type: string
 outputs:
   out:
     id: out
-    outputSource: mergeAndMark/out
+    outputSource: merge_and_mark/out
     secondaryFiles:
     - .bai
     type: File
@@ -52,7 +52,7 @@ requirements:
   StepInputExpressionRequirement: {}
   SubworkflowFeatureRequirement: {}
 steps:
-  alignAndSort:
+  align_and_sort:
     in:
       cutadapt_adapter:
         id: cutadapt_adapter
@@ -66,12 +66,12 @@ steps:
       reference:
         id: reference
         source: reference
-      sampleName:
-        id: sampleName
-        source: sampleName
+      sample_name:
+        id: sample_name
+        source: sample_name
       sortsam_tmpDir:
         id: sortsam_tmpDir
-        source: alignAndSort_sortsam_tmpDir
+        source: align_and_sort_sortsam_tmpDir
     out:
     - out
     run: BwaAligner.cwl
@@ -104,11 +104,11 @@ steps:
     run: ParseFastqcAdaptors.cwl
     scatter:
     - fastqc_datafiles
-  mergeAndMark:
+  merge_and_mark:
     in:
       bams:
         id: bams
-        source: alignAndSort/out
+        source: align_and_sort/out
     out:
     - out
     run: mergeAndMarkBams.cwl

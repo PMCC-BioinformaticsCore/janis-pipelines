@@ -7,15 +7,15 @@ import "trimIUPAC.wdl" as T
 
 workflow vardictSomaticVariantCaller {
   input {
-    File normalBam
-    File normalBam_bai
-    File tumorBam
-    File tumorBam_bai
-    String normalName
-    String tumorName
+    File normal_bam
+    File normal_bam_bai
+    File tumor_bam
+    File tumor_bam_bai
+    String normal_name
+    String tumor_name
     File intervals
-    Float? alleleFreqThreshold
-    File headerLines
+    Float? allele_freq_threshold
+    File header_lines
     File reference
     File reference_amb
     File reference_ann
@@ -32,16 +32,16 @@ workflow vardictSomaticVariantCaller {
   }
   call V.vardict_somatic as vardict {
     input:
-      tumorBam_bai=tumorBam_bai,
-      tumorBam=tumorBam,
-      normalBam_bai=normalBam_bai,
-      normalBam=normalBam,
+      tumorBam_bai=tumor_bam_bai,
+      tumorBam=tumor_bam,
+      normalBam_bai=normal_bam_bai,
+      normalBam=normal_bam,
       intervals=intervals,
       reference_fai=reference_fai,
       reference=reference,
-      tumorName=tumorName,
-      normalName=normalName,
-      alleleFreqThreshold=select_first([alleleFreqThreshold, 0.05]),
+      tumorName=tumor_name,
+      normalName=normal_name,
+      alleleFreqThreshold=select_first([allele_freq_threshold, 0.05]),
       chromNamesAreNumbers=select_first([vardict_chromNamesAreNumbers, true]),
       chromColumn=select_first([vardict_chromColumn, 1]),
       geneEndCol=select_first([vardict_geneEndCol, 3]),
@@ -51,9 +51,9 @@ workflow vardictSomaticVariantCaller {
   call B.bcftoolsAnnotate as annotate {
     input:
       file=vardict.out,
-      headerLines=headerLines
+      headerLines=header_lines
   }
-  call S.SplitMultiAllele as split {
+  call S.SplitMultiAllele as split_multi_allele {
     input:
       vcf=annotate.out,
       reference_amb=reference_amb,
@@ -67,10 +67,10 @@ workflow vardictSomaticVariantCaller {
   }
   call T.trimIUPAC as trim {
     input:
-      vcf=split.out
+      vcf=split_multi_allele.out
   }
   output {
-    File vardictVariants = vardict.out
+    File vardict_variants = vardict.out
     File out = trim.out
   }
 }

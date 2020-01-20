@@ -49,8 +49,8 @@ inputs:
     - .fai
     - ^.dict
     type: File
-  sampleName:
-    id: sampleName
+  sample_name:
+    id: sample_name
     type: string
   sortsam_createIndex:
     default: true
@@ -94,7 +94,7 @@ steps:
         source: reference
       sampleName:
         id: sampleName
-        source: sampleName
+        source: sample_name
     out:
     - out
     run: tools/BwaMemSamtoolsView.cwl

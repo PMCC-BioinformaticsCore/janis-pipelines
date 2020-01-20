@@ -1,11 +1,11 @@
-alignSortedBam_sortsam_tmpDir: ./tmp
-alleleFreqThreshold: 0.05
-combineVariants_columns:
+align_and_sort_sortsam_tmpDir: ./tmp
+allele_freq_threshold: 0.05
+combine_variants_columns:
 - AC
 - AN
 - AF
 - AD
 - DP
 - GT
-combineVariants_type: germline
-sampleName: NA12878
+combine_variants_type: germline
+sample_name: NA12878

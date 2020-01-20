@@ -13,7 +13,7 @@ task trimIUPAC {
       ~{if defined(outputFilename) then outputFilename else "generated-.trimmed.vcf"}
   >>>
   runtime {
-    docker: "michaelfranklin/pmacutil:0.0.4"
+    docker: "michaelfranklin/pmacutil:0.0.5"
     cpu: if defined(runtime_cpu) then runtime_cpu else 1
     memory: if defined(runtime_memory) then "~{runtime_memory}G" else "4G"
     preemptible: 2

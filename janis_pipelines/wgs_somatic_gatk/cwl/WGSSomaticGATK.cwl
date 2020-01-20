@@ -5,8 +5,8 @@ inputs:
   cutadapt_adapters:
     id: cutadapt_adapters
     type: File
-  gatkIntervals:
-    id: gatkIntervals
+  gatk_intervals:
+    id: gatk_intervals
     type:
       items: File
       type: array
@@ -20,16 +20,16 @@ inputs:
     secondaryFiles:
     - .tbi
     type: File
-  normalInputs:
-    id: normalInputs
+  normal_inputs:
+    id: normal_inputs
     type:
       items:
         items: File
         type: array
       type: array
-  normalName:
+  normal_name:
     default: NA24385_normal
-    id: normalName
+    id: normal_name
     type: string
   reference:
     id: reference
@@ -52,41 +52,41 @@ inputs:
     secondaryFiles:
     - .tbi
     type: File
-  tumorInputs:
-    id: tumorInputs
+  tumor_inputs:
+    id: tumor_inputs
     type:
       items:
         items: File
         type: array
       type: array
-  tumorName:
+  tumor_name:
     default: NA24385_tumour
-    id: tumorName
+    id: tumor_name
     type: string
 label: WGS Somatic (GATK only)
 outputs:
-  normalBam:
-    id: normalBam
+  normal_bam:
+    id: normal_bam
     outputSource: normal/out
     secondaryFiles:
     - .bai
     type: File
-  normalReport:
-    id: normalReport
+  normal_report:
+    id: normal_report
     outputSource: normal/reports
     type:
       items:
         items: File
         type: array
       type: array
-  tumorBam:
-    id: tumorBam
+  tumor_bam:
+    id: tumor_bam
     outputSource: tumor/out
     secondaryFiles:
     - .bai
     type: File
-  tumorReport:
-    id: tumorReport
+  tumor_report:
+    id: tumor_report
     outputSource: tumor/reports
     type:
       items:
@@ -110,13 +110,13 @@ steps:
         source: cutadapt_adapters
       reads:
         id: reads
-        source: tumorInputs
+        source: tumor_inputs
       reference:
         id: reference
         source: reference
-      sampleName:
-        id: sampleName
-        source: tumorName
+      sample_name:
+        id: sample_name
+        source: tumor_name
     out:
     - out
     - reports
@@ -125,7 +125,7 @@ steps:
     in:
       vcf:
         id: vcf
-        source: variantCaller_GATK_merge/out
+        source: vc_gatk_merge/out
     out:
     - out
     run: tools/bcftoolssort.cwl
@@ -136,34 +136,34 @@ steps:
         source: cutadapt_adapters
       reads:
         id: reads
-        source: normalInputs
+        source: normal_inputs
       reference:
         id: reference
         source: reference
-      sampleName:
-        id: sampleName
-        source: normalName
+      sample_name:
+        id: sample_name
+        source: normal_name
     out:
     - out
     - reports
     run: tools/somatic_subpipeline.cwl
-  variantCaller_GATK:
+  vc_gatk:
     in:
       intervals:
         id: intervals
-        source: gatkIntervals
-      knownIndels:
-        id: knownIndels
+        source: gatk_intervals
+      known_indels:
+        id: known_indels
         source: known_indels
-      millsIndels:
-        id: millsIndels
+      mills_indels:
+        id: mills_indels
         source: mills_indels
-      normalBam:
-        id: normalBam
+      normal_bam:
+        id: normal_bam
         source: tumor/out
-      normalName:
-        id: normalName
-        source: normalName
+      normal_name:
+        id: normal_name
+        source: normal_name
       reference:
         id: reference
         source: reference
@@ -173,22 +173,22 @@ steps:
       snps_dbsnp:
         id: snps_dbsnp
         source: snps_dbsnp
-      tumorBam:
-        id: tumorBam
+      tumor_bam:
+        id: tumor_bam
         source: normal/out
-      tumorName:
-        id: tumorName
-        source: tumorName
+      tumor_name:
+        id: tumor_name
+        source: tumor_name
     out:
     - out
     run: tools/GATK4_SomaticVariantCaller.cwl
     scatter:
     - intervals
-  variantCaller_GATK_merge:
+  vc_gatk_merge:
     in:
       vcfs:
         id: vcfs
-        source: variantCaller_GATK/out
+        source: vc_gatk/out
     out:
     - out
     run: tools/Gatk4GatherVcfs.cwl

@@ -16,13 +16,13 @@ inputs:
     type:
     - File
     - 'null'
-  isExome:
-    id: isExome
+  is_exome:
+    id: is_exome
     type:
     - boolean
     - 'null'
-  normalBam:
-    id: normalBam
+  normal_bam:
+    id: normal_bam
     secondaryFiles:
     - .bai
     type: File
@@ -37,8 +37,8 @@ inputs:
     - .fai
     - ^.dict
     type: File
-  tumorBam:
-    id: tumorBam
+  tumor_bam:
+    id: tumor_bam
     secondaryFiles:
     - .bai
     type: File
@@ -52,7 +52,7 @@ outputs:
     type: File
   out:
     id: out
-    outputSource: splitMultiAllele/out
+    outputSource: split_multi_allele/out
     type: File
   variants:
     id: variants
@@ -80,19 +80,19 @@ steps:
     in:
       bam:
         id: bam
-        source: normalBam
+        source: normal_bam
       callRegions:
         id: callRegions
         source: intervals
       exome:
         id: exome
-        source: isExome
+        source: is_exome
       reference:
         id: reference
         source: reference
       tumorBam:
         id: tumorBam
-        source: tumorBam
+        source: tumor_bam
     out:
     - python
     - pickle
@@ -103,7 +103,7 @@ steps:
     - svCandidateGenerationStats
     - svLocusGraphStats
     run: manta.cwl
-  splitMultiAllele:
+  split_multi_allele:
     in:
       reference:
         id: reference
@@ -121,7 +121,7 @@ steps:
         source: intervals
       exome:
         id: exome
-        source: isExome
+        source: is_exome
       indelCandidates:
         id: indelCandidates
         linkMerge: merge_nested
@@ -129,13 +129,13 @@ steps:
         - manta/candidateSmallIndels
       normalBam:
         id: normalBam
-        source: normalBam
+        source: normal_bam
       reference:
         id: reference
         source: reference
       tumorBam:
         id: tumorBam
-        source: tumorBam
+        source: tumor_bam
     out:
     - configPickle
     - script

@@ -4,23 +4,25 @@ import "tools/somatic_subpipeline.wdl" as S
 import "tools/GATK4_SomaticVariantCaller.wdl" as G
 import "tools/Gatk4GatherVcfs.wdl" as G2
 import "tools/strelkaSomaticVariantCaller.wdl" as S2
+import "tools/gridss.wdl" as G3
 import "tools/vardictSomaticVariantCaller.wdl" as V
 import "tools/combinevariants.wdl" as C
 import "tools/bcftoolssort.wdl" as B
 
 workflow WGSSomaticMultiCallers {
   input {
-    Array[Array[File]] normalInputs
-    Array[Array[File]] tumorInputs
-    String? normalName
-    String? tumorName
+    Array[Array[File]] normal_inputs
+    Array[Array[File]] tumor_inputs
+    String? normal_name
+    String? tumor_name
     File cutadapt_adapters
-    Array[File] gatkIntervals
-    Array[File] vardictIntervals
-    File? strelkaIntervals
-    File? strelkaIntervals_tbi
-    File vardictHeaderLines
-    Float? alleleFreqThreshold
+    File gridss_blacklist
+    Array[File] gatk_intervals
+    Array[File] vardict_intervals
+    File? strelka_intervals
+    File? strelka_intervals_tbi
+    File vardict_header_lines
+    Float? allele_freq_threshold
     File reference
     File reference_amb
     File reference_ann
@@ -37,8 +39,8 @@ workflow WGSSomaticMultiCallers {
     File known_indels_tbi
     File mills_indels
     File mills_indels_tbi
-    String? combineVariants_type
-    Array[String]? combineVariants_columns
+    String? combine_variants_type
+    Array[String]? combine_variants_columns
   }
   call S.somatic_subpipeline as normal {
     input:
@@ -50,9 +52,9 @@ workflow WGSSomaticMultiCallers {
       reference_fai=reference_fai,
       reference_dict=reference_dict,
       reference=reference,
-      reads=tumorInputs,
+      reads=tumor_inputs,
       cutadapt_adapters=cutadapt_adapters,
-      sampleName=select_first([tumorName, "NA24385_tumour"])
+      sample_name=select_first([tumor_name, "NA24385_tumour"])
   }
   call S.somatic_subpipeline as tumor {
     input:
@@ -64,19 +66,19 @@ workflow WGSSomaticMultiCallers {
       reference_fai=reference_fai,
       reference_dict=reference_dict,
       reference=reference,
-      reads=normalInputs,
+      reads=normal_inputs,
       cutadapt_adapters=cutadapt_adapters,
-      sampleName=select_first([normalName, "NA24385_normal"])
+      sample_name=select_first([normal_name, "NA24385_normal"])
   }
-  scatter (g in gatkIntervals) {
-     call G.GATK4_SomaticVariantCaller as variantCaller_GATK {
+  scatter (g in gatk_intervals) {
+     call G.GATK4_SomaticVariantCaller as vc_gatk {
       input:
-        normalBam_bai=tumor.out_bai,
-        normalBam=tumor.out,
-        tumorBam_bai=normal.out_bai,
-        tumorBam=normal.out,
-        normalName=select_first([normalName, "NA24385_normal"]),
-        tumorName=select_first([tumorName, "NA24385_tumour"]),
+        normal_bam_bai=tumor.out_bai,
+        normal_bam=tumor.out,
+        tumor_bam_bai=normal.out_bai,
+        tumor_bam=normal.out,
+        normal_name=select_first([normal_name, "NA24385_normal"]),
+        tumor_name=select_first([tumor_name, "NA24385_tumour"]),
         intervals=g,
         reference_amb=reference_amb,
         reference_ann=reference_ann,
@@ -90,22 +92,22 @@ workflow WGSSomaticMultiCallers {
         snps_dbsnp=snps_dbsnp,
         snps_1000gp_tbi=snps_1000gp_tbi,
         snps_1000gp=snps_1000gp,
-        knownIndels_tbi=known_indels_tbi,
-        knownIndels=known_indels,
-        millsIndels_tbi=mills_indels_tbi,
-        millsIndels=mills_indels
+        known_indels_tbi=known_indels_tbi,
+        known_indels=known_indels,
+        mills_indels_tbi=mills_indels_tbi,
+        mills_indels=mills_indels
     }
   }
-  call G2.Gatk4GatherVcfs as variantCaller_merge_GATK {
+  call G2.Gatk4GatherVcfs as vc_gatk_merge {
     input:
-      vcfs=variantCaller_GATK.out
+      vcfs=vc_gatk.out
   }
-  call S2.strelkaSomaticVariantCaller as variantCaller_Strelka {
+  call S2.strelkaSomaticVariantCaller as vc_strelka {
     input:
-      normalBam_bai=normal.out_bai,
-      normalBam=normal.out,
-      tumorBam_bai=tumor.out_bai,
-      tumorBam=tumor.out,
+      normal_bam_bai=normal.out_bai,
+      normal_bam=normal.out,
+      tumor_bam_bai=tumor.out_bai,
+      tumor_bam=tumor.out,
       reference_amb=reference_amb,
       reference_ann=reference_ann,
       reference_bwt=reference_bwt,
@@ -114,21 +116,34 @@ workflow WGSSomaticMultiCallers {
       reference_fai=reference_fai,
       reference_dict=reference_dict,
       reference=reference,
-      intervals_tbi=strelkaIntervals_tbi,
-      intervals=strelkaIntervals
+      intervals_tbi=strelka_intervals_tbi,
+      intervals=strelka_intervals
   }
-  scatter (v in vardictIntervals) {
-     call V.vardictSomaticVariantCaller as variantCaller_VarDict {
+  call G3.gridss as vc_gridss {
+    input:
+      bams=[normal.out, tumor.out],
+      reference_amb=reference_amb,
+      reference_ann=reference_ann,
+      reference_bwt=reference_bwt,
+      reference_pac=reference_pac,
+      reference_sa=reference_sa,
+      reference_fai=reference_fai,
+      reference_dict=reference_dict,
+      reference=reference,
+      blacklist=gridss_blacklist
+  }
+  scatter (v in vardict_intervals) {
+     call V.vardictSomaticVariantCaller as vc_vardict {
       input:
-        normalBam_bai=tumor.out_bai,
-        normalBam=tumor.out,
-        tumorBam_bai=normal.out_bai,
-        tumorBam=normal.out,
-        normalName=select_first([normalName, "NA24385_normal"]),
-        tumorName=select_first([tumorName, "NA24385_tumour"]),
+        normal_bam_bai=tumor.out_bai,
+        normal_bam=tumor.out,
+        tumor_bam_bai=normal.out_bai,
+        tumor_bam=normal.out,
+        normal_name=select_first([normal_name, "NA24385_normal"]),
+        tumor_name=select_first([tumor_name, "NA24385_tumour"]),
         intervals=v,
-        alleleFreqThreshold=select_first([alleleFreqThreshold, 0.05]),
-        headerLines=vardictHeaderLines,
+        allele_freq_threshold=select_first([allele_freq_threshold, 0.05]),
+        header_lines=vardict_header_lines,
         reference_amb=reference_amb,
         reference_ann=reference_ann,
         reference_bwt=reference_bwt,
@@ -139,32 +154,34 @@ workflow WGSSomaticMultiCallers {
         reference=reference
     }
   }
-  call G2.Gatk4GatherVcfs as variantCaller_merge_VarDict {
+  call G2.Gatk4GatherVcfs as vc_vardict_merge {
     input:
-      vcfs=variantCaller_VarDict.out
+      vcfs=vc_vardict.out
   }
-  call C.combinevariants as combineVariants {
+  call C.combinevariants as combine_variants {
     input:
-      vcfs=[variantCaller_merge_VarDict.out, variantCaller_Strelka.out, variantCaller_merge_GATK.out],
-      type=select_first([combineVariants_type, "somatic"]),
-      columns=select_first([combineVariants_columns, ["AD", "DP", "GT"]]),
-      normal=select_first([normalName, "NA24385_normal"]),
-      tumor=select_first([tumorName, "NA24385_tumour"])
+      vcfs=[vc_gatk_merge.out, vc_strelka.out, vc_vardict_merge.out],
+      type=select_first([combine_variants_type, "somatic"]),
+      columns=select_first([combine_variants_columns, ["AD", "DP", "GT"]]),
+      normal=select_first([normal_name, "NA24385_normal"]),
+      tumor=select_first([tumor_name, "NA24385_tumour"])
   }
   call B.bcftoolssort as sortCombined {
     input:
-      vcf=combineVariants.vcf
+      vcf=combine_variants.vcf
   }
   output {
-    File normalBam = normal.out
-    File normalBam_bai = normal.out_bai
-    File tumorBam = tumor.out
-    File tumorBam_bai = tumor.out_bai
-    Array[Array[File]] normalReport = normal.reports
-    Array[Array[File]] tumorReport = tumor.reports
-    File variants_gatk = variantCaller_merge_GATK.out
-    File variants_strelka = variantCaller_Strelka.out
-    File variants_vardict = variantCaller_merge_VarDict.out
-    File variants_combined = combineVariants.vcf
+    Array[Array[File]] normal_report = normal.reports
+    Array[Array[File]] tumor_report = tumor.reports
+    File normal_bam = normal.out
+    File normal_bam_bai = normal.out_bai
+    File tumor_bam = tumor.out
+    File tumor_bam_bai = tumor.out_bai
+    File gridss_assembly = vc_gridss.out
+    File variants_gatk = vc_gatk_merge.out
+    File variants_strelka = vc_strelka.out
+    File variants_vardict = vc_vardict_merge.out
+    File variants_gridss = vc_gridss.out
+    File variants_combined = combine_variants.vcf
   }
 }

@@ -21,8 +21,8 @@ inputs:
     type:
     - File
     - 'null'
-  isExome:
-    id: isExome
+  is_exome:
+    id: is_exome
     type:
     - boolean
     - 'null'
@@ -47,7 +47,7 @@ outputs:
     type: File
   out:
     id: out
-    outputSource: splitMultiAllele/out
+    outputSource: split_multi_allele/out
     type: File
   variants:
     id: variants
@@ -80,7 +80,7 @@ steps:
         source: intervals
       exome:
         id: exome
-        source: isExome
+        source: is_exome
       reference:
         id: reference
         source: reference
@@ -94,7 +94,7 @@ steps:
     - svCandidateGenerationStats
     - svLocusGraphStats
     run: manta.cwl
-  splitMultiAllele:
+  split_multi_allele:
     in:
       reference:
         id: reference
@@ -115,7 +115,7 @@ steps:
         source: intervals
       exome:
         id: exome
-        source: isExome
+        source: is_exome
       indelCandidates:
         id: indelCandidates
         source: manta/candidateSmallIndels

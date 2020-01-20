@@ -6,7 +6,7 @@ import "tools/Gatk4SortSam.wdl" as G
 
 workflow alignment {
   input {
-    String sampleName
+    String sample_name
     File reference
     File reference_amb
     File reference_ann
@@ -49,7 +49,7 @@ workflow alignment {
       reference_dict=reference_dict,
       reference=reference,
       reads=cutadapt.out,
-      sampleName=sampleName
+      sampleName=sample_name
   }
   call G.Gatk4SortSam as sortsam {
     input:

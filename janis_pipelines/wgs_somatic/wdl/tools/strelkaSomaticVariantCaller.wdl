@@ -7,10 +7,10 @@ import "SplitMultiAllele.wdl" as S2
 
 workflow strelkaSomaticVariantCaller {
   input {
-    File normalBam
-    File normalBam_bai
-    File tumorBam
-    File tumorBam_bai
+    File normal_bam
+    File normal_bam_bai
+    File tumor_bam
+    File tumor_bam_bai
     File reference
     File reference_amb
     File reference_ann
@@ -21,13 +21,13 @@ workflow strelkaSomaticVariantCaller {
     File reference_dict
     File? intervals
     File? intervals_tbi
-    Boolean? isExome
+    Boolean? is_exome
     Array[String]? bcf_view_applyFilters
   }
   call M.manta as manta {
     input:
-      bam_bai=normalBam_bai,
-      bam=normalBam,
+      bam_bai=normal_bam_bai,
+      bam=normal_bam,
       reference_amb=reference_amb,
       reference_ann=reference_ann,
       reference_bwt=reference_bwt,
@@ -36,18 +36,18 @@ workflow strelkaSomaticVariantCaller {
       reference_fai=reference_fai,
       reference_dict=reference_dict,
       reference=reference,
-      tumorBam_bai=tumorBam_bai,
-      tumorBam=tumorBam,
-      exome=isExome,
+      tumorBam_bai=tumor_bam_bai,
+      tumorBam=tumor_bam,
+      exome=is_exome,
       callRegions_tbi=intervals_tbi,
       callRegions=intervals
   }
   call S.strelka_somatic as strelka {
     input:
-      normalBam_bai=normalBam_bai,
-      normalBam=normalBam,
-      tumorBam_bai=tumorBam_bai,
-      tumorBam=tumorBam,
+      normalBam_bai=normal_bam_bai,
+      normalBam=normal_bam,
+      tumorBam_bai=tumor_bam_bai,
+      tumorBam=tumor_bam,
       reference_amb=reference_amb,
       reference_ann=reference_ann,
       reference_bwt=reference_bwt,
@@ -58,7 +58,7 @@ workflow strelkaSomaticVariantCaller {
       reference=reference,
       indelCandidates_tbi=[manta.candidateSmallIndels_tbi],
       indelCandidates=[manta.candidateSmallIndels],
-      exome=isExome,
+      exome=is_exome,
       callRegions_tbi=intervals_tbi,
       callRegions=intervals
   }
@@ -67,7 +67,7 @@ workflow strelkaSomaticVariantCaller {
       file=strelka.snvs,
       applyFilters=select_first([bcf_view_applyFilters, ["PASS"]])
   }
-  call S2.SplitMultiAllele as splitMultiAllele {
+  call S2.SplitMultiAllele as split_multi_allele {
     input:
       vcf=bcf_view.out,
       reference_amb=reference_amb,
@@ -84,6 +84,6 @@ workflow strelkaSomaticVariantCaller {
     File diploid_tbi = manta.diploidSV_tbi
     File variants = strelka.snvs
     File variants_tbi = strelka.snvs_tbi
-    File out = splitMultiAllele.out
+    File out = split_multi_allele.out
   }
 }

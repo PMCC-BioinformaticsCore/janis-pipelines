@@ -2,17 +2,17 @@ class: Workflow
 cwlVersion: v1.0
 id: vardictGermlineVariantCaller
 inputs:
-  alleleFreqThreshold:
+  allele_freq_threshold:
     default: 0.5
-    id: alleleFreqThreshold
+    id: allele_freq_threshold
     type: float
   bam:
     id: bam
     secondaryFiles:
     - .bai
     type: File
-  headerLines:
-    id: headerLines
+  header_lines:
+    id: header_lines
     type: File
   intervals:
     id: intervals
@@ -28,8 +28,8 @@ inputs:
     - .fai
     - ^.dict
     type: File
-  sampleName:
-    id: sampleName
+  sample_name:
+    id: sample_name
     type: string
   vardict_chromColumn:
     default: 1
@@ -57,8 +57,8 @@ outputs:
     id: out
     outputSource: trim/out
     type: File
-  vardictVariants:
-    id: vardictVariants
+  vardict_variants:
+    id: vardict_variants
     outputSource: vardict/out
     type: File
 requirements:
@@ -72,11 +72,11 @@ steps:
         source: vardict/out
       headerLines:
         id: headerLines
-        source: headerLines
+        source: header_lines
     out:
     - out
     run: bcftoolsAnnotate.cwl
-  split:
+  split_multi_allele:
     in:
       reference:
         id: reference
@@ -91,7 +91,7 @@ steps:
     in:
       vcf:
         id: vcf
-        source: split/out
+        source: split_multi_allele/out
     out:
     - out
     run: trimIUPAC.cwl
@@ -99,7 +99,7 @@ steps:
     in:
       alleleFreqThreshold:
         id: alleleFreqThreshold
-        source: alleleFreqThreshold
+        source: allele_freq_threshold
       bam:
         id: bam
         source: bam
@@ -123,13 +123,13 @@ steps:
         source: vardict_regStartCol
       sampleName:
         id: sampleName
-        source: sampleName
+        source: sample_name
       var2vcfAlleleFreqThreshold:
         id: var2vcfAlleleFreqThreshold
-        source: alleleFreqThreshold
+        source: allele_freq_threshold
       var2vcfSampleName:
         id: var2vcfSampleName
-        source: sampleName
+        source: sample_name
       vcfFormat:
         id: vcfFormat
         source: vardict_vcfFormat

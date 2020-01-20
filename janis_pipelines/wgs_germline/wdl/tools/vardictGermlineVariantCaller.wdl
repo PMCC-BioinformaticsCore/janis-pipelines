@@ -10,9 +10,9 @@ workflow vardictGermlineVariantCaller {
     File bam
     File bam_bai
     File intervals
-    String sampleName
-    Float? alleleFreqThreshold
-    File headerLines
+    String sample_name
+    Float? allele_freq_threshold
+    File header_lines
     File reference
     File reference_amb
     File reference_ann
@@ -37,19 +37,19 @@ workflow vardictGermlineVariantCaller {
       chromNamesAreNumbers=select_first([vardict_chromNamesAreNumbers, true]),
       chromColumn=select_first([vardict_chromColumn, 1]),
       geneEndCol=select_first([vardict_geneEndCol, 3]),
-      alleleFreqThreshold=select_first([alleleFreqThreshold, 0.5]),
-      sampleName=sampleName,
+      alleleFreqThreshold=select_first([allele_freq_threshold, 0.5]),
+      sampleName=sample_name,
       regStartCol=select_first([vardict_regStartCol, 2]),
       vcfFormat=select_first([vardict_vcfFormat, true]),
-      var2vcfSampleName=sampleName,
-      var2vcfAlleleFreqThreshold=select_first([alleleFreqThreshold, 0.5])
+      var2vcfSampleName=sample_name,
+      var2vcfAlleleFreqThreshold=select_first([allele_freq_threshold, 0.5])
   }
   call B.bcftoolsAnnotate as annotate {
     input:
       file=vardict.out,
-      headerLines=headerLines
+      headerLines=header_lines
   }
-  call S.SplitMultiAllele as split {
+  call S.SplitMultiAllele as split_multi_allele {
     input:
       vcf=annotate.out,
       reference_amb=reference_amb,
@@ -63,10 +63,10 @@ workflow vardictGermlineVariantCaller {
   }
   call T.trimIUPAC as trim {
     input:
-      vcf=split.out
+      vcf=split_multi_allele.out
   }
   output {
-    File vardictVariants = vardict.out
+    File vardict_variants = vardict.out
     File out = trim.out
   }
 }

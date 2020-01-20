@@ -12,23 +12,23 @@ inputs:
     type:
     - File
     - 'null'
-  knownIndels:
-    id: knownIndels
+  known_indels:
+    id: known_indels
     secondaryFiles:
     - .tbi
     type: File
-  millsIndels:
-    id: millsIndels
+  mills_indels:
+    id: mills_indels
     secondaryFiles:
     - .tbi
     type: File
-  normalBam:
-    id: normalBam
+  normal_bam:
+    id: normal_bam
     secondaryFiles:
     - .bai
     type: File
-  normalName:
-    id: normalName
+  normal_name:
+    id: normal_name
     type: string
   reference:
     id: reference
@@ -51,64 +51,64 @@ inputs:
     secondaryFiles:
     - .tbi
     type: File
-  tumorBam:
-    id: tumorBam
+  tumor_bam:
+    id: tumor_bam
     secondaryFiles:
     - .bai
     type: File
-  tumorName:
-    id: tumorName
+  tumor_name:
+    id: tumor_name
     type: string
 label: GATK4 Somatic Variant Caller
 outputs:
   out:
     id: out
-    outputSource: splitMultiAllele/out
+    outputSource: split_multi_allele/out
     type: File
 requirements:
   InlineJavascriptRequirement: {}
   MultipleInputFeatureRequirement: {}
   StepInputExpressionRequirement: {}
 steps:
-  applyBQSR_normal:
+  apply_bqsr_normal:
     in:
       bam:
         id: bam
-        source: normalBam
+        source: normal_bam
       intervals:
         id: intervals
         source: intervals
       recalFile:
         id: recalFile
-        source: baseRecalibrator_normal/out
+        source: base_recalibrator_normal/out
       reference:
         id: reference
         source: reference
     out:
     - out
     run: Gatk4ApplyBQSR.cwl
-  applyBQSR_tumor:
+  apply_bqsr_tumor:
     in:
       bam:
         id: bam
-        source: tumorBam
+        source: tumor_bam
       intervals:
         id: intervals
         source: intervals
       recalFile:
         id: recalFile
-        source: baseRecalibrator_tumor/out
+        source: base_recalibrator_tumor/out
       reference:
         id: reference
         source: reference
     out:
     - out
     run: Gatk4ApplyBQSR.cwl
-  baseRecalibrator_normal:
+  base_recalibrator_normal:
     in:
       bam:
         id: bam
-        source: normalBam
+        source: normal_bam
       intervals:
         id: intervals
         source: intervals
@@ -117,19 +117,19 @@ steps:
         source:
         - snps_dbsnp
         - snps_1000gp
-        - knownIndels
-        - millsIndels
+        - known_indels
+        - mills_indels
       reference:
         id: reference
         source: reference
     out:
     - out
     run: Gatk4BaseRecalibrator.cwl
-  baseRecalibrator_tumor:
+  base_recalibrator_tumor:
     in:
       bam:
         id: bam
-        source: tumorBam
+        source: tumor_bam
       intervals:
         id: intervals
         source: intervals
@@ -138,8 +138,8 @@ steps:
         source:
         - snps_dbsnp
         - snps_1000gp
-        - knownIndels
-        - millsIndels
+        - known_indels
+        - mills_indels
       reference:
         id: reference
         source: reference
@@ -155,10 +155,10 @@ steps:
         id: normalBams
         linkMerge: merge_nested
         source:
-        - applyBQSR_normal/out
+        - apply_bqsr_normal/out
       normalSample:
         id: normalSample
-        source: normalName
+        source: normal_name
       reference:
         id: reference
         source: reference
@@ -166,13 +166,13 @@ steps:
         id: tumorBams
         linkMerge: merge_nested
         source:
-        - applyBQSR_tumor/out
+        - apply_bqsr_tumor/out
     out:
     - out
     - stats
     - f1f2r_out
     run: Gatk4Mutect2.cwl
-  splitMultiAllele:
+  split_multi_allele:
     in:
       reference:
         id: reference

@@ -24,6 +24,6 @@ outputs:
   type: File
 requirements:
   DockerRequirement:
-    dockerPull: michaelfranklin/pmacutil:0.0.4
+    dockerPull: michaelfranklin/pmacutil:0.0.5
   InlineJavascriptRequirement: {}
   ShellCommandRequirement: {}

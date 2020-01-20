@@ -2,15 +2,15 @@ class: Workflow
 cwlVersion: v1.0
 id: WGSGermlineMultiCallers
 inputs:
-  alignSortedBam_sortsam_tmpDir:
+  align_and_sort_sortsam_tmpDir:
     default: ./tmp
-    id: alignSortedBam_sortsam_tmpDir
+    id: align_and_sort_sortsam_tmpDir
     type: string
-  alleleFreqThreshold:
+  allele_freq_threshold:
     default: 0.05
-    id: alleleFreqThreshold
+    id: allele_freq_threshold
     type: float
-  combineVariants_columns:
+  combine_variants_columns:
     default:
     - AC
     - AN
@@ -18,13 +18,13 @@ inputs:
     - AD
     - DP
     - GT
-    id: combineVariants_columns
+    id: combine_variants_columns
     type:
       items: string
       type: array
-  combineVariants_type:
+  combine_variants_type:
     default: germline
-    id: combineVariants_type
+    id: combine_variants_type
     type: string
   cutadapt_adapters:
     id: cutadapt_adapters
@@ -36,11 +36,14 @@ inputs:
         items: File
         type: array
       type: array
-  gatkIntervals:
-    id: gatkIntervals
+  gatk_intervals:
+    id: gatk_intervals
     type:
       items: File
       type: array
+  header_lines:
+    id: header_lines
+    type: File
   known_indels:
     id: known_indels
     secondaryFiles:
@@ -62,9 +65,9 @@ inputs:
     - .fai
     - ^.dict
     type: File
-  sampleName:
+  sample_name:
     default: NA12878
-    id: sampleName
+    id: sample_name
     type: string
   snps_1000gp:
     id: snps_1000gp
@@ -81,11 +84,8 @@ inputs:
     secondaryFiles:
     - .tbi
     type: File
-  vardictHeaderLines:
-    id: vardictHeaderLines
-    type: File
-  vardictIntervals:
-    id: vardictIntervals
+  vardict_intervals:
+    id: vardict_intervals
     type:
       items: File
       type: array
@@ -93,13 +93,9 @@ label: WGS Germline (Multi callers)
 outputs:
   bam:
     id: bam
-    outputSource: processBamFiles/out
+    outputSource: merge_and_mark/out
     secondaryFiles:
     - .bai
-    type: File
-  combinedVariants:
-    id: combinedVariants
-    outputSource: sortCombined/out
     type: File
   reports:
     id: reports
@@ -109,27 +105,31 @@ outputs:
         items: File
         type: array
       type: array
+  variants_combined:
+    id: variants_combined
+    outputSource: sort_combined/out
+    type: File
   variants_gatk:
     id: variants_gatk
-    outputSource: variantCaller_merge_GATK/out
+    outputSource: vc_gatk_merge/out
     type: File
   variants_gatk_split:
     id: variants_gatk_split
-    outputSource: variantCaller_GATK/out
+    outputSource: vc_gatk/out
     type:
       items: File
       type: array
   variants_strelka:
     id: variants_strelka
-    outputSource: variantCaller_Strelka/out
+    outputSource: vc_strelka/out
     type: File
   variants_vardict:
     id: variants_vardict
-    outputSource: variantCaller_merge_Vardict/out
+    outputSource: vc_vardict_merge/out
     type: File
   variants_vardict_split:
     id: variants_vardict_split
-    outputSource: variantCaller_Vardict/out
+    outputSource: vc_vardict/out
     type:
       items: File
       type: array
@@ -140,7 +140,7 @@ requirements:
   StepInputExpressionRequirement: {}
   SubworkflowFeatureRequirement: {}
 steps:
-  alignSortedBam:
+  align_and_sort:
     in:
       cutadapt_adapter:
         id: cutadapt_adapter
@@ -154,12 +154,12 @@ steps:
       reference:
         id: reference
         source: reference
-      sampleName:
-        id: sampleName
-        source: sampleName
+      sample_name:
+        id: sample_name
+        source: sample_name
       sortsam_tmpDir:
         id: sortsam_tmpDir
-        source: alignSortedBam_sortsam_tmpDir
+        source: align_and_sort_sortsam_tmpDir
     out:
     - out
     run: tools/BwaAligner.cwl
@@ -168,20 +168,20 @@ steps:
     - cutadapt_adapter
     - cutadapt_removeMiddle3Adapter
     scatterMethod: dotproduct
-  combineVariants:
+  combine_variants:
     in:
       columns:
         id: columns
-        source: combineVariants_columns
+        source: combine_variants_columns
       type:
         id: type
-        source: combineVariants_type
+        source: combine_variants_type
       vcfs:
         id: vcfs
         source:
-        - variantCaller_merge_GATK/out
-        - variantCaller_Strelka/out
-        - variantCaller_merge_Vardict/out
+        - vc_gatk_merge/out
+        - vc_strelka/out
+        - vc_vardict_merge/out
     out:
     - vcf
     - tsv
@@ -210,35 +210,35 @@ steps:
     run: tools/ParseFastqcAdaptors.cwl
     scatter:
     - fastqc_datafiles
-  processBamFiles:
+  merge_and_mark:
     in:
       bams:
         id: bams
-        source: alignSortedBam/out
+        source: align_and_sort/out
     out:
     - out
     run: tools/mergeAndMarkBams.cwl
-  sortCombined:
+  sort_combined:
     in:
       vcf:
         id: vcf
-        source: combineVariants/vcf
+        source: combine_variants/vcf
     out:
     - out
     run: tools/bcftoolssort.cwl
-  variantCaller_GATK:
+  vc_gatk:
     in:
       bam:
         id: bam
-        source: processBamFiles/out
+        source: merge_and_mark/out
       intervals:
         id: intervals
-        source: gatkIntervals
-      knownIndels:
-        id: knownIndels
+        source: gatk_intervals
+      known_indels:
+        id: known_indels
         source: known_indels
-      millsIndels:
-        id: millsIndels
+      mills_indels:
+        id: mills_indels
         source: mills_indels
       reference:
         id: reference
@@ -254,11 +254,19 @@ steps:
     run: tools/GATK4_GermlineVariantCaller.cwl
     scatter:
     - intervals
-  variantCaller_Strelka:
+  vc_gatk_merge:
+    in:
+      vcfs:
+        id: vcfs
+        source: vc_gatk/out
+    out:
+    - out
+    run: tools/Gatk4GatherVcfs.cwl
+  vc_strelka:
     in:
       bam:
         id: bam
-        source: processBamFiles/out
+        source: merge_and_mark/out
       intervals:
         id: intervals
         source: strelkaIntervals
@@ -270,45 +278,37 @@ steps:
     - variants
     - out
     run: tools/strelkaGermlineVariantCaller.cwl
-  variantCaller_Vardict:
+  vc_vardict:
     in:
-      alleleFreqThreshold:
-        id: alleleFreqThreshold
-        source: alleleFreqThreshold
+      allele_freq_threshold:
+        id: allele_freq_threshold
+        source: allele_freq_threshold
       bam:
         id: bam
-        source: processBamFiles/out
-      headerLines:
-        id: headerLines
-        source: vardictHeaderLines
+        source: merge_and_mark/out
+      header_lines:
+        id: header_lines
+        source: header_lines
       intervals:
         id: intervals
-        source: vardictIntervals
+        source: vardict_intervals
       reference:
         id: reference
         source: reference
-      sampleName:
-        id: sampleName
-        source: sampleName
+      sample_name:
+        id: sample_name
+        source: sample_name
     out:
-    - vardictVariants
+    - vardict_variants
     - out
     run: tools/vardictGermlineVariantCaller.cwl
     scatter:
     - intervals
-  variantCaller_merge_GATK:
+  vc_vardict_merge:
     in:
       vcfs:
         id: vcfs
-        source: variantCaller_GATK/out
-    out:
-    - out
-    run: tools/Gatk4GatherVcfs.cwl
-  variantCaller_merge_Vardict:
-    in:
-      vcfs:
-        id: vcfs
-        source: variantCaller_Vardict/out
+        source: vc_vardict/out
     out:
     - out
     run: tools/Gatk4GatherVcfs.cwl

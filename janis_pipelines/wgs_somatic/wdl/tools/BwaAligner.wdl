@@ -6,7 +6,7 @@ import "Gatk4SortSam.wdl" as G
 
 workflow BwaAligner {
   input {
-    String sampleName
+    String sample_name
     File reference
     File reference_amb
     File reference_ann
@@ -50,7 +50,7 @@ workflow BwaAligner {
       reference_dict=reference_dict,
       reference=reference,
       reads=cutadapt.out,
-      sampleName=sampleName,
+      sampleName=sample_name,
       markShorterSplits=select_first([bwamem_markShorterSplits, true])
   }
   call G.Gatk4SortSam as sortsam {

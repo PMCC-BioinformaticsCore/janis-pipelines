@@ -1,12 +1,12 @@
 {
     "WGSSomaticGATK.cutadapt_adapters": null,
-    "WGSSomaticGATK.gatkIntervals": null,
+    "WGSSomaticGATK.gatk_intervals": null,
     "WGSSomaticGATK.known_indels": null,
     "WGSSomaticGATK.known_indels_tbi": null,
     "WGSSomaticGATK.mills_indels": null,
     "WGSSomaticGATK.mills_indels_tbi": null,
-    "WGSSomaticGATK.normalInputs": null,
-    "WGSSomaticGATK.normalName": "NA24385_normal",
+    "WGSSomaticGATK.normal_inputs": null,
+    "WGSSomaticGATK.normal_name": "NA24385_normal",
     "WGSSomaticGATK.reference": null,
     "WGSSomaticGATK.reference_amb": null,
     "WGSSomaticGATK.reference_ann": null,
@@ -19,6 +19,6 @@
     "WGSSomaticGATK.snps_1000gp_tbi": null,
     "WGSSomaticGATK.snps_dbsnp": null,
     "WGSSomaticGATK.snps_dbsnp_tbi": null,
-    "WGSSomaticGATK.tumorInputs": null,
-    "WGSSomaticGATK.tumorName": "NA24385_tumour"
+    "WGSSomaticGATK.tumor_inputs": null,
+    "WGSSomaticGATK.tumor_name": "NA24385_tumour"
 }

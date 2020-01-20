@@ -2,23 +2,23 @@ class: Workflow
 cwlVersion: v1.0
 id: vardictSomaticVariantCaller
 inputs:
-  alleleFreqThreshold:
+  allele_freq_threshold:
     default: 0.05
-    id: alleleFreqThreshold
+    id: allele_freq_threshold
     type: float
-  headerLines:
-    id: headerLines
+  header_lines:
+    id: header_lines
     type: File
   intervals:
     id: intervals
     type: File
-  normalBam:
-    id: normalBam
+  normal_bam:
+    id: normal_bam
     secondaryFiles:
     - .bai
     type: File
-  normalName:
-    id: normalName
+  normal_name:
+    id: normal_name
     type: string
   reference:
     id: reference
@@ -31,13 +31,13 @@ inputs:
     - .fai
     - ^.dict
     type: File
-  tumorBam:
-    id: tumorBam
+  tumor_bam:
+    id: tumor_bam
     secondaryFiles:
     - .bai
     type: File
-  tumorName:
-    id: tumorName
+  tumor_name:
+    id: tumor_name
     type: string
   vardict_chromColumn:
     default: 1
@@ -65,8 +65,8 @@ outputs:
     id: out
     outputSource: trim/out
     type: File
-  vardictVariants:
-    id: vardictVariants
+  vardict_variants:
+    id: vardict_variants
     outputSource: vardict/out
     type: File
 requirements:
@@ -80,11 +80,11 @@ steps:
         source: vardict/out
       headerLines:
         id: headerLines
-        source: headerLines
+        source: header_lines
     out:
     - out
     run: bcftoolsAnnotate.cwl
-  split:
+  split_multi_allele:
     in:
       reference:
         id: reference
@@ -99,7 +99,7 @@ steps:
     in:
       vcf:
         id: vcf
-        source: split/out
+        source: split_multi_allele/out
     out:
     - out
     run: trimIUPAC.cwl
@@ -107,7 +107,7 @@ steps:
     in:
       alleleFreqThreshold:
         id: alleleFreqThreshold
-        source: alleleFreqThreshold
+        source: allele_freq_threshold
       chromColumn:
         id: chromColumn
         source: vardict_chromColumn
@@ -122,10 +122,10 @@ steps:
         source: intervals
       normalBam:
         id: normalBam
-        source: normalBam
+        source: normal_bam
       normalName:
         id: normalName
-        source: normalName
+        source: normal_name
       reference:
         id: reference
         source: reference
@@ -134,10 +134,10 @@ steps:
         source: vardict_regStartCol
       tumorBam:
         id: tumorBam
-        source: tumorBam
+        source: tumor_bam
       tumorName:
         id: tumorName
-        source: tumorName
+        source: tumor_name
       vcfFormat:
         id: vcfFormat
         source: vardict_vcfFormat

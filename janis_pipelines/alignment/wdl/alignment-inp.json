@@ -10,7 +10,7 @@
     "alignment.reference_fai": null,
     "alignment.reference_pac": null,
     "alignment.reference_sa": null,
-    "alignment.sampleName": null,
+    "alignment.sample_name": null,
     "alignment.sortsam_createIndex": true,
     "alignment.sortsam_maxRecordsInRam": 5000000,
     "alignment.sortsam_sortOrder": "coordinate",

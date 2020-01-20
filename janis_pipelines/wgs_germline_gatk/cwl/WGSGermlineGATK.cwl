@@ -2,9 +2,9 @@ class: Workflow
 cwlVersion: v1.0
 id: WGSGermlineGATK
 inputs:
-  alignSortedBam_sortsam_tmpDir:
+  align_and_sort_sortsam_tmpDir:
     default: .
-    id: alignSortedBam_sortsam_tmpDir
+    id: align_and_sort_sortsam_tmpDir
     type: string
   cutadapt_adapters:
     id: cutadapt_adapters
@@ -16,8 +16,8 @@ inputs:
         items: File
         type: array
       type: array
-  gatkIntervals:
-    id: gatkIntervals
+  gatk_intervals:
+    id: gatk_intervals
     type:
       items: File
       type: array
@@ -42,9 +42,9 @@ inputs:
     - .fai
     - ^.dict
     type: File
-  sampleName:
+  sample_name:
     default: NA12878
-    id: sampleName
+    id: sample_name
     type: string
   snps_1000gp:
     id: snps_1000gp
@@ -61,7 +61,7 @@ label: WGS Germline (GATK only)
 outputs:
   bam:
     id: bam
-    outputSource: processBamFiles/out
+    outputSource: merge_and_mark/out
     secondaryFiles:
     - .bai
     type: File
@@ -75,11 +75,11 @@ outputs:
       type: array
   variants:
     id: variants
-    outputSource: sortCombined/out
+    outputSource: sort_combined/out
     type: File
   variants_split:
     id: variants_split
-    outputSource: variantCaller_GATK/out
+    outputSource: vc_gatk/out
     type:
       items: File
       type: array
@@ -89,7 +89,7 @@ requirements:
   StepInputExpressionRequirement: {}
   SubworkflowFeatureRequirement: {}
 steps:
-  alignSortedBam:
+  align_and_sort:
     in:
       cutadapt_adapter:
         id: cutadapt_adapter
@@ -103,12 +103,12 @@ steps:
       reference:
         id: reference
         source: reference
-      sampleName:
-        id: sampleName
-        source: sampleName
+      sample_name:
+        id: sample_name
+        source: sample_name
       sortsam_tmpDir:
         id: sortsam_tmpDir
-        source: alignSortedBam_sortsam_tmpDir
+        source: align_and_sort_sortsam_tmpDir
     out:
     - out
     run: tools/BwaAligner.cwl
@@ -141,35 +141,35 @@ steps:
     run: tools/ParseFastqcAdaptors.cwl
     scatter:
     - fastqc_datafiles
-  processBamFiles:
+  merge_and_mark:
     in:
       bams:
         id: bams
-        source: alignSortedBam/out
+        source: align_and_sort/out
     out:
     - out
     run: tools/mergeAndMarkBams.cwl
-  sortCombined:
+  sort_combined:
     in:
       vcf:
         id: vcf
-        source: variantCaller_merge_GATK/out
+        source: vc_gatk_merge/out
     out:
     - out
     run: tools/bcftoolssort.cwl
-  variantCaller_GATK:
+  vc_gatk:
     in:
       bam:
         id: bam
-        source: processBamFiles/out
+        source: merge_and_mark/out
       intervals:
         id: intervals
-        source: gatkIntervals
-      knownIndels:
-        id: knownIndels
+        source: gatk_intervals
+      known_indels:
+        id: known_indels
         source: known_indels
-      millsIndels:
-        id: millsIndels
+      mills_indels:
+        id: mills_indels
         source: mills_indels
       reference:
         id: reference
@@ -185,11 +185,11 @@ steps:
     run: tools/GATK4_GermlineVariantCaller.cwl
     scatter:
     - intervals
-  variantCaller_merge_GATK:
+  vc_gatk_merge:
     in:
       vcfs:
         id: vcfs
-        source: variantCaller_GATK/out
+        source: vc_gatk/out
     out:
     - out
     run: tools/Gatk4GatherVcfs.cwl

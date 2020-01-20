@@ -10,8 +10,9 @@ inputs:
   cutadapt_adapter:
     id: cutadapt_adapter
     type:
-      items: string
+    - items: string
       type: array
+    - 'null'
   cutadapt_front:
     id: cutadapt_front
     type:
@@ -28,8 +29,9 @@ inputs:
   cutadapt_removeMiddle3Adapter:
     id: cutadapt_removeMiddle3Adapter
     type:
-      items: string
+    - items: string
       type: array
+    - 'null'
   cutadapt_removeMiddle5Adapter:
     id: cutadapt_removeMiddle5Adapter
     type:
@@ -51,8 +53,8 @@ inputs:
     - .fai
     - ^.dict
     type: File
-  sampleName:
-    id: sampleName
+  sample_name:
+    id: sample_name
     type: string
   sortsam_createIndex:
     default: true
@@ -99,7 +101,7 @@ steps:
         source: reference
       sampleName:
         id: sampleName
-        source: sampleName
+        source: sample_name
     out:
     - out
     run: BwaMemSamtoolsView.cwl

@@ -7,11 +7,11 @@ import "tools/bcftoolssort.wdl" as B
 
 workflow WGSSomaticGATK {
   input {
-    Array[Array[File]] normalInputs
-    Array[Array[File]] tumorInputs
-    String? normalName
-    String? tumorName
-    Array[File] gatkIntervals
+    Array[Array[File]] normal_inputs
+    Array[Array[File]] tumor_inputs
+    String? normal_name
+    String? tumor_name
+    Array[File] gatk_intervals
     File cutadapt_adapters
     File reference
     File reference_amb
@@ -40,9 +40,9 @@ workflow WGSSomaticGATK {
       reference_fai=reference_fai,
       reference_dict=reference_dict,
       reference=reference,
-      reads=tumorInputs,
+      reads=tumor_inputs,
       cutadapt_adapters=cutadapt_adapters,
-      sampleName=select_first([tumorName, "NA24385_tumour"])
+      sample_name=select_first([tumor_name, "NA24385_tumour"])
   }
   call S.somatic_subpipeline as tumor {
     input:
@@ -54,19 +54,19 @@ workflow WGSSomaticGATK {
       reference_fai=reference_fai,
       reference_dict=reference_dict,
       reference=reference,
-      reads=normalInputs,
+      reads=normal_inputs,
       cutadapt_adapters=cutadapt_adapters,
-      sampleName=select_first([normalName, "NA24385_normal"])
+      sample_name=select_first([normal_name, "NA24385_normal"])
   }
-  scatter (g in gatkIntervals) {
-     call G.GATK4_SomaticVariantCaller as variantCaller_GATK {
+  scatter (g in gatk_intervals) {
+     call G.GATK4_SomaticVariantCaller as vc_gatk {
       input:
-        normalBam_bai=tumor.out_bai,
-        normalBam=tumor.out,
-        tumorBam_bai=normal.out_bai,
-        tumorBam=normal.out,
-        normalName=select_first([normalName, "NA24385_normal"]),
-        tumorName=select_first([tumorName, "NA24385_tumour"]),
+        normal_bam_bai=tumor.out_bai,
+        normal_bam=tumor.out,
+        tumor_bam_bai=normal.out_bai,
+        tumor_bam=normal.out,
+        normal_name=select_first([normal_name, "NA24385_normal"]),
+        tumor_name=select_first([tumor_name, "NA24385_tumour"]),
         intervals=g,
         reference_amb=reference_amb,
         reference_ann=reference_ann,
@@ -80,27 +80,27 @@ workflow WGSSomaticGATK {
         snps_dbsnp=snps_dbsnp,
         snps_1000gp_tbi=snps_1000gp_tbi,
         snps_1000gp=snps_1000gp,
-        knownIndels_tbi=known_indels_tbi,
-        knownIndels=known_indels,
-        millsIndels_tbi=mills_indels_tbi,
-        millsIndels=mills_indels
+        known_indels_tbi=known_indels_tbi,
+        known_indels=known_indels,
+        mills_indels_tbi=mills_indels_tbi,
+        mills_indels=mills_indels
     }
   }
-  call G2.Gatk4GatherVcfs as variantCaller_GATK_merge {
+  call G2.Gatk4GatherVcfs as vc_gatk_merge {
     input:
-      vcfs=variantCaller_GATK.out
+      vcfs=vc_gatk.out
   }
   call B.bcftoolssort as sorted {
     input:
-      vcf=variantCaller_GATK_merge.out
+      vcf=vc_gatk_merge.out
   }
   output {
-    File normalBam = normal.out
-    File normalBam_bai = normal.out_bai
-    File tumorBam = tumor.out
-    File tumorBam_bai = tumor.out_bai
-    Array[Array[File]] normalReport = normal.reports
-    Array[Array[File]] tumorReport = tumor.reports
+    File normal_bam = normal.out
+    File normal_bam_bai = normal.out_bai
+    File tumor_bam = tumor.out
+    File tumor_bam_bai = tumor.out_bai
+    Array[Array[File]] normal_report = normal.reports
+    Array[Array[File]] tumor_report = tumor.reports
     File variants_gatk = sorted.out
   }
 }

@@ -19,7 +19,7 @@ workflow strelkaGermlineVariantCaller {
     File reference_dict
     File? intervals
     File? intervals_tbi
-    Boolean? isExome
+    Boolean? is_exome
     Array[String]? bcfview_applyFilters
   }
   call M.manta as manta {
@@ -34,7 +34,7 @@ workflow strelkaGermlineVariantCaller {
       reference_fai=reference_fai,
       reference_dict=reference_dict,
       reference=reference,
-      exome=isExome,
+      exome=is_exome,
       callRegions_tbi=intervals_tbi,
       callRegions=intervals
   }
@@ -52,7 +52,7 @@ workflow strelkaGermlineVariantCaller {
       reference=reference,
       indelCandidates_tbi=manta.candidateSmallIndels_tbi,
       indelCandidates=manta.candidateSmallIndels,
-      exome=isExome,
+      exome=is_exome,
       callRegions_tbi=intervals_tbi,
       callRegions=intervals
   }
@@ -61,7 +61,7 @@ workflow strelkaGermlineVariantCaller {
       file=strelka.variants,
       applyFilters=select_first([bcfview_applyFilters, ["PASS"]])
   }
-  call S2.SplitMultiAllele as splitMultiAllele {
+  call S2.SplitMultiAllele as split_multi_allele {
     input:
       vcf=bcfview.out,
       reference_amb=reference_amb,
@@ -78,6 +78,6 @@ workflow strelkaGermlineVariantCaller {
     File diploid_tbi = manta.diploidSV_tbi
     File variants = strelka.variants
     File variants_tbi = strelka.variants_tbi
-    File out = splitMultiAllele.out
+    File out = split_multi_allele.out
   }
 }
