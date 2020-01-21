@@ -1,6 +1,14 @@
 from datetime import date
 
-from janis_core import File, String, Array, InputSelector, WorkflowMetadata, ScatterDescription, ScatterMethods
+from janis_core import (
+    File,
+    String,
+    Array,
+    InputSelector,
+    WorkflowMetadata,
+    ScatterDescription,
+    ScatterMethods,
+)
 
 from janis_bioinformatics.data_types import (
     FastaWithDict,
@@ -47,14 +55,14 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
         # STEPS
 
         self.step("fastqc", FastQC_0_11_5(reads=self.fastqs), scatter="reads")
-        
+
         self.step(
-            "getfastqc_adapters", 
+            "getfastqc_adapters",
             ParseFastqcAdaptors(
                 fastqc_datafiles=self.fastqc.datafile,
-                cutadapt_adaptors_lookup=self.cutadapt_adapters
+                cutadapt_adaptors_lookup=self.cutadapt_adapters,
             ),
-            scatter="fastqc_datafiles"
+            scatter="fastqc_datafiles",
         )
 
         self.step(
@@ -65,9 +73,9 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
                 sample_name=self.sample_name,
                 sortsam_tmpDir=".",
                 cutadapt_adapter=self.getfastqc_adapters,
-                cutadapt_removeMiddle3Adapter=self.getfastqc_adapters
+                cutadapt_removeMiddle3Adapter=self.getfastqc_adapters,
             ),
-            scatter=["fastq", "cutadapt_adapter", "cutadapt_removeMiddle3Adapter"]
+            scatter=["fastq", "cutadapt_adapter", "cutadapt_removeMiddle3Adapter"],
         )
 
         self.step("merge_and_mark", MergeAndMarkBams_4_1_3(bams=self.align_and_sort))
@@ -89,22 +97,20 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
             scatter="intervals",
         )
 
-        self.step(
-            "vc_gatk_merge",
-            Gatk4GatherVcfs_4_0(vcfs=self.vc_gatk.out),
-        )
+        self.step("vc_gatk_merge", Gatk4GatherVcfs_4_0(vcfs=self.vc_gatk.out))
         # sort
 
-        self.step(
-            "sort_combined", BcfToolsSort_1_9(vcf=self.vc_gatk_merge.out)
-        )
-
+        self.step("sort_combined", BcfToolsSort_1_9(vcf=self.vc_gatk_merge.out))
 
         self.output(
-            "bam", source=self.merge_and_mark.out, output_folder=["bams", self.sample_name]
+            "bam",
+            source=self.merge_and_mark.out,
+            output_folder=["bams", self.sample_name],
         )
         self.output(
-            "reports", source=self.fastqc.out, output_folder=["reports", self.sample_name]
+            "reports",
+            source=self.fastqc.out,
+            output_folder=["reports", self.sample_name],
         )
         self.output("variants", source=self.sort_combined.out, output_folder="variants")
         self.output(
@@ -124,12 +130,15 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
 
 if __name__ == "__main__":
     import os.path
+
     w = WGSGermlineGATK()
     args = {
         "to_console": False,
         "to_disk": True,
         "validate": True,
-        "export_path": os.path.join(os.path.dirname(os.path.realpath(__file__)), "{language}"),
+        "export_path": os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "{language}"
+        ),
     }
     w.translate("cwl", **args)
     w.translate("wdl", **args)

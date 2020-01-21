@@ -96,10 +96,7 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
             scatter="intervals",
         )
 
-        self.step(
-            "vc_gatk_merge",
-            Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk),
-        )
+        self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk))
 
         self.step(
             "vc_strelka",
@@ -116,8 +113,8 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
             Gridss_2_5_1(
                 bams=[self.normal.out, self.tumor.out],
                 reference=self.reference,
-                blacklist=self.gridss_blacklist
-            )
+                blacklist=self.gridss_blacklist,
+            ),
         )
 
         self.step(
@@ -135,10 +132,7 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
             scatter="intervals",
         )
 
-        self.step(
-            "vc_vardict_merge",
-            Gatk4GatherVcfs_4_1_3(vcfs=self.vc_vardict.out),
-        )
+        self.step("vc_vardict_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_vardict.out))
 
         self.step(
             "combine_variants",
@@ -158,18 +152,34 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
 
         # Outputs
 
-        self.output("normal_report", source=self.normal.reports, output_folder="reports")
+        self.output(
+            "normal_report", source=self.normal.reports, output_folder="reports"
+        )
         self.output("tumor_report", source=self.tumor.reports, output_folder="reports")
-        
+
         self.output("normal_bam", source=self.normal.out, output_folder="bams")
         self.output("tumor_bam", source=self.tumor.out, output_folder="bams")
         self.output("gridss_assembly", source=self.vc_gridss.out, output_folder="bams")
 
-        self.output("variants_gatk", source=self.vc_gatk_merge.out, output_folder="variants")
-        self.output("variants_strelka", source=self.vc_strelka.out, output_folder="variants")
-        self.output("variants_vardict", source=self.vc_vardict_merge.out, output_folder="variants")
-        self.output("variants_gridss", source=self.vc_gridss.out, output_folder="variants")
-        self.output("variants_combined", source=self.combine_variants.vcf, output_folder="variants")
+        self.output(
+            "variants_gatk", source=self.vc_gatk_merge.out, output_folder="variants"
+        )
+        self.output(
+            "variants_strelka", source=self.vc_strelka.out, output_folder="variants"
+        )
+        self.output(
+            "variants_vardict",
+            source=self.vc_vardict_merge.out,
+            output_folder="variants",
+        )
+        self.output(
+            "variants_gridss", source=self.vc_gridss.out, output_folder="variants"
+        )
+        self.output(
+            "variants_combined",
+            source=self.combine_variants.vcf,
+            output_folder="variants",
+        )
 
     @staticmethod
     def process_subpipeline(**connections):
@@ -184,12 +194,12 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
         w.step("fastqc", FastQC_0_11_5(reads=w.reads), scatter="reads")
 
         w.step(
-            "getfastqc_adapters", 
+            "getfastqc_adapters",
             ParseFastqcAdaptors(
                 fastqc_datafiles=w.fastqc.datafile,
-                cutadapt_adaptors_lookup=w.cutadapt_adapters
+                cutadapt_adaptors_lookup=w.cutadapt_adapters,
             ),
-            scatter="fastqc_datafiles"
+            scatter="fastqc_datafiles",
         )
 
         w.step(
@@ -202,12 +212,14 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
                 cutadapt_adapter=w.getfastqc_adapters,
                 cutadapt_removeMiddle3Adapter=w.getfastqc_adapters,
             ),
-            scatter=["fastq", "cutadapt_adapter", "cutadapt_removeMiddle3Adapter"]
+            scatter=["fastq", "cutadapt_adapter", "cutadapt_removeMiddle3Adapter"],
         )
         w.step("merge_and_mark", MergeAndMarkBams_4_1_3(bams=w.align_and_sort.out))
 
         w.output("out", source=w.merge_and_mark.out)
-        w.output("reports", source=w.fastqc.out, output_folder=[w.sample_name, "reports"])
+        w.output(
+            "reports", source=w.fastqc.out, output_folder=[w.sample_name, "reports"]
+        )
 
         return w(**connections)
 
@@ -222,7 +234,7 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
             "gatk",
             "vardict",
             "strelka",
-            "gridss"
+            "gridss",
         ]
         meta.contributors = ["Michael Franklin"]
         meta.dateUpdated = date(2019, 10, 16)
@@ -231,12 +243,15 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
 
 if __name__ == "__main__":
     import os.path
+
     w = WGSSomaticMultiCallers()
     args = {
         "to_console": False,
         "to_disk": True,
         "validate": True,
-        "export_path": os.path.join(os.path.dirname(os.path.realpath(__file__)), "{language}"),
+        "export_path": os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "{language}"
+        ),
     }
     w.translate("cwl", **args)
     w.translate("wdl", **args)

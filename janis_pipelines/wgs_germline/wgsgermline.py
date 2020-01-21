@@ -45,7 +45,7 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
         self.input("reference", FastaWithDict)
 
         self.input("cutadapt_adapters", File)
-    
+
         self.input("gatk_intervals", Array(Bed))
         self.input("vardict_intervals", Array(Bed))
         self.input("strelkaIntervals", BedTabix)
@@ -65,14 +65,14 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
         # STEPS
 
         self.step("fastqc", FastQC_0_11_5(reads=self.fastqs), scatter="reads"),
-        
+
         self.step(
-            "getfastqc_adapters", 
+            "getfastqc_adapters",
             ParseFastqcAdaptors(
                 fastqc_datafiles=self.fastqc.datafile,
-                cutadapt_adaptors_lookup=self.cutadapt_adapters
+                cutadapt_adaptors_lookup=self.cutadapt_adapters,
             ),
-            scatter="fastqc_datafiles"
+            scatter="fastqc_datafiles",
         )
 
         self.step(
@@ -84,9 +84,8 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
                 sortsam_tmpDir="./tmp",
                 cutadapt_adapter=self.getfastqc_adapters,
                 cutadapt_removeMiddle3Adapter=self.getfastqc_adapters,
-            
             ),
-            scatter=["fastq", "cutadapt_adapter", "cutadapt_removeMiddle3Adapter"]
+            scatter=["fastq", "cutadapt_adapter", "cutadapt_removeMiddle3Adapter"],
         )
         self.step(
             "merge_and_mark", MergeAndMarkBams_4_1_3(bams=self.align_and_sort.out)
@@ -109,10 +108,7 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
             scatter="intervals",
         )
 
-        self.step(
-            "vc_gatk_merge",
-            Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out),
-        )
+        self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out))
 
         # Strelka
         self.step(
@@ -137,10 +133,7 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
             ),
             scatter="intervals",
         )
-        self.step(
-            "vc_vardict_merge",
-            Gatk4GatherVcfs_4_1_3(vcfs=self.vc_vardict.out),
-        )
+        self.step("vc_vardict_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_vardict.out))
 
         # GRIDSS
         # self.step(
@@ -169,7 +162,6 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
         )
         self.step("sort_combined", BcfToolsSort_1_9(vcf=self.combine_variants.vcf))
 
-
         self.output("reports", source=self.fastqc.out, output_folder="reports")
         self.output("bam", source=self.merge_and_mark.out, output_folder="bams")
 
@@ -178,9 +170,7 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
         )
 
         self.output(
-            "variants_gatk",
-            source=self.vc_gatk_merge.out,
-            output_folder="variants",
+            "variants_gatk", source=self.vc_gatk_merge.out, output_folder="variants"
         )
         self.output(
             "variants_vardict",
@@ -188,9 +178,7 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
             output_folder=["variants"],
         )
         self.output(
-            "variants_strelka",
-            source=self.vc_strelka.out,
-            output_folder="variants",
+            "variants_strelka", source=self.vc_strelka.out, output_folder="variants"
         )
 
         self.output(
@@ -227,12 +215,15 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
 
 if __name__ == "__main__":
     import os.path
+
     w = WGSGermlineMultiCallers()
     args = {
         "to_console": False,
         "to_disk": True,
         "validate": True,
-        "export_path": os.path.join(os.path.dirname(os.path.realpath(__file__)), "{language}"),
+        "export_path": os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "{language}"
+        ),
     }
     w.translate("cwl", **args)
     w.translate("wdl", **args)

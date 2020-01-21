@@ -84,12 +84,15 @@ class BwaAlignment(BioinformaticsWorkflow):
 
 if __name__ == "__main__":
     import os.path
+
     w = BwaAlignment()
     args = {
         "to_console": False,
         "to_disk": True,
         "validate": True,
-        "export_path": os.path.join(os.path.dirname(os.path.realpath(__file__)), "{language}"),
+        "export_path": os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "{language}"
+        ),
     }
     w.translate("cwl", **args)
     w.translate("wdl", **args)

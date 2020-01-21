@@ -11,6 +11,7 @@ workflows = [
     WGSSomaticGATK,
 ]
 
+
 def export_workflows(wfs=workflows):
     import inspect, os.path
 
@@ -20,13 +21,14 @@ def export_workflows(wfs=workflows):
             "to_console": False,
             "to_disk": True,
             "validate": True,
-            "export_path": os.path.join(os.path.dirname(os.path.realpath(inspect.getfile(W))), "{language}"),
+            "export_path": os.path.join(
+                os.path.dirname(os.path.realpath(inspect.getfile(W))), "{language}"
+            ),
         }
         w.translate("cwl", **args)
         w.translate("wdl", **args)
 
+
 if __name__ == "__main__":
     __name__ = None
     export_workflows()
-
-    

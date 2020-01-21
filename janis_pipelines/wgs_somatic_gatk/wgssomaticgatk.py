@@ -6,7 +6,7 @@ from janis_bioinformatics.data_types import (
     VcfTabix,
     Bed,
     FastqGzPair,
-    File
+    File,
 )
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
@@ -28,7 +28,7 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
     @staticmethod
     def version():
         return "1.2.0"
-        
+
     def constructor(self):
 
         self.input("normal_inputs", Array(FastqGzPair))
@@ -82,17 +82,16 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
             scatter="intervals",
         )
 
-        self.step(
-            "vc_gatk_merge",
-            Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk),
-        )
+        self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk))
         self.step("sorted", BcfToolsSort_1_9(vcf=self.vc_gatk_merge.out))
 
         # Outputs
 
         self.output("normal_bam", source=self.normal.out, output_folder="bams")
         self.output("tumor_bam", source=self.tumor.out, output_folder="bams")
-        self.output("normal_report", source=self.normal.reports, output_folder="reports")
+        self.output(
+            "normal_report", source=self.normal.reports, output_folder="reports"
+        )
         self.output("tumor_report", source=self.tumor.reports, output_folder="reports")
 
         self.output("variants_gatk", source=self.sorted.out, output_folder="variants")
@@ -110,12 +109,12 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
         w.step("fastqc", FastQC_0_11_5(reads=w.reads), scatter="reads")
 
         w.step(
-            "getfastqc_adapters", 
+            "getfastqc_adapters",
             ParseFastqcAdaptors(
                 fastqc_datafiles=w.fastqc.datafile,
-                cutadapt_adaptors_lookup=w.cutadapt_adapters
+                cutadapt_adaptors_lookup=w.cutadapt_adapters,
             ),
-            scatter="fastqc_datafiles"
+            scatter="fastqc_datafiles",
         )
 
         w.step(
@@ -128,7 +127,7 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
                 cutadapt_adapter=w.getfastqc_adapters,
                 cutadapt_removeMiddle3Adapter=w.getfastqc_adapters,
             ),
-            scatter=["fastq", "cutadapt_adapter", "cutadapt_removeMiddle3Adapter"]
+            scatter=["fastq", "cutadapt_adapter", "cutadapt_removeMiddle3Adapter"],
         )
 
         w.step("merge_and_mark", MergeAndMarkBams_4_1_3(bams=w.align_and_sort.out))
@@ -149,12 +148,15 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
 
 if __name__ == "__main__":
     import os.path
+
     w = WGSSomaticGATK()
     args = {
         "to_console": False,
         "to_disk": True,
         "validate": True,
-        "export_path": os.path.join(os.path.dirname(os.path.realpath(__file__)), "{language}"),
+        "export_path": os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "{language}"
+        ),
     }
     w.translate("cwl", **args)
     w.translate("wdl", **args)
