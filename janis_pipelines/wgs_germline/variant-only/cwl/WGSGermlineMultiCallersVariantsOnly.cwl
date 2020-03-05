@@ -1,30 +1,28 @@
 #!/usr/bin/env cwl-runner
 class: Workflow
 cwlVersion: v1.0
-doc: "This is a genomics pipeline to align sequencing data (Fastq pairs) into BAMs\
-  \ and call variants using:\n\nThis workflow is a reference pipeline using the Janis\
-  \ Python framework (pipelines assistant).\n\n- Takes raw sequence data in the FASTQ\
-  \ format;\n- align to the reference genome using BWA MEM;\n- Marks duplicates using\
-  \ Picard;\n- Call the appropriate variant callers (GATK / Strelka / VarDict);\n\
-  - Outputs the final variants in the VCF format.\n\n**Resources**\n\nThis pipeline\
-  \ has been tested using the HG38 reference set, available on Google Cloud Storage\
-  \ through:\n\n- https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/\n\
+doc: "This is a genomics pipeline which:\n\n- Call the appropriate variant callers\
+  \ (GATK / Strelka / VarDict);\n- Outputs the final variants in the VCF format.\n\
+  \n**Resources**\n\nThis pipeline has been tested using the HG38 reference set, available\
+  \ on Google Cloud Storage through:\n\n- https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/\n\
   \nThis pipeline expects the assembly references to be as they appear in that storage\
   \     (\".fai\", \".amb\", \".ann\", \".bwt\", \".pac\", \".sa\", \"^.dict\").\n\
   The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be\
   \ gzipped and tabix indexed.\n"
-id: WGSGermlineMultiCallers
+id: WGSGermlineMultiCallersVariantsOnly
 inputs:
-  align_and_sort_sortsam_tmpDir:
-    default: ./tmp
-    doc: Undocumented option
-    id: align_and_sort_sortsam_tmpDir
-    type: string
   allele_freq_threshold:
     default: 0.05
     doc: "The threshold for VarDict's allele frequency, default: 0.05 or 5%"
     id: allele_freq_threshold
     type: float
+  bam:
+    doc: An array of FastqGz pairs. These are aligned separately and merged to create
+      higher depth coverages from multiple sets of reads
+    id: bam
+    secondaryFiles:
+    - .bai
+    type: File
   combine_variants_columns:
     default:
     - AC
@@ -52,15 +50,6 @@ inputs:
     type:
     - File
     - 'null'
-  fastqs:
-    doc: An array of FastqGz pairs. These are aligned separately and merged to create
-      higher depth coverages from multiple sets of reads
-    id: fastqs
-    type:
-      items:
-        items: File
-        type: array
-      type: array
   gatk_intervals:
     doc: List of intervals over which to split the GATK variant calling
     id: gatk_intervals
@@ -127,24 +116,8 @@ inputs:
     type:
       items: File
       type: array
-label: WGS Germline (Multi callers)
+label: WGS Germline (Multi callers) [VARIANTS ONLY]
 outputs:
-  bam:
-    doc: Aligned and indexed bam.
-    id: bam
-    outputSource: merge_and_mark/out
-    secondaryFiles:
-    - .bai
-    type: File
-  reports:
-    doc: A zip file of the FastQC quality report.
-    id: reports
-    outputSource: fastqc/out
-    type:
-      items:
-        items: File
-        type: array
-      type: array
   variants_combined:
     doc: Combined variants from all 3 callers
     id: variants_combined
@@ -186,34 +159,6 @@ requirements:
   StepInputExpressionRequirement: {}
   SubworkflowFeatureRequirement: {}
 steps:
-  align_and_sort:
-    in:
-      cutadapt_adapter:
-        id: cutadapt_adapter
-        source: getfastqc_adapters/adaptor_sequences
-      cutadapt_removeMiddle3Adapter:
-        id: cutadapt_removeMiddle3Adapter
-        source: getfastqc_adapters/adaptor_sequences
-      fastq:
-        id: fastq
-        source: fastqs
-      reference:
-        id: reference
-        source: reference
-      sample_name:
-        id: sample_name
-        source: sample_name
-      sortsam_tmpDir:
-        id: sortsam_tmpDir
-        source: align_and_sort_sortsam_tmpDir
-    out:
-    - out
-    run: tools/BwaAligner.cwl
-    scatter:
-    - fastq
-    - cutadapt_adapter
-    - cutadapt_removeMiddle3Adapter
-    scatterMethod: dotproduct
   combine_variants:
     in:
       columns:
@@ -232,38 +177,6 @@ steps:
     - vcf
     - tsv
     run: tools/combinevariants.cwl
-  fastqc:
-    in:
-      reads:
-        id: reads
-        source: fastqs
-    out:
-    - out
-    - datafile
-    run: tools/fastqc.cwl
-    scatter:
-    - reads
-  getfastqc_adapters:
-    in:
-      cutadapt_adaptors_lookup:
-        id: cutadapt_adaptors_lookup
-        source: cutadapt_adapters
-      fastqc_datafiles:
-        id: fastqc_datafiles
-        source: fastqc/datafile
-    out:
-    - adaptor_sequences
-    run: tools/ParseFastqcAdaptors.cwl
-    scatter:
-    - fastqc_datafiles
-  merge_and_mark:
-    in:
-      bams:
-        id: bams
-        source: align_and_sort/out
-    out:
-    - out
-    run: tools/mergeAndMarkBams.cwl
   sort_combined:
     in:
       vcf:
@@ -276,7 +189,7 @@ steps:
     in:
       bam:
         id: bam
-        source: merge_and_mark/out
+        source: bam
       intervals:
         id: intervals
         source: gatk_intervals
@@ -312,7 +225,7 @@ steps:
     in:
       bam:
         id: bam
-        source: merge_and_mark/out
+        source: bam
       intervals:
         id: intervals
         source: strelka_intervals
@@ -331,7 +244,7 @@ steps:
         source: allele_freq_threshold
       bam:
         id: bam
-        source: merge_and_mark/out
+        source: bam
       header_lines:
         id: header_lines
         source: header_lines

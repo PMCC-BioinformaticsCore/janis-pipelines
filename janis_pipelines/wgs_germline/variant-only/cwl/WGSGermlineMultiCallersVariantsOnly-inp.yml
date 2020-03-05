@@ -1,4 +1,3 @@
-align_and_sort_sortsam_tmpDir: ./tmp
 allele_freq_threshold: 0.05
 combine_variants_columns:
 - AC

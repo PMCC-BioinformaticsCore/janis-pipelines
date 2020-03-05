@@ -10,10 +10,8 @@
         "GT"
     ],
     "WGSGermlineMultiCallers.combine_variants_type": "germline",
-    "WGSGermlineMultiCallers.cutadapt_adapters": null,
     "WGSGermlineMultiCallers.fastqs": null,
     "WGSGermlineMultiCallers.gatk_intervals": null,
-    "WGSGermlineMultiCallers.header_lines": null,
     "WGSGermlineMultiCallers.known_indels": null,
     "WGSGermlineMultiCallers.known_indels_tbi": null,
     "WGSGermlineMultiCallers.mills_indels": null,
@@ -26,12 +24,12 @@
     "WGSGermlineMultiCallers.reference_fai": null,
     "WGSGermlineMultiCallers.reference_pac": null,
     "WGSGermlineMultiCallers.reference_sa": null,
-    "WGSGermlineMultiCallers.sample_name": "NA12878",
+    "WGSGermlineMultiCallers.sample_name": null,
     "WGSGermlineMultiCallers.snps_1000gp": null,
     "WGSGermlineMultiCallers.snps_1000gp_tbi": null,
     "WGSGermlineMultiCallers.snps_dbsnp": null,
     "WGSGermlineMultiCallers.snps_dbsnp_tbi": null,
-    "WGSGermlineMultiCallers.strelkaIntervals": null,
-    "WGSGermlineMultiCallers.strelkaIntervals_tbi": null,
+    "WGSGermlineMultiCallers.strelka_intervals": null,
+    "WGSGermlineMultiCallers.strelka_intervals_tbi": null,
     "WGSGermlineMultiCallers.vardict_intervals": null
 }
