@@ -5,7 +5,7 @@ task Gatk4GatherVcfs {
     Int? runtime_cpu
     Int? runtime_memory
     Array[File] vcfs
-    String outputFilename = "generated-.gathered.vcf"
+    String? outputFilename = "generated-.gathered.vcf"
     Array[File]? argumentsFile
     Int? compressionLevel
     Boolean? createIndex
@@ -23,28 +23,28 @@ task Gatk4GatherVcfs {
   command <<<
     gatk GatherVcfs \
       ~{sep=" " prefix("--INPUT ", vcfs)} \
-      ~{"--OUTPUT " + if defined(outputFilename) then outputFilename else "generated-.gathered.vcf"} \
+      ~{if defined(select_first([outputFilename, "generated-.gathered.vcf"])) then ("--OUTPUT " +  '"' + select_first([outputFilename, "generated-.gathered.vcf"]) + '"') else ""} \
       ~{true="--arguments_file " false="" defined(argumentsFile)}~{sep=" " argumentsFile} \
-      ~{"--COMPRESSION_LEVEL " + compressionLevel} \
+      ~{if defined(compressionLevel) then ("--COMPRESSION_LEVEL " +  '"' + compressionLevel + '"') else ""} \
       ~{true="--CREATE_INDEX" false="" createIndex} \
       ~{true="--CREATE_MD5_FILE" false="" createMd5File} \
-      ~{"--GA4GH_CLIENT_SECRETS " + ga4ghClientSecrets} \
-      ~{"--MAX_RECORDS_IN_RAM " + maxRecordsInRam} \
+      ~{if defined(ga4ghClientSecrets) then ("--GA4GH_CLIENT_SECRETS " +  '"' + ga4ghClientSecrets + '"') else ""} \
+      ~{if defined(maxRecordsInRam) then ("--MAX_RECORDS_IN_RAM " +  '"' + maxRecordsInRam + '"') else ""} \
       ~{true="--QUIET" false="" quiet} \
-      ~{"--REFERENCE_SEQUENCE " + referenceSequence} \
-      ~{"--TMP_DIR " + if defined(tmpDir) then tmpDir else "/tmp"} \
+      ~{if defined(referenceSequence) then ("--REFERENCE_SEQUENCE " +  '"' + referenceSequence + '"') else ""} \
+      ~{if defined(select_first([tmpDir, "/tmp"])) then ("--TMP_DIR " +  '"' + select_first([tmpDir, "/tmp"]) + '"') else ""} \
       ~{true="--USE_JDK_DEFLATER" false="" useJdkDeflater} \
       ~{true="--USE_JDK_INFLATER" false="" useJdkInflater} \
-      ~{"--VALIDATION_STRINGENCY " + validationStringency} \
+      ~{if defined(validationStringency) then ("--VALIDATION_STRINGENCY " +  '"' + validationStringency + '"') else ""} \
       ~{true="--VERBOSITY" false="" verbosity}
   >>>
   runtime {
     docker: "broadinstitute/gatk:4.0.12.0"
-    cpu: if defined(runtime_cpu) then runtime_cpu else 1
-    memory: if defined(runtime_memory) then "~{runtime_memory}G" else "4G"
+    cpu: select_first([runtime_cpu, 1])
+    memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-.gathered.vcf"
+    File out = select_first([outputFilename, "generated-.gathered.vcf"])
   }
 }

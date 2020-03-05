@@ -1,15 +1,33 @@
+#!/usr/bin/env cwl-runner
 class: Workflow
 cwlVersion: v1.0
+doc: "This is a genomics pipeline to align sequencing data (Fastq pairs) into BAMs\
+  \ and call variants using GATK. The final variants are outputted in the VCF format.\n\
+  \n**Resources**\n\nThis pipeline has been tested using the HG38 reference set, available\
+  \ on Google Cloud Storage through:\n\n- https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/\n\
+  \nThis pipeline expects the assembly references to be as they appear in that storage\
+  \     (\".fai\", \".amb\", \".ann\", \".bwt\", \".pac\", \".sa\", \"^.dict\").\n\
+  The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be\
+  \ gzipped and tabix indexed.\n"
 id: WGSGermlineGATK
 inputs:
   align_and_sort_sortsam_tmpDir:
     default: .
+    doc: Undocumented option
     id: align_and_sort_sortsam_tmpDir
     type: string
   cutadapt_adapters:
+    doc: Specifies a file which contains a list of sequences to determine valid overrepresented
+      sequences from the FastQC report to trim with Cuatadapt. The file must contain
+      sets of named adapters in the form name[tab]sequence. Lines prefixed with a
+      hash will be ignored.
     id: cutadapt_adapters
-    type: File
+    type:
+    - File
+    - 'null'
   fastqs:
+    doc: An array of FastqGz pairs. These are aligned separately and merged to create
+      higher depth coverages from multiple sets of reads
     id: fastqs
     type:
       items:
@@ -17,42 +35,49 @@ inputs:
         type: array
       type: array
   gatk_intervals:
+    doc: List of intervals over which to split the GATK variant calling
     id: gatk_intervals
     type:
       items: File
       type: array
   known_indels:
+    doc: From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``
     id: known_indels
     secondaryFiles:
     - .tbi
     type: File
   mills_indels:
+    doc: From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``
     id: mills_indels
     secondaryFiles:
     - .tbi
     type: File
   reference:
+    doc: The reference genome from which to align the reads. This requires a number
+      indexes (can be generated with the 'IndexFasta' pipeline. This pipeline has
+      been tested with the hg38 reference genome.
     id: reference
     secondaryFiles:
+    - .fai
     - .amb
     - .ann
     - .bwt
     - .pac
     - .sa
-    - .fai
     - ^.dict
     type: File
   sample_name:
-    default: NA12878
+    doc: Sample name from which to generate the readGroupHeaderLine for BwaMem
     id: sample_name
     type: string
   snps_1000gp:
+    doc: From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``
     id: snps_1000gp
     secondaryFiles:
     - .tbi
     type: File
   snps_dbsnp:
-    doc: ''
+    doc: From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``
     id: snps_dbsnp
     secondaryFiles:
     - .tbi

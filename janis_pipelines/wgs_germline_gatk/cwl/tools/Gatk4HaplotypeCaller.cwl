@@ -1,3 +1,4 @@
+#!/usr/bin/env cwl-runner
 baseCommand:
 - gatk
 - HaplotypeCaller
@@ -378,12 +379,12 @@ inputs:
     prefix: --reference
   label: reference
   secondaryFiles:
+  - .fai
   - .amb
   - .ann
   - .bwt
   - .pac
   - .sa
-  - .fai
   - ^.dict
   type: File
 - default: generated.vcf.gz

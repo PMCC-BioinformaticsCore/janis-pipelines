@@ -1,3 +1,4 @@
+#!/usr/bin/env cwl-runner
 class: Workflow
 cwlVersion: v1.0
 doc: "This is a VariantCaller based on the GATK Best Practice pipelines. It uses the\
@@ -31,12 +32,12 @@ inputs:
   reference:
     id: reference
     secondaryFiles:
+    - .fai
     - .amb
     - .ann
     - .bwt
     - .pac
     - .sa
-    - .fai
     - ^.dict
     type: File
   snps_1000gp:

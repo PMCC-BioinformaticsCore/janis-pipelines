@@ -6,14 +6,14 @@ task SplitMultiAllele {
     Int? runtime_memory
     File vcf
     File reference
+    File reference_fai
     File reference_amb
     File reference_ann
     File reference_bwt
     File reference_pac
     File reference_sa
-    File reference_fai
     File reference_dict
-    String outputFilename = "generated-.norm.vcf"
+    String? outputFilename = "generated-.norm.vcf"
   }
   command <<<
      \
@@ -27,16 +27,16 @@ task SplitMultiAllele {
       vt normalize -n -q - -o - \
       -r ~{reference} \
       | \
-      ~{"> " + if defined(outputFilename) then outputFilename else "generated-.norm.vcf"} \
+      ~{if defined(select_first([outputFilename, "generated-.norm.vcf"])) then ("> " +  '"' + select_first([outputFilename, "generated-.norm.vcf"]) + '"') else ""} \
       sed 's/ID=AD,Number=./ID=AD,Number=1/'
   >>>
   runtime {
     docker: "heuermh/vt"
-    cpu: if defined(runtime_cpu) then runtime_cpu else 1
-    memory: if defined(runtime_memory) then "~{runtime_memory}G" else "4G"
+    cpu: select_first([runtime_cpu, 1])
+    memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-.norm.vcf"
+    File out = select_first([outputFilename, "generated-.norm.vcf"])
   }
 }

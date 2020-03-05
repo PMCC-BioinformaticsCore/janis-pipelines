@@ -1,3 +1,4 @@
+#!/usr/bin/env cwl-runner
 baseCommand:
 - gatk
 - SplitReads
@@ -289,12 +290,12 @@ inputs:
     prefix: --reference
   label: reference
   secondaryFiles:
+  - .fai
   - .amb
   - .ann
   - .bwt
   - .pac
   - .sa
-  - .fai
   - ^.dict
   type:
   - File

@@ -5,24 +5,24 @@ task bcftoolssort {
     Int? runtime_cpu
     Int? runtime_memory
     File vcf
-    String outputFilename = "generated-.sorted.vcf.gz"
+    String? outputFilename = "generated-.sorted.vcf.gz"
     String? outputType
     String? tempDir
   }
   command <<<
     bcftools sort \
-      ~{"--output-file " + if defined(outputFilename) then outputFilename else "generated-.sorted.vcf.gz"} \
-      ~{"--output-type " + if defined(outputType) then outputType else "z"} \
-      ~{"--temp-dir " + tempDir} \
+      ~{if defined(select_first([outputFilename, "generated-.sorted.vcf.gz"])) then ("--output-file " +  '"' + select_first([outputFilename, "generated-.sorted.vcf.gz"]) + '"') else ""} \
+      ~{if defined(select_first([outputType, "z"])) then ("--output-type " +  '"' + select_first([outputType, "z"]) + '"') else ""} \
+      ~{if defined(tempDir) then ("--temp-dir " +  '"' + tempDir + '"') else ""} \
       ~{vcf}
   >>>
   runtime {
     docker: "michaelfranklin/bcftools:1.9"
-    cpu: if defined(runtime_cpu) then runtime_cpu else 1
-    memory: if defined(runtime_memory) then "~{runtime_memory}G" else "4G"
+    cpu: select_first([runtime_cpu, 1])
+    memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-.sorted.vcf.gz"
+    File out = select_first([outputFilename, "generated-.sorted.vcf.gz"])
   }
 }

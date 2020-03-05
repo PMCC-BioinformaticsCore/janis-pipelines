@@ -10,33 +10,33 @@ task Gatk4BaseRecalibrator {
     Array[File] knownSites
     Array[File] knownSites_tbi
     File reference
+    File reference_fai
     File reference_amb
     File reference_ann
     File reference_bwt
     File reference_pac
     File reference_sa
-    File reference_fai
     File reference_dict
-    String outputFilename = "generated.table"
+    String? outputFilename = "generated.table"
     File? intervals
   }
   command <<<
     ln -f ~{bam_bai} `echo '~{bam}' | sed 's/\.[^.]*$//'`.bai
     gatk BaseRecalibrator \
-      ~{"--tmp-dir " + if defined(tmpDir) then tmpDir else "/tmp/"} \
-      ~{"--intervals " + intervals} \
+      ~{if defined(select_first([tmpDir, "/tmp/"])) then ("--tmp-dir " +  '"' + select_first([tmpDir, "/tmp/"]) + '"') else ""} \
+      ~{if defined(intervals) then ("--intervals " +  '"' + intervals + '"') else ""} \
       -R ~{reference} \
       -I ~{bam} \
-      ~{"-O " + if defined(outputFilename) then outputFilename else "generated.table"} \
+      ~{if defined(select_first([outputFilename, "generated.table"])) then ("-O " +  '"' + select_first([outputFilename, "generated.table"]) + '"') else ""} \
       ~{sep=" " prefix("--known-sites ", knownSites)}
   >>>
   runtime {
     docker: "broadinstitute/gatk:4.1.3.0"
-    cpu: if defined(runtime_cpu) then runtime_cpu else 1
-    memory: if defined(runtime_memory) then "~{runtime_memory}G" else "4G"
+    cpu: select_first([runtime_cpu, 1])
+    memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated.table"
+    File out = select_first([outputFilename, "generated.table"])
   }
 }

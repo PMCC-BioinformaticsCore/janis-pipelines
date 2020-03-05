@@ -6,8 +6,8 @@ task cutadapt {
     Int? runtime_memory
     Array[File] fastq
     Array[String]? adapter
-    String outputFilename = "generated--R1.fastq.gz"
-    String secondReadFile = "generated--R2.fastq.gz"
+    String? outputFilename = "generated--R1.fastq.gz"
+    String? secondReadFile = "generated--R2.fastq.gz"
     Int? cores
     String? front
     String? anywhere
@@ -57,59 +57,59 @@ task cutadapt {
   command <<<
     cutadapt \
       ~{if defined(adapter) && length(select_first([adapter, []])) > 0 then "-a " else ""}~{sep=" -a " adapter} \
-      ~{"-o " + if defined(outputFilename) then outputFilename else "generated--R1.fastq.gz"} \
-      ~{"-p " + if defined(secondReadFile) then secondReadFile else "generated--R2.fastq.gz"} \
-      ~{"--cores " + cores} \
-      ~{"--front " + front} \
-      ~{"--anywhere " + anywhere} \
-      ~{"--error-rate " + errorRate} \
+      ~{if defined(select_first([outputFilename, "generated--R1.fastq.gz"])) then ("-o " +  '"' + select_first([outputFilename, "generated--R1.fastq.gz"]) + '"') else ""} \
+      ~{if defined(select_first([secondReadFile, "generated--R2.fastq.gz"])) then ("-p " +  '"' + select_first([secondReadFile, "generated--R2.fastq.gz"]) + '"') else ""} \
+      ~{if defined(cores) then ("--cores " +  '"' + cores + '"') else ""} \
+      ~{if defined(front) then ("--front " +  '"' + front + '"') else ""} \
+      ~{if defined(anywhere) then ("--anywhere " +  '"' + anywhere + '"') else ""} \
+      ~{if defined(errorRate) then ("--error-rate " +  '"' + errorRate + '"') else ""} \
       ~{true="--no-indels" false="" noIndels} \
-      ~{"--times " + times} \
-      ~{"--overlap " + overlap} \
+      ~{if defined(times) then ("--times " +  '"' + times + '"') else ""} \
+      ~{if defined(overlap) then ("--overlap " +  '"' + overlap + '"') else ""} \
       ~{true="--match-read-wildcards" false="" matchReadWildcards} \
       ~{true="--no-match-adapter-wildcards" false="" noMatchAdapterWildcards} \
-      ~{"--action " + action} \
-      ~{"--cut " + cut} \
-      ~{"--nextseq-trim " + nextseqTrim} \
-      ~{"--quality-cutoff " + qualityCutoff} \
+      ~{if defined(action) then ("--action " +  '"' + action + '"') else ""} \
+      ~{if defined(cut) then ("--cut " +  '"' + cut + '"') else ""} \
+      ~{if defined(nextseqTrim) then ("--nextseq-trim " +  '"' + nextseqTrim + '"') else ""} \
+      ~{if defined(qualityCutoff) then ("--quality-cutoff " +  '"' + qualityCutoff + '"') else ""} \
       ~{true="--quality-base" false="" qualityBase} \
-      ~{"--length " + length} \
-      ~{"--trim-n " + trimN} \
-      ~{"--length-tag " + lengthTag} \
-      ~{"--strip-suffix " + stripSuffix} \
-      ~{"--prefix " + prefix} \
-      ~{"--suffix " + suffix} \
+      ~{if defined(length) then ("--length " +  '"' + length + '"') else ""} \
+      ~{if defined(trimN) then ("--trim-n " +  '"' + trimN + '"') else ""} \
+      ~{if defined(lengthTag) then ("--length-tag " +  '"' + lengthTag + '"') else ""} \
+      ~{if defined(stripSuffix) then ("--strip-suffix " +  '"' + stripSuffix + '"') else ""} \
+      ~{if defined(prefix) then ("--prefix " +  '"' + prefix + '"') else ""} \
+      ~{if defined(suffix) then ("--suffix " +  '"' + suffix + '"') else ""} \
       ~{true="--zero-cap" false="" zeroCap} \
-      ~{"--minimum-length " + minimumLength} \
-      ~{"--maximum-length " + maximumLength} \
-      ~{"--max-n " + maxN} \
+      ~{if defined(minimumLength) then ("--minimum-length " +  '"' + minimumLength + '"') else ""} \
+      ~{if defined(maximumLength) then ("--maximum-length " +  '"' + maximumLength + '"') else ""} \
+      ~{if defined(maxN) then ("--max-n " +  '"' + maxN + '"') else ""} \
       ~{true="--discard-trimmed" false="" discardTrimmed} \
       ~{true="--discard-untrimmed" false="" discardUntrimmed} \
       ~{true="--discard-casava" false="" discardCasava} \
       ~{true="--quiet" false="" quiet} \
-      ~{"-Z " + compressionLevel} \
-      ~{"--info-file " + infoFile} \
-      ~{"--rest-file " + restFile} \
-      ~{"--wildcard-file " + wildcardFile} \
-      ~{"--too-short-output " + tooShortOutput} \
-      ~{"--too-long-output " + tooLongOutput} \
-      ~{"--untrimmed-output " + untrimmedOutput} \
+      ~{if defined(compressionLevel) then ("-Z " +  '"' + compressionLevel + '"') else ""} \
+      ~{if defined(infoFile) then ("--info-file " +  '"' + infoFile + '"') else ""} \
+      ~{if defined(restFile) then ("--rest-file " +  '"' + restFile + '"') else ""} \
+      ~{if defined(wildcardFile) then ("--wildcard-file " +  '"' + wildcardFile + '"') else ""} \
+      ~{if defined(tooShortOutput) then ("--too-short-output " +  '"' + tooShortOutput + '"') else ""} \
+      ~{if defined(tooLongOutput) then ("--too-long-output " +  '"' + tooLongOutput + '"') else ""} \
+      ~{if defined(untrimmedOutput) then ("--untrimmed-output " +  '"' + untrimmedOutput + '"') else ""} \
       ~{if defined(removeMiddle3Adapter) && length(select_first([removeMiddle3Adapter, []])) > 0 then "-A " else ""}~{sep=" -A " removeMiddle3Adapter} \
-      ~{"-G " + removeMiddle5Adapter} \
-      ~{"-B " + removeMiddleBothAdapter} \
-      ~{"-U " + removeNBasesFromSecondRead} \
-      ~{"--pair-adapters " + pairAdapters} \
-      ~{"--pair-filter " + pairFilter} \
+      ~{if defined(removeMiddle5Adapter) then ("-G " +  '"' + removeMiddle5Adapter + '"') else ""} \
+      ~{if defined(removeMiddleBothAdapter) then ("-B " +  '"' + removeMiddleBothAdapter + '"') else ""} \
+      ~{if defined(removeNBasesFromSecondRead) then ("-U " +  '"' + removeNBasesFromSecondRead + '"') else ""} \
+      ~{if defined(pairAdapters) then ("--pair-adapters " +  '"' + pairAdapters + '"') else ""} \
+      ~{if defined(pairFilter) then ("--pair-filter " +  '"' + pairFilter + '"') else ""} \
       ~{true="--interleaved" false="" interleaved} \
-      ~{"--untrimmed-paired-output " + untrimmedPairedOutput} \
-      ~{"--too-short-paired-output " + tooShortPairedOutput} \
-      ~{"--too-long-paired-output " + tooLongPairedOutput} \
+      ~{if defined(untrimmedPairedOutput) then ("--untrimmed-paired-output " +  '"' + untrimmedPairedOutput + '"') else ""} \
+      ~{if defined(tooShortPairedOutput) then ("--too-short-paired-output " +  '"' + tooShortPairedOutput + '"') else ""} \
+      ~{if defined(tooLongPairedOutput) then ("--too-long-paired-output " +  '"' + tooLongPairedOutput + '"') else ""} \
       ~{sep=" " fastq}
   >>>
   runtime {
     docker: "quay.io/biocontainers/cutadapt:2.6--py36h516909a_0"
-    cpu: if defined(runtime_cpu) then runtime_cpu else 1
-    memory: if defined(runtime_memory) then "~{runtime_memory}G" else "4G"
+    cpu: select_first([runtime_cpu, 1])
+    memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }
   output {

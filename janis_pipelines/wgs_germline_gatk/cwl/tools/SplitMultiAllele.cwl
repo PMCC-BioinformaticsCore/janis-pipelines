@@ -1,3 +1,4 @@
+#!/usr/bin/env cwl-runner
 arguments:
 - position: 0
   shellQuote: false
@@ -43,12 +44,12 @@ inputs:
     shellQuote: false
   label: reference
   secondaryFiles:
+  - .fai
   - .amb
   - .ann
   - .bwt
   - .pac
   - .sa
-  - .fai
   - ^.dict
   type: File
 - default: generated-.norm.vcf
