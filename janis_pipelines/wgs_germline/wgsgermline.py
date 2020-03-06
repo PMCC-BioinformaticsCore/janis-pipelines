@@ -25,7 +25,15 @@ from janis_bioinformatics.tools.variantcallers.gridssgermline import (
 )
 from janis_bioinformatics.tools.pmac import ParseFastqcAdaptors
 
-from janis_core import Array, File, String, Float, WorkflowMetadata
+from janis_core import (
+    Array,
+    File,
+    String,
+    Float,
+    WorkflowMetadata,
+    InputDocumentation,
+    InputQualityType,
+)
 
 
 class WGSGermlineMultiCallers(BioinformaticsWorkflow):
@@ -35,8 +43,7 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
     def friendly_name(self):
         return "WGS Germline (Multi callers)"
 
-    @staticmethod
-    def version():
+    def version(self):
         return "1.2.0"
 
     def constructor(self):
@@ -44,51 +51,97 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
         self.input(
             "sample_name",
             String,
-            doc="Sample name from which to generate the readGroupHeaderLine for BwaMem",
+            doc=InputDocumentation(
+                "Sample name from which to generate the readGroupHeaderLine for BwaMem",
+                quality=InputQualityType.user,
+                example="NA12878",
+            ),
         )
 
         self.input(
             "fastqs",
             Array(FastqGzPair),
-            doc="An array of FastqGz pairs. These are aligned separately and merged to create higher depth coverages from multiple sets of reads",
+            doc=InputDocumentation(
+                "An array of FastqGz pairs. These are aligned separately and merged "
+                "to create higher depth coverages from multiple sets of reads",
+                quality=InputQualityType.user,
+                example="[[BRCA1_R1.fastq.gz, BRCA1_R2.fastq.gz]]",
+            ),
         )
         self.input(
             "reference",
             FastaWithDict,
-            doc="The reference genome from which to align the reads. This requires a number indexes (can be generated with the 'IndexFasta' pipeline. This pipeline has been tested with the hg38 reference genome.",
+            doc=InputDocumentation(
+                """\
+The reference genome from which to align the reads. This requires a number indexes (can be generated \
+with the 'IndexFasta' pipeline This pipeline has been tested using the HG38 reference set.
+
+This pipeline expects the assembly references to be as they appear in the GCP example:
+
+- (".fai", ".amb", ".ann", ".bwt", ".pac", ".sa", "^.dict").""",
+                quality=InputQualityType.static,
+                example="HG38: https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/\n\n"
+                "File: gs://genomics-public-data/references/hg38/v0/Homo_sapiens_assembly38.fasta",
+            ),
         )
         self.input(
             "cutadapt_adapters",
             File(optional=True),
-            doc="Specifies a file which contains a list of sequences to determine valid overrepresented sequences from the FastQC report to trim with Cuatadapt. The file must contain sets of named adapters in the form: ``name[tab]sequence``. Lines prefixed with a hash will be ignored.",
+            doc=InputDocumentation(
+                "Specifies a file which contains a list of sequences to determine valid overrepresented sequences from "
+                "the FastQC report to trim with Cuatadapt. The file must contain sets of named adapters in the form: "
+                "``name[tab]sequence``. Lines prefixed with a hash will be ignored.",
+                quality=InputQualityType.static,
+                example=None,
+            ),
         )
         self.input(
             "gatk_intervals",
             Array(Bed),
-            doc="List of intervals over which to split the GATK variant calling",
+            doc=InputDocumentation(
+                "List of intervals over which to split the GATK variant calling",
+                quality=InputQualityType.static,
+                example="BRCA1.bed",
+            ),
         )
         self.input(
             "vardict_intervals",
             Array(Bed),
-            doc="List of intervals over which to split the VarDict variant calling",
+            doc=InputDocumentation(
+                "List of intervals over which to split the VarDict variant calling",
+                quality=InputQualityType.static,
+                example="BRCA1.bed",
+            ),
         )
         self.input(
             "strelka_intervals",
             BedTabix,
-            doc="An interval for which to restrict the analysis to. Recommended HG38 interval: ",
+            doc=InputDocumentation(
+                "An interval for which to restrict the analysis to. Recommended HG38 interval: ",
+                quality=InputQualityType.static,
+                example="BRCA1.bed.gz",
+            ),
         )
 
         self.input(
             "header_lines",
             File(optional=True),
-            doc="Header lines passed to BCFTools annotate as ``--header-lines``.",
+            doc=InputDocumentation(
+                "Header lines passed to BCFTools annotate as ``--header-lines``.",
+                quality=InputQualityType.static,
+                example=None,
+            ),
         )
 
         self.input(
             "allele_freq_threshold",
             Float,
             default=0.05,
-            doc="The threshold for VarDict's allele frequency, default: 0.05 or 5%",
+            doc=InputDocumentation(
+                "The threshold for VarDict's allele frequency, default: 0.05 or 5%",
+                quality=InputQualityType.configuration,
+                example=None,
+            ),
         )
 
         # self.input("gridssBlacklist", Bed)
@@ -96,22 +149,42 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
         self.input(
             "snps_dbsnp",
             VcfTabix,
-            doc="From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``",
+            doc=InputDocumentation(
+                "From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``",
+                quality=InputQualityType.static,
+                example="HG38: https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/\n\n"
+                "File: gs://genomics-public-data/references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.gz",
+            ),
         )
         self.input(
             "snps_1000gp",
             VcfTabix,
-            doc="From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``",
+            doc=InputDocumentation(
+                "From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``",
+                quality=InputQualityType.static,
+                example="HG38: https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/\n\n"
+                "File: gs://genomics-public-data/references/hg38/v0/1000G_phase1.snps.high_confidence.hg38.vcf.gz",
+            ),
         )
         self.input(
             "known_indels",
             VcfTabix,
-            doc="From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``",
+            doc=InputDocumentation(
+                "From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``",
+                quality=InputQualityType.static,
+                example="HG38: https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/\n\n"
+                "File: gs://genomics-public-data/references/hg38/v0/Homo_sapiens_assembly38.known_indels.vcf.gz",
+            ),
         )
         self.input(
             "mills_indels",
             VcfTabix,
-            doc="From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``",
+            doc=InputDocumentation(
+                "From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``",
+                quality=InputQualityType.static,
+                example="HG38: https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/\n\n"
+                "File: gs://genomics-public-data/references/hg38/v0/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz",
+            ),
         )
 
         # STEPS
@@ -300,16 +373,6 @@ This workflow is a reference pipeline using the Janis Python framework (pipeline
 - Marks duplicates using Picard;
 - Call the appropriate variant callers (GATK / Strelka / VarDict);
 - Outputs the final variants in the VCF format.
-
-**Resources**
-
-This pipeline has been tested using the HG38 reference set, available on Google Cloud Storage through:
-
-- https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/
-
-This pipeline expects the assembly references to be as they appear in that storage \
-    (".fai", ".amb", ".ann", ".bwt", ".pac", ".sa", "^.dict").
-The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be gzipped and tabix indexed.
 """
         meta.sample_input_overrides = {
             "fastqs": [
