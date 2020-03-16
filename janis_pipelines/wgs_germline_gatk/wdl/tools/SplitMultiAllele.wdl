@@ -6,12 +6,12 @@ task SplitMultiAllele {
     Int? runtime_memory
     File vcf
     File reference
-    File reference_fai
     File reference_amb
     File reference_ann
     File reference_bwt
     File reference_pac
     File reference_sa
+    File reference_fai
     File reference_dict
     String? outputFilename = "generated-.norm.vcf"
   }

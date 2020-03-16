@@ -31,12 +31,12 @@ inputs:
   reference:
     id: reference
     secondaryFiles:
-    - .fai
     - .amb
     - .ann
     - .bwt
     - .pac
     - .sa
+    - .fai
     - ^.dict
     type: File
 label: Strelka Germline Variant Caller

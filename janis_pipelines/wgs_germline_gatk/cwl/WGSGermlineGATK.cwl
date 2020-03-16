@@ -17,10 +17,10 @@ inputs:
     id: align_and_sort_sortsam_tmpDir
     type: string
   cutadapt_adapters:
-    doc: Specifies a file which contains a list of sequences to determine valid overrepresented
-      sequences from the FastQC report to trim with Cuatadapt. The file must contain
-      sets of named adapters in the form name[tab]sequence. Lines prefixed with a
-      hash will be ignored.
+    doc: 'Specifies a containment list for cutadapt, which contains a list of sequences
+      to determine valid overrepresented sequences from the FastQC report to trim
+      with Cuatadapt. The file must contain sets of named adapters in the form: ``name[tab]sequence``.
+      Lines prefixed with a hash will be ignored.'
     id: cutadapt_adapters
     type:
     - File
@@ -53,17 +53,19 @@ inputs:
     - .tbi
     type: File
   reference:
-    doc: The reference genome from which to align the reads. This requires a number
-      indexes (can be generated with the 'IndexFasta' pipeline. This pipeline has
-      been tested with the hg38 reference genome.
+    doc: "The reference genome from which to align the reads. This requires a number\
+      \ indexes (can be generated with the 'IndexFasta' pipeline This pipeline has\
+      \ been tested using the HG38 reference set.\n\nThis pipeline expects the assembly\
+      \ references to be as they appear in the GCP example:\n\n- (\".fai\", \".amb\"\
+      , \".ann\", \".bwt\", \".pac\", \".sa\", \"^.dict\")."
     id: reference
     secondaryFiles:
-    - .fai
     - .amb
     - .ann
     - .bwt
     - .pac
     - .sa
+    - .fai
     - ^.dict
     type: File
   sample_name:
@@ -85,12 +87,14 @@ inputs:
 label: WGS Germline (GATK only)
 outputs:
   bam:
+    doc: Aligned and indexed bam.
     id: bam
     outputSource: merge_and_mark/out
     secondaryFiles:
     - .bai
     type: File
   reports:
+    doc: A zip file of the FastQC quality report.
     id: reports
     outputSource: fastqc/out
     type:
@@ -99,10 +103,12 @@ outputs:
         type: array
       type: array
   variants:
+    doc: Merged variants from the GATK caller
     id: variants
     outputSource: sort_combined/out
     type: File
   variants_split:
+    doc: Unmerged variants from the GATK caller (by interval)
     id: variants_split
     outputSource: vc_gatk/out
     type:

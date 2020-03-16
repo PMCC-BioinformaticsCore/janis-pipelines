@@ -10,18 +10,18 @@ import "tools/bcftoolssort.wdl" as B2
 
 workflow WGSGermlineGATK {
   input {
+    String sample_name
     Array[Array[File]] fastqs
     File reference
-    File reference_fai
     File reference_amb
     File reference_ann
     File reference_bwt
     File reference_pac
     File reference_sa
+    File reference_fai
     File reference_dict
     File? cutadapt_adapters
     Array[File] gatk_intervals
-    String sample_name
     File snps_dbsnp
     File snps_dbsnp_tbi
     File snps_1000gp
@@ -49,12 +49,12 @@ workflow WGSGermlineGATK {
      call B.BwaAligner as align_and_sort {
       input:
         sample_name=sample_name,
-        reference_fai=reference_fai,
         reference_amb=reference_amb,
         reference_ann=reference_ann,
         reference_bwt=reference_bwt,
         reference_pac=reference_pac,
         reference_sa=reference_sa,
+        reference_fai=reference_fai,
         reference_dict=reference_dict,
         reference=reference,
         fastq=Q.left,
@@ -74,12 +74,12 @@ workflow WGSGermlineGATK {
         bam_bai=merge_and_mark.out_bai,
         bam=merge_and_mark.out,
         intervals=g,
-        reference_fai=reference_fai,
         reference_amb=reference_amb,
         reference_ann=reference_ann,
         reference_bwt=reference_bwt,
         reference_pac=reference_pac,
         reference_sa=reference_sa,
+        reference_fai=reference_fai,
         reference_dict=reference_dict,
         reference=reference,
         snps_dbsnp_tbi=snps_dbsnp_tbi,

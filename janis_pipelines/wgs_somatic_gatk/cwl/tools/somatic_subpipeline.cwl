@@ -1,3 +1,4 @@
+#!/usr/bin/env cwl-runner
 class: Workflow
 cwlVersion: v1.0
 id: somatic_subpipeline
@@ -9,7 +10,9 @@ inputs:
     - 'null'
   cutadapt_adapters:
     id: cutadapt_adapters
-    type: File
+    type:
+    - File
+    - 'null'
   reads:
     id: reads
     type:

@@ -5,12 +5,12 @@ task BwaMemSamtoolsView {
     Int? runtime_cpu
     Int? runtime_memory
     File reference
-    File reference_fai
     File reference_amb
     File reference_ann
     File reference_bwt
     File reference_pac
     File reference_sa
+    File reference_fai
     File reference_dict
     Array[File] reads
     Array[File]? mates

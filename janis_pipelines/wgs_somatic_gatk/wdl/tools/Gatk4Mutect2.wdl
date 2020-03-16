@@ -9,7 +9,7 @@ task Gatk4Mutect2 {
     Array[File] normalBams
     Array[File] normalBams_bai
     String normalSample
-    String outputFilename = "generated.vcf.gz"
+    String? outputFilename = "generated.vcf.gz"
     File reference
     File reference_amb
     File reference_ann
@@ -44,7 +44,7 @@ task Gatk4Mutect2 {
     Int? f1r2MaxDepth
     Int? f1r2MedianMq
     Int? f1r2MinBq
-    String f1r2TarGz_outputFilename = "generated.tar.gz"
+    String? f1r2TarGz_outputFilename = "generated.tar.gz"
     String? founderId
     String? gatkConfigFile
     Int? gcsRetries
@@ -154,20 +154,20 @@ task Gatk4Mutect2 {
       ~{sep=" " prefix("-I ", normalBams)} \
       --normal-sample ~{normalSample} \
       --reference ~{reference} \
-      ~{"--activity-profile-out " + activityProfileOut} \
+      ~{if defined(activityProfileOut) then ("--activity-profile-out " +  '"' + activityProfileOut + '"') else ""} \
       ~{true="-add-output-sam-program-record" false="" addOutputSamProgramRecord} \
       ~{true="-add-output-vcf-command-line" false="" addOutputVcfCommandLine} \
-      ~{"--af-of-alleles-not-in-resource " + afOfAllelesNotInResource} \
-      ~{"--alleles " + alleles} \
-      ~{"--annotation " + annotation} \
-      ~{"--annotation-group " + annotationGroup} \
-      ~{"--annotations-to-exclude " + annotationsToExclude} \
-      ~{"--arguments_file " + arguments_file} \
-      ~{"--assembly-region-out " + assemblyRegionOut} \
-      ~{"--base-quality-score-threshold " + baseQualityScoreThreshold} \
-      ~{"--callable-depth " + callableDepth} \
-      ~{"--cloud-index-prefetch-buffer " + cloudIndexPrefetchBuffer} \
-      ~{"--cloud-prefetch-buffer " + cloudPrefetchBuffer} \
+      ~{if defined(afOfAllelesNotInResource) then ("--af-of-alleles-not-in-resource " +  '"' + afOfAllelesNotInResource + '"') else ""} \
+      ~{if defined(alleles) then ("--alleles " +  '"' + alleles + '"') else ""} \
+      ~{if defined(annotation) then ("--annotation " +  '"' + annotation + '"') else ""} \
+      ~{if defined(annotationGroup) then ("--annotation-group " +  '"' + annotationGroup + '"') else ""} \
+      ~{if defined(annotationsToExclude) then ("--annotations-to-exclude " +  '"' + annotationsToExclude + '"') else ""} \
+      ~{if defined(arguments_file) then ("--arguments_file " +  '"' + arguments_file + '"') else ""} \
+      ~{if defined(assemblyRegionOut) then ("--assembly-region-out " +  '"' + assemblyRegionOut + '"') else ""} \
+      ~{if defined(baseQualityScoreThreshold) then ("--base-quality-score-threshold " +  '"' + baseQualityScoreThreshold + '"') else ""} \
+      ~{if defined(callableDepth) then ("--callable-depth " +  '"' + callableDepth + '"') else ""} \
+      ~{if defined(cloudIndexPrefetchBuffer) then ("--cloud-index-prefetch-buffer " +  '"' + cloudIndexPrefetchBuffer + '"') else ""} \
+      ~{if defined(cloudPrefetchBuffer) then ("--cloud-prefetch-buffer " +  '"' + cloudPrefetchBuffer + '"') else ""} \
       ~{true="--create-output-bam-index" false="" createOutputBamIndex} \
       ~{true="--create-output-bam-md5" false="" createOutputBamMd5} \
       ~{true="--create-output-variant-index" false="" createOutputVariantIndex} \
@@ -175,124 +175,124 @@ task Gatk4Mutect2 {
       ~{true="--disable-bam-index-caching" false="" disableBamIndexCaching} \
       ~{true="--disable-read-filter" false="" disableReadFilter} \
       ~{true="-disable-sequence-dictionary-validation" false="" disableSequenceDictionaryValidation} \
-      ~{"--downsampling-stride " + downsamplingStride} \
+      ~{if defined(downsamplingStride) then ("--downsampling-stride " +  '"' + downsamplingStride + '"') else ""} \
       ~{true="--exclude-intervals" false="" excludeIntervals} \
-      ~{"--f1r2-max-depth " + f1r2MaxDepth} \
-      ~{"--f1r2-median-mq " + f1r2MedianMq} \
-      ~{"--f1r2-min-bq " + f1r2MinBq} \
-      ~{"--f1r2-tar-gz " + if defined(f1r2TarGz_outputFilename) then f1r2TarGz_outputFilename else "generated.tar.gz"} \
-      ~{"-founder-id " + founderId} \
-      ~{"--gatk-config-file " + gatkConfigFile} \
-      ~{"-gcs-retries " + gcsRetries} \
-      ~{"--gcs-project-for-requester-pays " + gcsProjectForRequesterPays} \
+      ~{if defined(f1r2MaxDepth) then ("--f1r2-max-depth " +  '"' + f1r2MaxDepth + '"') else ""} \
+      ~{if defined(f1r2MedianMq) then ("--f1r2-median-mq " +  '"' + f1r2MedianMq + '"') else ""} \
+      ~{if defined(f1r2MinBq) then ("--f1r2-min-bq " +  '"' + f1r2MinBq + '"') else ""} \
+      ~{if defined(select_first([f1r2TarGz_outputFilename, "generated.tar.gz"])) then ("--f1r2-tar-gz " +  '"' + select_first([f1r2TarGz_outputFilename, "generated.tar.gz"]) + '"') else ""} \
+      ~{if defined(founderId) then ("-founder-id " +  '"' + founderId + '"') else ""} \
+      ~{if defined(gatkConfigFile) then ("--gatk-config-file " +  '"' + gatkConfigFile + '"') else ""} \
+      ~{if defined(gcsRetries) then ("-gcs-retries " +  '"' + gcsRetries + '"') else ""} \
+      ~{if defined(gcsProjectForRequesterPays) then ("--gcs-project-for-requester-pays " +  '"' + gcsProjectForRequesterPays + '"') else ""} \
       ~{true="--genotype-germline-sites" false="" genotypeGermlineSites} \
       ~{true="--genotype-pon-sites" false="" genotypePonSites} \
-      ~{"--germline-resource " + germlineResource} \
-      ~{"-graph " + graph} \
+      ~{if defined(germlineResource) then ("--germline-resource " +  '"' + germlineResource + '"') else ""} \
+      ~{if defined(graph) then ("-graph " +  '"' + graph + '"') else ""} \
       ~{true="-h" false="" help} \
-      ~{"--ignore-itr-artifactsTurn " + ignoreItrArtifacts} \
-      ~{"--initial-tumor-lod " + initialTumorLod} \
-      ~{"--interval-exclusion-padding " + intervalExclusionPadding} \
-      ~{"--interval-merging-rule " + imr} \
-      ~{"-ipAmount " + ip} \
-      ~{"--interval-set-rule " + isr} \
-      ~{"--intervals " + intervals} \
+      ~{if defined(ignoreItrArtifacts) then ("--ignore-itr-artifactsTurn " +  '"' + ignoreItrArtifacts + '"') else ""} \
+      ~{if defined(initialTumorLod) then ("--initial-tumor-lod " +  '"' + initialTumorLod + '"') else ""} \
+      ~{if defined(intervalExclusionPadding) then ("--interval-exclusion-padding " +  '"' + intervalExclusionPadding + '"') else ""} \
+      ~{if defined(imr) then ("--interval-merging-rule " +  '"' + imr + '"') else ""} \
+      ~{if defined(ip) then ("-ipAmount " +  '"' + ip + '"') else ""} \
+      ~{if defined(isr) then ("--interval-set-rule " +  '"' + isr + '"') else ""} \
+      ~{if defined(intervals) then ("--intervals " +  '"' + intervals + '"') else ""} \
       ~{true="-LE" false="" le} \
-      ~{"--max-population-af " + maxPopulationAf} \
-      ~{"--max-reads-per-alignment-start " + maxReadsPerAlignmentStart} \
-      ~{"--min-base-quality-score " + minBaseQualityScore} \
+      ~{if defined(maxPopulationAf) then ("--max-population-af " +  '"' + maxPopulationAf + '"') else ""} \
+      ~{if defined(maxReadsPerAlignmentStart) then ("--max-reads-per-alignment-start " +  '"' + maxReadsPerAlignmentStart + '"') else ""} \
+      ~{if defined(minBaseQualityScore) then ("--min-base-quality-score " +  '"' + minBaseQualityScore + '"') else ""} \
       ~{true="--mitochondria-mode" false="" mitochondriaMode} \
-      ~{"--native-pair-hmm-threads " + if defined(nativePairHmmThreads) then nativePairHmmThreads else if defined(runtime_cpu) then runtime_cpu else 1} \
+      ~{if defined(select_first([nativePairHmmThreads, select_first([runtime_cpu, 1])])) then ("--native-pair-hmm-threads " +  '"' + select_first([nativePairHmmThreads, select_first([runtime_cpu, 1])]) + '"') else ""} \
       ~{true="--native-pair-hmm-use-double-precision" false="" nativePairHmmUseDoublePrecision} \
-      ~{"--normal-lod " + normalLod} \
-      ~{"-encode " + encode} \
-      ~{"--panel-of-normals " + panelOfNormals} \
-      ~{"--pcr-indel-qual " + pcrIndelQual} \
-      ~{"--pcr-snv-qual " + pcrSnvQual} \
-      ~{"--pedigree " + pedigree} \
+      ~{if defined(normalLod) then ("--normal-lod " +  '"' + normalLod + '"') else ""} \
+      ~{if defined(encode) then ("-encode " +  '"' + encode + '"') else ""} \
+      ~{if defined(panelOfNormals) then ("--panel-of-normals " +  '"' + panelOfNormals + '"') else ""} \
+      ~{if defined(pcrIndelQual) then ("--pcr-indel-qual " +  '"' + pcrIndelQual + '"') else ""} \
+      ~{if defined(pcrSnvQual) then ("--pcr-snv-qual " +  '"' + pcrSnvQual + '"') else ""} \
+      ~{if defined(pedigree) then ("--pedigree " +  '"' + pedigree + '"') else ""} \
       ~{true="--QUIET" false="" quiet} \
-      ~{"--read-filter " + readFilter} \
-      ~{"-read-index " + readIndex} \
-      ~{"--read-validation-stringency " + readValidationStringency} \
-      ~{"-seconds-between-progress-updates " + secondsBetweenProgressUpdates} \
-      ~{"-sequence-dictionary " + sequenceDictionary} \
+      ~{if defined(readFilter) then ("--read-filter " +  '"' + readFilter + '"') else ""} \
+      ~{if defined(readIndex) then ("-read-index " +  '"' + readIndex + '"') else ""} \
+      ~{if defined(readValidationStringency) then ("--read-validation-stringency " +  '"' + readValidationStringency + '"') else ""} \
+      ~{if defined(secondsBetweenProgressUpdates) then ("-seconds-between-progress-updates " +  '"' + secondsBetweenProgressUpdates + '"') else ""} \
+      ~{if defined(sequenceDictionary) then ("-sequence-dictionary " +  '"' + sequenceDictionary + '"') else ""} \
       ~{true="--sites-only-vcf-output" false="" sitesOnlyVcfOutput} \
-      ~{"--tmp-dir " + tmpDir} \
-      ~{"--tumor-lod-to-emit " + tumorLodToEmit} \
-      ~{"-tumor " + tumor} \
+      ~{if defined(tmpDir) then ("--tmp-dir " +  '"' + tmpDir + '"') else ""} \
+      ~{if defined(tumorLodToEmit) then ("--tumor-lod-to-emit " +  '"' + tumorLodToEmit + '"') else ""} \
+      ~{if defined(tumor) then ("-tumor " +  '"' + tumor + '"') else ""} \
       ~{true="-jdk-deflater" false="" jdkDeflater} \
       ~{true="-jdk-inflater" false="" jdkInflater} \
-      ~{"-verbosity " + verbosity} \
+      ~{if defined(verbosity) then ("-verbosity " +  '"' + verbosity + '"') else ""} \
       ~{true="--version" false="" version} \
-      ~{"--active-probability-threshold " + activeProbabilityThreshold} \
-      ~{"--adaptive-pruning-initial-error-rate " + adaptivePruningInitialErrorRate} \
+      ~{if defined(activeProbabilityThreshold) then ("--active-probability-threshold " +  '"' + activeProbabilityThreshold + '"') else ""} \
+      ~{if defined(adaptivePruningInitialErrorRate) then ("--adaptive-pruning-initial-error-rate " +  '"' + adaptivePruningInitialErrorRate + '"') else ""} \
       ~{true="--allow-non-unique-kmers-in-ref" false="" allowNonUniqueKmersInRef} \
-      ~{"--assembly-region-padding " + assemblyRegionPadding} \
-      ~{"-bamout " + bamout} \
-      ~{"--bam-writer-type " + bamWriterType} \
-      ~{"--debug-assembly " + debugAssembly} \
+      ~{if defined(assemblyRegionPadding) then ("--assembly-region-padding " +  '"' + assemblyRegionPadding + '"') else ""} \
+      ~{if defined(bamout) then ("-bamout " +  '"' + bamout + '"') else ""} \
+      ~{if defined(bamWriterType) then ("--bam-writer-type " +  '"' + bamWriterType + '"') else ""} \
+      ~{if defined(debugAssembly) then ("--debug-assembly " +  '"' + debugAssembly + '"') else ""} \
       ~{true="--disable-adaptive-pruning" false="" disableAdaptivePruning} \
       ~{true="-disable-tool-default-annotations" false="" disableToolDefaultAnnotations} \
       ~{true="-disable-tool-default-read-filters" false="" disableToolDefaultReadFilters} \
       ~{true="--dont-increase-kmer-sizes-for-cycles" false="" dontIncreaseKmerSizesForCycles} \
       ~{true="--dont-trim-active-regions" false="" dontTrimActiveRegions} \
       ~{true="--dont-use-soft-clipped-bases" false="" dontUseSoftClippedBases} \
-      ~{"-ERC " + erc} \
+      ~{if defined(erc) then ("-ERC " +  '"' + erc + '"') else ""} \
       ~{true="--enable-all-annotations" false="" enableAllAnnotations} \
       ~{true="--force-active" false="" forceActive} \
       ~{true="--genotype-filtered-alleles" false="" genotypeFilteredAlleles} \
-      ~{"--gvcf-lod-band " + gvcfLodBand} \
-      ~{"--kmer-size " + kmerSize} \
-      ~{"--max-assembly-region-size " + maxAssemblyRegionSize} \
-      ~{"-mnp-dist " + mnpDist} \
-      ~{"--max-num-haplotypes-in-population " + maxNumHaplotypesInPopulation} \
-      ~{"--max-prob-propagation-distance " + maxProbPropagationDistance} \
-      ~{"--max-suspicious-reads-per-alignment-start " + maxSuspiciousReadsPerAlignmentStart} \
-      ~{"--max-unpruned-variants " + maxUnprunedVariants} \
-      ~{"--min-assembly-region-size " + minAssemblyRegionSize} \
-      ~{"--min-dangling-branch-length " + minDanglingBranchLength} \
-      ~{"--min-pruning " + minPruning} \
-      ~{"--minimum-allele-fraction " + minimumAlleleFraction} \
-      ~{"--num-pruning-samples " + numPruningSamples} \
-      ~{"--pair-hmm-gap-continuation-penalty " + pairHmmGapContinuationPenalty} \
-      ~{"-pairHMM " + pairhmm} \
-      ~{"--pcr-indel-model " + pcrIndelModel} \
-      ~{"--phred-scaled-global-read-mismapping-rate " + phredScaledGlobalReadMismappingRate} \
-      ~{"--pruning-lod-thresholdLn " + pruningLodThreshold} \
+      ~{if defined(gvcfLodBand) then ("--gvcf-lod-band " +  '"' + gvcfLodBand + '"') else ""} \
+      ~{if defined(kmerSize) then ("--kmer-size " +  '"' + kmerSize + '"') else ""} \
+      ~{if defined(maxAssemblyRegionSize) then ("--max-assembly-region-size " +  '"' + maxAssemblyRegionSize + '"') else ""} \
+      ~{if defined(mnpDist) then ("-mnp-dist " +  '"' + mnpDist + '"') else ""} \
+      ~{if defined(maxNumHaplotypesInPopulation) then ("--max-num-haplotypes-in-population " +  '"' + maxNumHaplotypesInPopulation + '"') else ""} \
+      ~{if defined(maxProbPropagationDistance) then ("--max-prob-propagation-distance " +  '"' + maxProbPropagationDistance + '"') else ""} \
+      ~{if defined(maxSuspiciousReadsPerAlignmentStart) then ("--max-suspicious-reads-per-alignment-start " +  '"' + maxSuspiciousReadsPerAlignmentStart + '"') else ""} \
+      ~{if defined(maxUnprunedVariants) then ("--max-unpruned-variants " +  '"' + maxUnprunedVariants + '"') else ""} \
+      ~{if defined(minAssemblyRegionSize) then ("--min-assembly-region-size " +  '"' + minAssemblyRegionSize + '"') else ""} \
+      ~{if defined(minDanglingBranchLength) then ("--min-dangling-branch-length " +  '"' + minDanglingBranchLength + '"') else ""} \
+      ~{if defined(minPruning) then ("--min-pruning " +  '"' + minPruning + '"') else ""} \
+      ~{if defined(minimumAlleleFraction) then ("--minimum-allele-fraction " +  '"' + minimumAlleleFraction + '"') else ""} \
+      ~{if defined(numPruningSamples) then ("--num-pruning-samples " +  '"' + numPruningSamples + '"') else ""} \
+      ~{if defined(pairHmmGapContinuationPenalty) then ("--pair-hmm-gap-continuation-penalty " +  '"' + pairHmmGapContinuationPenalty + '"') else ""} \
+      ~{if defined(pairhmm) then ("-pairHMM " +  '"' + pairhmm + '"') else ""} \
+      ~{if defined(pcrIndelModel) then ("--pcr-indel-model " +  '"' + pcrIndelModel + '"') else ""} \
+      ~{if defined(phredScaledGlobalReadMismappingRate) then ("--phred-scaled-global-read-mismapping-rate " +  '"' + phredScaledGlobalReadMismappingRate + '"') else ""} \
+      ~{if defined(pruningLodThreshold) then ("--pruning-lod-thresholdLn " +  '"' + pruningLodThreshold + '"') else ""} \
       ~{true="--recover-all-dangling-branches" false="" recoverAllDanglingBranches} \
       ~{true="-showHidden" false="" showhidden} \
-      ~{"--smith-waterman " + smithWaterman} \
-      ~{"--ambig-filter-bases " + ambigFilterBases} \
-      ~{"--ambig-filter-frac " + ambigFilterFrac} \
-      ~{"--max-fragment-length " + maxFragmentLength} \
-      ~{"--min-fragment-length " + minFragmentLength} \
-      ~{"--keep-intervals " + keepIntervals} \
-      ~{"-library " + library} \
-      ~{"--maximum-mapping-quality " + maximumMappingQuality} \
-      ~{"--minimum-mapping-quality " + minimumMappingQuality} \
+      ~{if defined(smithWaterman) then ("--smith-waterman " +  '"' + smithWaterman + '"') else ""} \
+      ~{if defined(ambigFilterBases) then ("--ambig-filter-bases " +  '"' + ambigFilterBases + '"') else ""} \
+      ~{if defined(ambigFilterFrac) then ("--ambig-filter-frac " +  '"' + ambigFilterFrac + '"') else ""} \
+      ~{if defined(maxFragmentLength) then ("--max-fragment-length " +  '"' + maxFragmentLength + '"') else ""} \
+      ~{if defined(minFragmentLength) then ("--min-fragment-length " +  '"' + minFragmentLength + '"') else ""} \
+      ~{if defined(keepIntervals) then ("--keep-intervals " +  '"' + keepIntervals + '"') else ""} \
+      ~{if defined(library) then ("-library " +  '"' + library + '"') else ""} \
+      ~{if defined(maximumMappingQuality) then ("--maximum-mapping-quality " +  '"' + maximumMappingQuality + '"') else ""} \
+      ~{if defined(minimumMappingQuality) then ("--minimum-mapping-quality " +  '"' + minimumMappingQuality + '"') else ""} \
       ~{true="--dont-require-soft-clips-both-ends" false="" dontRequireSoftClipsBothEnds} \
-      ~{"--filter-too-short " + filterTooShort} \
-      ~{"--platform-filter-name " + platformFilterName} \
-      ~{"--black-listed-lanes " + blackListedLanes} \
-      ~{"--read-group-black-listThe " + readGroupBlackList} \
-      ~{"--keep-read-group " + keepReadGroup} \
-      ~{"--max-read-length " + maxReadLength} \
-      ~{"--min-read-length " + minReadLength} \
-      ~{"--read-name " + readName} \
+      ~{if defined(filterTooShort) then ("--filter-too-short " +  '"' + filterTooShort + '"') else ""} \
+      ~{if defined(platformFilterName) then ("--platform-filter-name " +  '"' + platformFilterName + '"') else ""} \
+      ~{if defined(blackListedLanes) then ("--black-listed-lanes " +  '"' + blackListedLanes + '"') else ""} \
+      ~{if defined(readGroupBlackList) then ("--read-group-black-listThe " +  '"' + readGroupBlackList + '"') else ""} \
+      ~{if defined(keepReadGroup) then ("--keep-read-group " +  '"' + keepReadGroup + '"') else ""} \
+      ~{if defined(maxReadLength) then ("--max-read-length " +  '"' + maxReadLength + '"') else ""} \
+      ~{if defined(minReadLength) then ("--min-read-length " +  '"' + minReadLength + '"') else ""} \
+      ~{if defined(readName) then ("--read-name " +  '"' + readName + '"') else ""} \
       ~{true="--keep-reverse-strand-only" false="" keepReverseStrandOnly} \
-      ~{"-sample " + sample} \
-      ~{"-O " + if defined(outputFilename) then outputFilename else "generated.vcf.gz"}
+      ~{if defined(sample) then ("-sample " +  '"' + sample + '"') else ""} \
+      ~{if defined(select_first([outputFilename, "generated.vcf.gz"])) then ("-O " +  '"' + select_first([outputFilename, "generated.vcf.gz"]) + '"') else ""}
   >>>
   runtime {
     docker: "broadinstitute/gatk:4.1.3.0"
-    cpu: if defined(runtime_cpu) then runtime_cpu else 1
-    memory: if defined(runtime_memory) then "~{runtime_memory}G" else "4G"
+    cpu: select_first([runtime_cpu, 1])
+    memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated.vcf.gz"
-    File out_tbi = (if defined(outputFilename) then outputFilename else "generated.vcf.gz") + ".tbi"
-    File stats = "~{if defined(outputFilename) then outputFilename else "generated.vcf.gz"}.stats"
-    File f1f2r_out = if defined(f1r2TarGz_outputFilename) then f1r2TarGz_outputFilename else "generated.tar.gz"
+    File out = select_first([outputFilename, "generated.vcf.gz"])
+    File out_tbi = (select_first([outputFilename, "generated.vcf.gz"])) + ".tbi"
+    File stats = "~{select_first([outputFilename, "generated.vcf.gz"])}.stats"
+    File f1f2r_out = select_first([f1r2TarGz_outputFilename, "generated.tar.gz"])
   }
 }

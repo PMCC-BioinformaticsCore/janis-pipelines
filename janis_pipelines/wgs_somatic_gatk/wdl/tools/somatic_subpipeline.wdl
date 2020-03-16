@@ -16,7 +16,7 @@ workflow somatic_subpipeline {
     File reference_fai
     File reference_dict
     Array[Array[File]] reads
-    File cutadapt_adapters
+    File? cutadapt_adapters
     String sample_name
     String? align_and_sort_sortsam_tmpDir
   }

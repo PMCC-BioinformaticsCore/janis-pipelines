@@ -31,5 +31,6 @@
     "WGSGermlineMultiCallers.snps_dbsnp_tbi": null,
     "WGSGermlineMultiCallers.strelka_intervals": null,
     "WGSGermlineMultiCallers.strelka_intervals_tbi": null,
+    "WGSGermlineMultiCallers.vardict_header_lines": null,
     "WGSGermlineMultiCallers.vardict_intervals": null
 }

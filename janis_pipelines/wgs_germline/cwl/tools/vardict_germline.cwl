@@ -12,28 +12,6 @@ arguments:
 baseCommand: VarDict
 class: CommandLineTool
 cwlVersion: v1.0
-doc: "VarDict\n\nVarDict is an ultra sensitive variant caller for both single and\
-  \ paired sample variant \ncalling from BAM files. VarDict implements several novel\
-  \ features such as amplicon bias \naware variant calling from targeted sequencing\
-  \ experiments, rescue of long indels by \nrealigning bwa soft clipped reads and\
-  \ better scalability than many Java based variant callers.\n\nDue to the philosophy\
-  \ of VarDict in calling \"everything\", several downstream strategies have \nbeen\
-  \ developed to filter variants to for example the most likely cancer driving events.\
-  \ \nThese strategies are based on evidence in different databases and/or quality\
-  \ metrics. \nhttp://bcb.io/2016/04/04/vardict-filtering/ provides an overview of\
-  \ how to develop further \nfilters for VarDict. The script at https://github.com/AstraZeneca-NGS/VarDict/blob/master/vcf2txt.pl\
-  \ \ncan be used to put the variants into a context by including information from\
-  \ dbSNP, Cosmic and ClinVar. \nWe are open to suggestions from the community on\
-  \ how to best narrow down to the variants of most interest.\n\nA Java based drop-in\
-  \ replacement for vardict.pl is being developed at \nhttps://github.com/AstraZeneca-NGS/VarDictJava.\
-  \ The Java implementation is approximately \n10 times faster than the original Perl\
-  \ implementation and does not depend on samtools\n\nTo enable amplicon aware variant\
-  \ calling (single sample mode only; not supported in paired \nvariant calling),\
-  \ please make sure the bed file has 8 columns with the 7th and 8th columns \ncontaining\
-  \ the insert interval (therefore subset of the 2nd and 3rd column interval). \n\n\
-  Requirements\n\n    - Perl (uses /usr/bin/env perl)\n    - R (uses /usr/bin/env\
-  \ R)\n    - samtools (must be in path, not required if using the Java implementation\
-  \ in place of vardict.pl)\n    "
 id: vardict_germline
 inputs:
 - id: intervals

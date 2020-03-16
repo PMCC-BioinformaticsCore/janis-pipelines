@@ -6,13 +6,7 @@ doc: "This is a genomics pipeline to align sequencing data (Fastq pairs) into BA
   \ Python framework (pipelines assistant).\n\n- Takes raw sequence data in the FASTQ\
   \ format;\n- align to the reference genome using BWA MEM;\n- Marks duplicates using\
   \ Picard;\n- Call the appropriate variant callers (GATK / Strelka / VarDict);\n\
-  - Outputs the final variants in the VCF format.\n\n**Resources**\n\nThis pipeline\
-  \ has been tested using the HG38 reference set, available on Google Cloud Storage\
-  \ through:\n\n- https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/\n\
-  \nThis pipeline expects the assembly references to be as they appear in that storage\
-  \     (\".fai\", \".amb\", \".ann\", \".bwt\", \".pac\", \".sa\", \"^.dict\").\n\
-  The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be\
-  \ gzipped and tabix indexed.\n"
+  - Outputs the final variants in the VCF format.\n"
 id: WGSGermlineMultiCallers
 inputs:
   align_and_sort_sortsam_tmpDir:
@@ -44,10 +38,10 @@ inputs:
     id: combine_variants_type
     type: string
   cutadapt_adapters:
-    doc: 'Specifies a file which contains a list of sequences to determine valid overrepresented
-      sequences from the FastQC report to trim with Cuatadapt. The file must contain
-      sets of named adapters in the form: ``name[tab]sequence``. Lines prefixed with
-      a hash will be ignored.'
+    doc: 'Specifies a containment list for cutadapt, which contains a list of sequences
+      to determine valid overrepresented sequences from the FastQC report to trim
+      with Cuatadapt. The file must contain sets of named adapters in the form: ``name[tab]sequence``.
+      Lines prefixed with a hash will be ignored.'
     id: cutadapt_adapters
     type:
     - File
@@ -67,12 +61,6 @@ inputs:
     type:
       items: File
       type: array
-  header_lines:
-    doc: Header lines passed to BCFTools annotate as ``--header-lines``.
-    id: header_lines
-    type:
-    - File
-    - 'null'
   known_indels:
     doc: From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``
     id: known_indels
@@ -86,17 +74,19 @@ inputs:
     - .tbi
     type: File
   reference:
-    doc: The reference genome from which to align the reads. This requires a number
-      indexes (can be generated with the 'IndexFasta' pipeline. This pipeline has
-      been tested with the hg38 reference genome.
+    doc: "The reference genome from which to align the reads. This requires a number\
+      \ indexes (can be generated with the 'IndexFasta' pipeline This pipeline has\
+      \ been tested using the HG38 reference set.\n\nThis pipeline expects the assembly\
+      \ references to be as they appear in the GCP example:\n\n- (\".fai\", \".amb\"\
+      , \".ann\", \".bwt\", \".pac\", \".sa\", \"^.dict\")."
     id: reference
     secondaryFiles:
-    - .fai
     - .amb
     - .ann
     - .bwt
     - .pac
     - .sa
+    - .fai
     - ^.dict
     type: File
   sample_name:
@@ -116,10 +106,21 @@ inputs:
     - .tbi
     type: File
   strelka_intervals:
-    doc: 'An interval for which to restrict the analysis to. Recommended HG38 interval: '
+    doc: An interval for which to restrict the analysis to.
     id: strelka_intervals
     secondaryFiles:
     - .tbi
+    type: File
+  vardict_header_lines:
+    doc: "As with chromosomal sequences it is highly recommended (but not required)\
+      \ that the header include tags describing the contigs referred to in the VCF\
+      \ file. This furthermore allows these contigs to come from different files.\
+      \ The format is identical to that of a reference sequence, but with an additional\
+      \ URL tag to indicate where that sequence can be found. For example:\n\n.. code-block:\n\
+      \n   ##contig=<ID=ctg1,URL=ftp://somewhere.org/assembly.fa,...>\n\nSource: (1.2.5\
+      \ Alternative allele field format) https://samtools.github.io/hts-specs/VCFv4.1.pdf\
+      \ (edited) \n"
+    id: vardict_header_lines
     type: File
   vardict_intervals:
     doc: List of intervals over which to split the VarDict variant calling
@@ -334,7 +335,7 @@ steps:
         source: merge_and_mark/out
       header_lines:
         id: header_lines
-        source: header_lines
+        source: vardict_header_lines
       intervals:
         id: intervals
         source: vardict_intervals

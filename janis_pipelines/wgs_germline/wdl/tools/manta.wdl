@@ -9,12 +9,12 @@ task manta {
     File bam_bai
     String? runDir = "generated"
     File reference
-    File reference_fai
     File reference_amb
     File reference_ann
     File reference_bwt
     File reference_pac
     File reference_sa
+    File reference_fai
     File reference_dict
     File? tumorBam
     File? tumorBam_bai

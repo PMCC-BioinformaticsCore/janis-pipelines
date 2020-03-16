@@ -4,7 +4,7 @@ cwlVersion: v1.0
 id: vardictGermlineVariantCaller
 inputs:
   allele_freq_threshold:
-    default: 0.05
+    default: 0.5
     id: allele_freq_threshold
     type: float
   bam:
@@ -14,21 +14,19 @@ inputs:
     type: File
   header_lines:
     id: header_lines
-    type:
-    - File
-    - 'null'
+    type: File
   intervals:
     id: intervals
     type: File
   reference:
     id: reference
     secondaryFiles:
-    - .fai
     - .amb
     - .ann
     - .bwt
     - .pac
     - .sa
+    - .fai
     - ^.dict
     type: File
   sample_name:

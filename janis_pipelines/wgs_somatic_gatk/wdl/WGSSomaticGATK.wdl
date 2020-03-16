@@ -9,10 +9,10 @@ workflow WGSSomaticGATK {
   input {
     Array[Array[File]] normal_inputs
     Array[Array[File]] tumor_inputs
-    String? normal_name
-    String? tumor_name
+    String normal_name
+    String tumor_name
+    File? cutadapt_adapters
     Array[File] gatk_intervals
-    File cutadapt_adapters
     File reference
     File reference_amb
     File reference_ann
@@ -42,7 +42,7 @@ workflow WGSSomaticGATK {
       reference=reference,
       reads=tumor_inputs,
       cutadapt_adapters=cutadapt_adapters,
-      sample_name=select_first([tumor_name, "NA24385_tumour"])
+      sample_name=tumor_name
   }
   call S.somatic_subpipeline as tumor {
     input:
@@ -56,7 +56,7 @@ workflow WGSSomaticGATK {
       reference=reference,
       reads=normal_inputs,
       cutadapt_adapters=cutadapt_adapters,
-      sample_name=select_first([normal_name, "NA24385_normal"])
+      sample_name=normal_name
   }
   scatter (g in gatk_intervals) {
      call G.GATK4_SomaticVariantCaller as vc_gatk {
@@ -65,8 +65,8 @@ workflow WGSSomaticGATK {
         normal_bam=tumor.out,
         tumor_bam_bai=normal.out_bai,
         tumor_bam=normal.out,
-        normal_name=select_first([normal_name, "NA24385_normal"]),
-        tumor_name=select_first([tumor_name, "NA24385_tumour"]),
+        normal_name=normal_name,
+        tumor_name=tumor_name,
         intervals=g,
         reference_amb=reference_amb,
         reference_ann=reference_ann,
