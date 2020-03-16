@@ -15,7 +15,14 @@ from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
 from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
 from janis_bioinformatics.tools.pmac import ParseFastqcAdaptors
-from janis_core import String, WorkflowBuilder, Array, WorkflowMetadata
+from janis_core import (
+    String,
+    WorkflowBuilder,
+    Array,
+    WorkflowMetadata,
+    InputDocumentation,
+    InputQualityType,
+)
 
 
 class WGSSomaticGATK(BioinformaticsWorkflow):
@@ -31,20 +38,122 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
 
     def constructor(self):
 
-        self.input("normal_inputs", Array(FastqGzPair))
-        self.input("tumor_inputs", Array(FastqGzPair))
+        self.input(
+            "normal_inputs",
+            Array(FastqGzPair),
+            doc=InputDocumentation(
+                "An array of NORMAL FastqGz pairs. These are aligned separately and merged to create higher depth coverages from multiple sets of reads",
+                quality=InputQualityType.user,
+                example='["normal_R1.fastq.gz", "normal_R2.fastq.gz"]',
+            ),
+        )
+        self.input(
+            "tumor_inputs",
+            Array(FastqGzPair),
+            doc=InputDocumentation(
+                "An array of TUMOR FastqGz pairs. These are aligned separately and merged to create higher depth coverages from multiple sets of reads",
+                quality=InputQualityType.user,
+                example='["tumor_R1.fastq.gz", "tumor_R2.fastq.gz"]',
+            ),
+        )
 
-        self.input("normal_name", String, default="NA24385_normal")
-        self.input("tumor_name", String, default="NA24385_tumour")
+        self.input(
+            "normal_name",
+            String(),
+            doc=InputDocumentation(
+                "Sample name for the NORMAL sample from which to generate the readGroupHeaderLine for BwaMem",
+                quality=InputQualityType.user,
+                example="NA24385_normal",
+            ),
+        )
+        self.input(
+            "tumor_name",
+            String(),
+            doc=InputDocumentation(
+                "Sample name for the TUMOR sample from which to generate the readGroupHeaderLine for BwaMem",
+                quality=InputQualityType.user,
+                example="NA24385_tumor",
+            ),
+        )
 
-        self.input("gatk_intervals", Array(Bed))
-        self.input("cutadapt_adapters", File)
+        self.input(
+            "cutadapt_adapters",
+            File(optional=True),
+            doc=InputDocumentation(
+                "Specifies a containment list for cutadapt, which contains a list of sequences to determine valid overrepresented sequences from "
+                "the FastQC report to trim with Cuatadapt. The file must contain sets of named adapters in the form: "
+                "``name[tab]sequence``. Lines prefixed with a hash will be ignored.",
+                quality=InputQualityType.static,
+                example="https://github.com/csf-ngs/fastqc/blob/master/Contaminants/contaminant_list.txt",
+            ),
+        )
+        self.input(
+            "gatk_intervals",
+            Array(Bed),
+            doc=InputDocumentation(
+                "List of intervals over which to split the GATK variant calling",
+                quality=InputQualityType.static,
+                example="BRCA1.bed",
+            ),
+        )
 
-        self.input("reference", FastaWithDict)
-        self.input("snps_dbsnp", VcfTabix)
-        self.input("snps_1000gp", VcfTabix)
-        self.input("known_indels", VcfTabix)
-        self.input("mills_indels", VcfTabix)
+        self.input(
+            "reference",
+            FastaWithDict,
+            doc=InputDocumentation(
+                """\
+The reference genome from which to align the reads. This requires a number indexes (can be generated \
+with the 'IndexFasta' pipeline This pipeline has been tested using the HG38 reference set.
+
+This pipeline expects the assembly references to be as they appear in the GCP example:
+
+- (".fai", ".amb", ".ann", ".bwt", ".pac", ".sa", "^.dict").""",
+                quality=InputQualityType.static,
+                example="HG38: https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/\n\n"
+                "File: gs://genomics-public-data/references/hg38/v0/Homo_sapiens_assembly38.fasta",
+            ),
+        )
+
+        self.input(
+            "snps_dbsnp",
+            VcfTabix,
+            doc=InputDocumentation(
+                "From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``",
+                quality=InputQualityType.static,
+                example="HG38: https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/\n\n"
+                "File: gs://genomics-public-data/references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.gz",
+            ),
+        )
+        self.input(
+            "snps_1000gp",
+            VcfTabix,
+            doc=InputDocumentation(
+                "From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``",
+                quality=InputQualityType.static,
+                example="HG38: https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/\n\n"
+                "File: gs://genomics-public-data/references/hg38/v0/1000G_phase1.snps.high_confidence.hg38.vcf.gz",
+            ),
+        )
+        self.input(
+            "known_indels",
+            VcfTabix,
+            doc=InputDocumentation(
+                "From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``",
+                quality=InputQualityType.static,
+                example="HG38: https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/\n\n"
+                "File: gs://genomics-public-data/references/hg38/v0/Homo_sapiens_assembly38.known_indels.vcf.gz",
+            ),
+        )
+        self.input(
+            "mills_indels",
+            VcfTabix,
+            doc=InputDocumentation(
+                "From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``",
+                quality=InputQualityType.static,
+                example="HG38: https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/\n\n"
+                "File: gs://genomics-public-data/references/hg38/v0/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz",
+            ),
+        )
 
         self.step(
             "normal",
@@ -102,7 +211,7 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
 
         w.input("reference", FastaWithDict)
         w.input("reads", Array(FastqGzPair))
-        w.input("cutadapt_adapters", File)
+        w.input("cutadapt_adapters", File(optional=True))
 
         w.input("sample_name", String)
 
@@ -141,9 +250,45 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
         meta: WorkflowMetadata = self.metadata
 
         meta.keywords = ["wgs", "cancer", "somatic", "variants", "gatk"]
-        meta.contributors = ["Michael Franklin"]
         meta.dateUpdated = date(2019, 10, 16)
+        meta.dateUpdated = date(2020, 3, 16)
+
+        meta.contributors = ["Michael Franklin", "Richard Lupat", "Jiaan Yu"]
         meta.short_documentation = "A somatic tumor-normal variant-calling WGS pipeline using only GATK Mutect2"
+        meta.documentation = """\
+This is a genomics pipeline to align sequencing data (Fastq pairs) into BAMs:
+
+- Takes raw sequence data in the FASTQ format;
+- align to the reference genome using BWA MEM;
+- Marks duplicates using Picard;
+- Call the appropriate somatic variant callers (GATK / Strelka / VarDict);
+- Outputs the final variants in the VCF format.
+
+**Resources**
+
+This pipeline has been tested using the HG38 reference set, available on Google Cloud Storage through:
+
+- https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/
+
+This pipeline expects the assembly references to be as they appear in that storage \
+    (".fai", ".amb", ".ann", ".bwt", ".pac", ".sa", "^.dict").
+The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be gzipped and tabix indexed.
+"""
+        meta.sample_input_overrides = {
+            "normal_inputs": [
+                ["normal_R1.fastq.gz", "normal_R2.fastq.gz"],
+                ["normal_R1-TOPUP.fastq.gz", "normal_R2-TOPUP.fastq.gz"],
+            ],
+            "tumor_inputs": [
+                ["tumor_R1.fastq.gz", "tumor_R2.fastq.gz"],
+                ["tumor_R1-TOPUP.fastq.gz", "tumor_R2-TOPUP.fastq.gz"],
+            ],
+            "reference": "Homo_sapiens_assembly38.fasta",
+            "snps_dbsnp": "Homo_sapiens_assembly38.dbsnp138.vcf.gz",
+            "snps_1000gp": "1000G_phase1.snps.high_confidence.hg38.vcf.gz",
+            "known_indels": "Homo_sapiens_assembly38.known_indels.vcf.gz",
+            "mills_indels": "Mills_and_1000G_gold_standard.indels.hg38.vcf.gz",
+        }
 
 
 if __name__ == "__main__":
@@ -160,3 +305,10 @@ if __name__ == "__main__":
     }
     w.translate("cwl", **args)
     w.translate("wdl", **args)
+
+    # from cwltool import main
+    # import logging
+
+    # op = os.path.dirname(os.path.realpath(__file__)) + "/cwl/WGSGermlineGATK.py"
+
+    # main.run(*["--validate", op], logger_handler=logging.Handler())

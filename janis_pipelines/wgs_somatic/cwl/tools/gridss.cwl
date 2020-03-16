@@ -1,3 +1,4 @@
+#!/usr/bin/env cwl-runner
 baseCommand: gridss.sh
 class: CommandLineTool
 cwlVersion: v1.0

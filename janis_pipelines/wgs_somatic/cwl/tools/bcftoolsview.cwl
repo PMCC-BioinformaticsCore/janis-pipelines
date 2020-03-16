@@ -1,3 +1,4 @@
+#!/usr/bin/env cwl-runner
 arguments:
 - position: 1
   prefix: --output-type

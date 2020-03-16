@@ -5,20 +5,20 @@ task trimIUPAC {
     Int? runtime_cpu
     Int? runtime_memory
     File vcf
-    String outputFilename = "generated-.trimmed.vcf"
+    String? outputFilename = "generated-.trimmed.vcf"
   }
   command <<<
     trimIUPAC.py \
       ~{vcf} \
-      ~{if defined(outputFilename) then outputFilename else "generated-.trimmed.vcf"}
+      ~{select_first([outputFilename, "generated-.trimmed.vcf"])}
   >>>
   runtime {
     docker: "michaelfranklin/pmacutil:0.0.5"
-    cpu: if defined(runtime_cpu) then runtime_cpu else 1
-    memory: if defined(runtime_memory) then "~{runtime_memory}G" else "4G"
+    cpu: select_first([runtime_cpu, 1])
+    memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-.trimmed.vcf"
+    File out = select_first([outputFilename, "generated-.trimmed.vcf"])
   }
 }

@@ -1,3 +1,4 @@
+#!/usr/bin/env cwl-runner
 class: Workflow
 cwlVersion: v1.0
 id: vardictSomaticVariantCaller
@@ -41,22 +42,27 @@ inputs:
     type: string
   vardict_chromColumn:
     default: 1
+    doc: The column for chromosome
     id: vardict_chromColumn
     type: int
   vardict_chromNamesAreNumbers:
     default: true
+    doc: Indicate the chromosome names are just numbers, such as 1, 2, not chr1, chr2
     id: vardict_chromNamesAreNumbers
     type: boolean
   vardict_geneEndCol:
     default: 3
+    doc: The column for region end, e.g. gene end
     id: vardict_geneEndCol
     type: int
   vardict_regStartCol:
     default: 2
+    doc: The column for region start, e.g. gene start
     id: vardict_regStartCol
     type: int
   vardict_vcfFormat:
     default: true
+    doc: VCF format output
     id: vardict_vcfFormat
     type: boolean
 label: Vardict Somatic Variant Caller

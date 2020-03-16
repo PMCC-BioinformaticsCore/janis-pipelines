@@ -46,32 +46,32 @@ task bcftoolsview {
       ~{true="--drop-genotypes" false="" dropGenotypes} \
       ~{true="--header-only" false="" headerOnly} \
       ~{true="--no-header" false="" noHeader} \
-      ~{"--compression-level " + compressionLevel} \
+      ~{if defined(compressionLevel) then ("--compression-level " +  '"' + compressionLevel + '"') else ""} \
       ~{true="--no-version" false="" noVersion} \
-      ~{"--regions " + regions} \
-      ~{"--regions-file " + regionsFile} \
-      ~{"--targets " + targets} \
-      ~{"--targets-file " + targetsFile} \
-      ~{"--threads " + threads} \
+      ~{if defined(regions) then ("--regions " +  '"' + regions + '"') else ""} \
+      ~{if defined(regionsFile) then ("--regions-file " +  '"' + regionsFile + '"') else ""} \
+      ~{if defined(targets) then ("--targets " +  '"' + targets + '"') else ""} \
+      ~{if defined(targetsFile) then ("--targets-file " +  '"' + targetsFile + '"') else ""} \
+      ~{if defined(threads) then ("--threads " +  '"' + threads + '"') else ""} \
       ~{true="--trim-alt-alleles" false="" trimAltAlleles} \
       ~{true="--no-update" false="" noUpdate} \
       ~{true="--samples " false="" defined(samples)}~{sep=" " samples} \
-      ~{"--samples-file " + samplesFile} \
+      ~{if defined(samplesFile) then ("--samples-file " +  '"' + samplesFile + '"') else ""} \
       ~{true="--force-samples" false="" forceSamples} \
-      ~{"--min-ac " + minAc} \
-      ~{"--max-ac " + maxAc} \
+      ~{if defined(minAc) then ("--min-ac " +  '"' + minAc + '"') else ""} \
+      ~{if defined(maxAc) then ("--max-ac " +  '"' + maxAc + '"') else ""} \
       ~{true="--apply-filters " false="" defined(applyFilters)}~{sep=" " applyFilters} \
-      ~{"--genotype " + genotype} \
-      ~{"--include " + include} \
-      ~{"--exclude " + exclude} \
+      ~{if defined(genotype) then ("--genotype " +  '"' + genotype + '"') else ""} \
+      ~{if defined(include) then ("--include " +  '"' + include + '"') else ""} \
+      ~{if defined(exclude) then ("--exclude " +  '"' + exclude + '"') else ""} \
       ~{true="--known" false="" known} \
       ~{true="--novel" false="" novel} \
-      ~{"--min-alleles " + minAlleles} \
-      ~{"--max-alleles " + maxAlleles} \
+      ~{if defined(minAlleles) then ("--min-alleles " +  '"' + minAlleles + '"') else ""} \
+      ~{if defined(maxAlleles) then ("--max-alleles " +  '"' + maxAlleles + '"') else ""} \
       ~{true="--phased" false="" phased} \
       ~{true="--exclude-phased" false="" excludePhased} \
-      ~{"--min-af " + minAf} \
-      ~{"--max-af " + maxAf} \
+      ~{if defined(minAf) then ("--min-af " +  '"' + minAf + '"') else ""} \
+      ~{if defined(maxAf) then ("--max-af " +  '"' + maxAf + '"') else ""} \
       ~{true="--uncalled" false="" uncalled} \
       ~{true="--exclude-uncalled" false="" excludeUncalled} \
       ~{true="--types " false="" defined(types)}~{sep=" " types} \
@@ -83,8 +83,8 @@ task bcftoolsview {
   >>>
   runtime {
     docker: "biocontainers/bcftools:v1.5_cv2"
-    cpu: if defined(runtime_cpu) then runtime_cpu else 1
-    memory: if defined(runtime_memory) then "~{runtime_memory}G" else "4G"
+    cpu: select_first([runtime_cpu, 1])
+    memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }
   output {

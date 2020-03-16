@@ -1,3 +1,4 @@
+#!/usr/bin/env cwl-runner
 class: Workflow
 cwlVersion: v1.0
 id: strelkaSomaticVariantCaller
@@ -5,6 +6,7 @@ inputs:
   bcf_view_applyFilters:
     default:
     - PASS
+    doc: (-f) require at least one of the listed FILTER strings (e.g. 'PASS,.'')
     id: bcf_view_applyFilters
     type:
       items: string

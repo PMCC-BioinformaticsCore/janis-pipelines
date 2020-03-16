@@ -14,7 +14,7 @@ task vardict_somatic {
     String tumorName
     String normalName
     Float? alleleFreqThreshold
-    String outputFilename = "generated-.vardict.vcf"
+    String? outputFilename = "generated-.vardict.vcf"
     Boolean? indels3prime
     Float? amplicon
     Int? minReads
@@ -59,44 +59,44 @@ task vardict_somatic {
     VarDict \
       -G ~{reference} \
       ~{true="-3" false="" indels3prime} \
-      ~{"-a " + amplicon} \
-      ~{"-B " + minReads} \
+      ~{if defined(amplicon) then ("-a " +  '"' + amplicon + '"') else ""} \
+      ~{if defined(minReads) then ("-B " +  '"' + minReads + '"') else ""} \
       ~{true="-C" false="" chromNamesAreNumbers} \
-      ~{"-c " + chromColumn} \
+      ~{if defined(chromColumn) then ("-c " +  '"' + chromColumn + '"') else ""} \
       ~{true="-D" false="" debug} \
-      ~{"-d " + splitDelimeter} \
-      ~{"-E " + geneEndCol} \
-      ~{"-e " + segEndCol} \
-      ~{"-F " + filter} \
-      ~{"-g " + geneNameCol} \
+      ~{if defined(splitDelimeter) then ("-d " +  '"' + splitDelimeter + '"') else ""} \
+      ~{if defined(geneEndCol) then ("-E " +  '"' + geneEndCol + '"') else ""} \
+      ~{if defined(segEndCol) then ("-e " +  '"' + segEndCol + '"') else ""} \
+      ~{if defined(filter) then ("-F " +  '"' + filter + '"') else ""} \
+      ~{if defined(geneNameCol) then ("-g " +  '"' + geneNameCol + '"') else ""} \
       ~{true="-h" false="" printHeaderRow} \
-      ~{"-I " + indelSize} \
+      ~{if defined(indelSize) then ("-I " +  '"' + indelSize + '"') else ""} \
       ~{true="-i" false="" outputSplice} \
-      ~{"-k " + performLocalRealignment} \
-      ~{"-M " + minMatches} \
-      ~{"-m " + maxMismatches} \
-      ~{"-n " + regexSampleName} \
-      ~{"-O " + mapq} \
-      ~{"-o " + qratio} \
-      ~{"-P " + readPosition} \
+      ~{if defined(performLocalRealignment) then ("-k " +  '"' + performLocalRealignment + '"') else ""} \
+      ~{if defined(minMatches) then ("-M " +  '"' + minMatches + '"') else ""} \
+      ~{if defined(maxMismatches) then ("-m " +  '"' + maxMismatches + '"') else ""} \
+      ~{if defined(regexSampleName) then ("-n " +  '"' + regexSampleName + '"') else ""} \
+      ~{if defined(mapq) then ("-O " +  '"' + mapq + '"') else ""} \
+      ~{if defined(qratio) then ("-o " +  '"' + qratio + '"') else ""} \
+      ~{if defined(readPosition) then ("-P " +  '"' + readPosition + '"') else ""} \
       ~{true="-p" false="" pileup} \
-      ~{"-Q " + minMappingQual} \
-      ~{"-q " + phredScore} \
-      ~{"-R " + region} \
-      ~{"-r " + minVariantReads} \
-      ~{"-S " + regStartCol} \
-      ~{"-s " + segStartCol} \
-      ~{"-T " + minReadsBeforeTrim} \
+      ~{if defined(minMappingQual) then ("-Q " +  '"' + minMappingQual + '"') else ""} \
+      ~{if defined(phredScore) then ("-q " +  '"' + phredScore + '"') else ""} \
+      ~{if defined(region) then ("-R " +  '"' + region + '"') else ""} \
+      ~{if defined(minVariantReads) then ("-r " +  '"' + minVariantReads + '"') else ""} \
+      ~{if defined(regStartCol) then ("-S " +  '"' + regStartCol + '"') else ""} \
+      ~{if defined(segStartCol) then ("-s " +  '"' + segStartCol + '"') else ""} \
+      ~{if defined(minReadsBeforeTrim) then ("-T " +  '"' + minReadsBeforeTrim + '"') else ""} \
       ~{true="-t" false="" removeDuplicateReads} \
-      ~{"-th " + if defined(threads) then threads else if defined(runtime_cpu) then runtime_cpu else 1} \
-      ~{"-V " + freq} \
+      ~{if defined(select_first([threads, select_first([runtime_cpu, 1])])) then ("-th " +  '"' + select_first([threads, select_first([runtime_cpu, 1])]) + '"') else ""} \
+      ~{if defined(freq) then ("-V " +  '"' + freq + '"') else ""} \
       ~{true="-v" false="" vcfFormat} \
-      ~{"-VS " + vs} \
-      ~{"-X " + bp} \
-      ~{"-x " + extensionNucleotide} \
+      ~{if defined(vs) then ("-VS " +  '"' + vs + '"') else ""} \
+      ~{if defined(bp) then ("-X " +  '"' + bp + '"') else ""} \
+      ~{if defined(extensionNucleotide) then ("-x " +  '"' + extensionNucleotide + '"') else ""} \
       ~{true="-y" false="" yy} \
-      ~{"-Z " + downsamplingFraction} \
-      ~{"-z " + zeroBasedCoords} \
+      ~{if defined(downsamplingFraction) then ("-Z " +  '"' + downsamplingFraction + '"') else ""} \
+      ~{if defined(zeroBasedCoords) then ("-z " +  '"' + zeroBasedCoords + '"') else ""} \
       -b '~{tumorBam}|~{normalBam}' \
       -N '~{tumorName}' \
       -f ~{alleleFreqThreshold} \
@@ -106,15 +106,15 @@ task vardict_somatic {
       -N '~{tumorName}|~{normalName}' \
       -f ~{alleleFreqThreshold} \
       | bcftools view -O z \
-      ~{"> " + if defined(outputFilename) then outputFilename else "generated-.vardict.vcf"}
+      ~{if defined(select_first([outputFilename, "generated-.vardict.vcf"])) then ("> " +  '"' + select_first([outputFilename, "generated-.vardict.vcf"]) + '"') else ""}
   >>>
   runtime {
     docker: "michaelfranklin/vardict:1.6.0"
-    cpu: if defined(runtime_cpu) then runtime_cpu else 1
-    memory: if defined(runtime_memory) then "~{runtime_memory}G" else "4G"
+    cpu: select_first([runtime_cpu, 1])
+    memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated-.vardict.vcf"
+    File out = select_first([outputFilename, "generated-.vardict.vcf"])
   }
 }

@@ -16,7 +16,7 @@ task strelka_somatic {
     File reference_sa
     File reference_fai
     File reference_dict
-    String rundir = "generated"
+    String? rundir = "generated"
     Array[String]? region
     File? config
     Boolean? outputcallableregions
@@ -48,43 +48,43 @@ task strelka_somatic {
       --normalBam=~{normalBam} \
       --tumourBam=~{tumorBam} \
       --referenceFasta=~{reference} \
-      ~{"--runDir=" + if defined(rundir) then rundir else "generated"} \
+      ~{if defined(select_first([rundir, "generated"])) then ('"' + "--runDir=" + select_first([rundir, "generated"]) + '"') else ""} \
       ~{if defined(region) && length(select_first([region, []])) > 0 then "--region " else ""}~{sep=" --region " region} \
-      ~{"--config=" + config} \
+      ~{if defined(config) then ('"' + "--config=" + config + '"') else ""} \
       ~{true="--outputCallableRegions" false="" outputcallableregions} \
       ~{if defined(indelCandidates) && length(select_first([indelCandidates, []])) > 0 then "--indelCandidates=" else ""}~{sep=" --indelCandidates=" indelCandidates} \
       ~{if defined(forcedgt) && length(select_first([forcedgt, []])) > 0 then "--forcedGT=" else ""}~{sep=" --forcedGT=" forcedgt} \
       ~{true="--targeted" false="" targeted} \
       ~{true="--exome" false="" exome} \
-      ~{"--callRegions=" + callRegions} \
-      ~{"--noiseVcf=" + noisevcf} \
-      ~{"--scanSizeMb=" + scansizemb} \
-      ~{"--callMemMb=" + callmemmb} \
-      ~{true="--retainTempFiles" false="" if defined(retaintempfiles) then retaintempfiles else false} \
+      ~{if defined(callRegions) then ('"' + "--callRegions=" + callRegions + '"') else ""} \
+      ~{if defined(noisevcf) then ('"' + "--noiseVcf=" + noisevcf + '"') else ""} \
+      ~{if defined(scansizemb) then ('"' + "--scanSizeMb=" + scansizemb + '"') else ""} \
+      ~{if defined(callmemmb) then ('"' + "--callMemMb=" + callmemmb + '"') else ""} \
+      ~{true="--retainTempFiles" false="" select_first([retaintempfiles, false])} \
       ~{true="--disableEVS" false="" disableevs} \
       ~{true="--reportEVSFeatures" false="" reportevsfeatures} \
-      ~{"--snvScoringModelFile=" + snvscoringmodelfile} \
-      ~{"--indelScoringModelFile=" + indelscoringmodelfile} \
-      ;~{if defined(rundir) then rundir else "generated"}/runWorkflow.py \
-      ~{"--mode " + if defined(mode) then mode else "local"} \
-      ~{"--queue " + queue} \
-      ~{"--memGb " + memGb} \
+      ~{if defined(snvscoringmodelfile) then ('"' + "--snvScoringModelFile=" + snvscoringmodelfile + '"') else ""} \
+      ~{if defined(indelscoringmodelfile) then ('"' + "--indelScoringModelFile=" + indelscoringmodelfile + '"') else ""} \
+      ;~{select_first([rundir, "generated"])}/runWorkflow.py \
+      ~{if defined(select_first([mode, "local"])) then ("--mode " +  '"' + select_first([mode, "local"]) + '"') else ""} \
+      ~{if defined(queue) then ("--queue " +  '"' + queue + '"') else ""} \
+      ~{if defined(memGb) then ("--memGb " +  '"' + memGb + '"') else ""} \
       ~{true="--quiet" false="" quiet} \
-      --jobs ~{if defined(runtime_cpu) then runtime_cpu else 1}
+      --jobs ~{select_first([runtime_cpu, 1])}
   >>>
   runtime {
     docker: "michaelfranklin/strelka:2.9.10"
-    cpu: if defined(runtime_cpu) then runtime_cpu else 1
-    memory: if defined(runtime_memory) then "~{runtime_memory}G" else "4G"
+    cpu: select_first([runtime_cpu, 1])
+    memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }
   output {
-    File configPickle = "~{if defined(rundir) then rundir else "generated"}/runWorkflow.py.config.pickle"
-    File script = "~{if defined(rundir) then rundir else "generated"}/runWorkflow.py"
-    File stats = "~{if defined(rundir) then rundir else "generated"}/results/stats/runStats.tsv"
-    File indels = "~{if defined(rundir) then rundir else "generated"}/results/variants/somatic.indels.vcf.gz"
-    File indels_tbi = "~{if defined(rundir) then rundir else "generated"}/results/variants/somatic.indels.vcf.gz.tbi"
-    File snvs = "~{if defined(rundir) then rundir else "generated"}/results/variants/somatic.snvs.vcf.gz"
-    File snvs_tbi = "~{if defined(rundir) then rundir else "generated"}/results/variants/somatic.snvs.vcf.gz.tbi"
+    File configPickle = "~{select_first([rundir, "generated"])}/runWorkflow.py.config.pickle"
+    File script = "~{select_first([rundir, "generated"])}/runWorkflow.py"
+    File stats = "~{select_first([rundir, "generated"])}/results/stats/runStats.tsv"
+    File indels = "~{select_first([rundir, "generated"])}/results/variants/somatic.indels.vcf.gz"
+    File indels_tbi = "~{select_first([rundir, "generated"])}/results/variants/somatic.indels.vcf.gz.tbi"
+    File snvs = "~{select_first([rundir, "generated"])}/results/variants/somatic.snvs.vcf.gz"
+    File snvs_tbi = "~{select_first([rundir, "generated"])}/results/variants/somatic.snvs.vcf.gz.tbi"
   }
 }

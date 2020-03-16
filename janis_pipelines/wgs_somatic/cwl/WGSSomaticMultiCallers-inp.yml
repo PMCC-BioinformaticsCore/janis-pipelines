@@ -4,5 +4,3 @@ combine_variants_columns:
 - DP
 - GT
 combine_variants_type: somatic
-normal_name: NA24385_normal
-tumor_name: NA24385_tumour

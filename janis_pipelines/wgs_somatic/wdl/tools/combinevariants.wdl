@@ -4,8 +4,8 @@ task combinevariants {
   input {
     Int? runtime_cpu
     Int? runtime_memory
-    String outputFilename = "generated-.combined.vcf"
-    String regions = "generated.tsv"
+    String? outputFilename = "generated-.combined.vcf"
+    String? regions = "generated.tsv"
     Array[File] vcfs
     String type
     Array[String]? columns
@@ -15,23 +15,23 @@ task combinevariants {
   }
   command <<<
     combine_vcf.py \
-      ~{"-o " + if defined(outputFilename) then outputFilename else "generated-.combined.vcf"} \
-      ~{"--regions " + if defined(regions) then regions else "generated.tsv"} \
+      ~{if defined(select_first([outputFilename, "generated-.combined.vcf"])) then ("-o " +  '"' + select_first([outputFilename, "generated-.combined.vcf"]) + '"') else ""} \
+      ~{if defined(select_first([regions, "generated.tsv"])) then ("--regions " +  '"' + select_first([regions, "generated.tsv"]) + '"') else ""} \
       ~{sep=" " prefix("-i ", vcfs)} \
       --type ~{type} \
       ~{if defined(columns) && length(select_first([columns, []])) > 0 then "--columns " else ""}~{sep=" --columns " columns} \
-      ~{"--normal " + normal} \
-      ~{"--tumor " + tumor} \
-      ~{"--priority " + priority}
+      ~{if defined(normal) then ("--normal " +  '"' + normal + '"') else ""} \
+      ~{if defined(tumor) then ("--tumor " +  '"' + tumor + '"') else ""} \
+      ~{if defined(priority) then ("--priority " +  '"' + priority + '"') else ""}
   >>>
   runtime {
     docker: "michaelfranklin/pmacutil:0.0.4"
-    cpu: if defined(runtime_cpu) then runtime_cpu else 1
-    memory: if defined(runtime_memory) then "~{runtime_memory}G" else "4G"
+    cpu: select_first([runtime_cpu, 1])
+    memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }
   output {
-    File vcf = if defined(outputFilename) then outputFilename else "generated-.combined.vcf"
-    File tsv = if defined(regions) then regions else "generated.tsv"
+    File vcf = select_first([outputFilename, "generated-.combined.vcf"])
+    File tsv = select_first([regions, "generated.tsv"])
   }
 }

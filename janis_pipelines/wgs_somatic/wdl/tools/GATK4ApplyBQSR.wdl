@@ -14,7 +14,7 @@ task Gatk4ApplyBQSR {
     File reference_sa
     File reference_fai
     File reference_dict
-    String outputFilename = "generated.bam"
+    String? outputFilename = "generated.bam"
     File? recalFile
     File? intervals
     String? tmpDir
@@ -23,21 +23,21 @@ task Gatk4ApplyBQSR {
     ln -f ~{bam_bai} `echo '~{bam}' | sed 's/\.[^.]*$//'`.bai
     gatk ApplyBQSR \
       -R ~{reference} \
-      ~{"-O " + if defined(outputFilename) then outputFilename else "generated.bam"} \
-      ~{"--bqsr-recal-file " + recalFile} \
-      ~{"--intervals " + intervals} \
+      ~{if defined(select_first([outputFilename, "generated.bam"])) then ("-O " +  '"' + select_first([outputFilename, "generated.bam"]) + '"') else ""} \
+      ~{if defined(recalFile) then ("--bqsr-recal-file " +  '"' + recalFile + '"') else ""} \
+      ~{if defined(intervals) then ("--intervals " +  '"' + intervals + '"') else ""} \
       -I ~{bam} \
-      ~{"--tmp-dir " + if defined(tmpDir) then tmpDir else "/tmp/"}
-    ln -f `echo '~{if defined(outputFilename) then outputFilename else "generated.bam"}' | sed 's/\.[^.]*$//'`.bai `echo '~{if defined(outputFilename) then outputFilename else "generated.bam"}' `.bai
+      ~{if defined(select_first([tmpDir, "/tmp/"])) then ("--tmp-dir " +  '"' + select_first([tmpDir, "/tmp/"]) + '"') else ""}
+    ln -f `echo '~{select_first([outputFilename, "generated.bam"])}' | sed 's/\.[^.]*$//'`.bai `echo '~{select_first([outputFilename, "generated.bam"])}' `.bai
   >>>
   runtime {
     docker: "broadinstitute/gatk:4.1.3.0"
-    cpu: if defined(runtime_cpu) then runtime_cpu else 1
-    memory: if defined(runtime_memory) then "~{runtime_memory}G" else "4G"
+    cpu: select_first([runtime_cpu, 1])
+    memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated.bam"
-    File out_bai = (if defined(outputFilename) then outputFilename else "generated.bam") + ".bai"
+    File out = select_first([outputFilename, "generated.bam"])
+    File out_bai = (select_first([outputFilename, "generated.bam"])) + ".bai"
   }
 }

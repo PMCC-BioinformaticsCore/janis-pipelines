@@ -6,7 +6,6 @@
         "GT"
     ],
     "WGSSomaticMultiCallers.combine_variants_type": "somatic",
-    "WGSSomaticMultiCallers.cutadapt_adapters": null,
     "WGSSomaticMultiCallers.gatk_intervals": null,
     "WGSSomaticMultiCallers.gridss_blacklist": null,
     "WGSSomaticMultiCallers.known_indels": null,
@@ -14,7 +13,7 @@
     "WGSSomaticMultiCallers.mills_indels": null,
     "WGSSomaticMultiCallers.mills_indels_tbi": null,
     "WGSSomaticMultiCallers.normal_inputs": null,
-    "WGSSomaticMultiCallers.normal_name": "NA24385_normal",
+    "WGSSomaticMultiCallers.normal_name": null,
     "WGSSomaticMultiCallers.reference": null,
     "WGSSomaticMultiCallers.reference_amb": null,
     "WGSSomaticMultiCallers.reference_ann": null,
@@ -27,8 +26,10 @@
     "WGSSomaticMultiCallers.snps_1000gp_tbi": null,
     "WGSSomaticMultiCallers.snps_dbsnp": null,
     "WGSSomaticMultiCallers.snps_dbsnp_tbi": null,
+    "WGSSomaticMultiCallers.strelka_intervals": null,
+    "WGSSomaticMultiCallers.strelka_intervals_tbi": null,
     "WGSSomaticMultiCallers.tumor_inputs": null,
-    "WGSSomaticMultiCallers.tumor_name": "NA24385_tumour",
+    "WGSSomaticMultiCallers.tumor_name": null,
     "WGSSomaticMultiCallers.vardict_header_lines": null,
     "WGSSomaticMultiCallers.vardict_intervals": null
 }

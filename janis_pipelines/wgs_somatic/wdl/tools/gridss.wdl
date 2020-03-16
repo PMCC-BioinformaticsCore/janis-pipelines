@@ -13,28 +13,28 @@ task gridss {
     File reference_sa
     File reference_fai
     File reference_dict
-    String outputFilename = "generated.vcf"
-    String assemblyFilename = "generated.bam"
+    String? outputFilename = "generated.vcf"
+    String? assemblyFilename = "generated.bam"
     Int? threads
     File? blacklist
   }
   command <<<
     gridss.sh \
-      ~{"--threads " + if defined(threads) then threads else if defined(runtime_cpu) then runtime_cpu else 1} \
+      ~{if defined(select_first([threads, select_first([runtime_cpu, 1])])) then ("--threads " +  '"' + select_first([threads, select_first([runtime_cpu, 1])]) + '"') else ""} \
       --reference ~{reference} \
-      ~{"--output " + if defined(outputFilename) then outputFilename else "generated.vcf"} \
-      ~{"--assembly " + if defined(assemblyFilename) then assemblyFilename else "generated.bam"} \
-      ~{"--blacklist " + blacklist} \
+      ~{if defined(select_first([outputFilename, "generated.vcf"])) then ("--output " +  '"' + select_first([outputFilename, "generated.vcf"]) + '"') else ""} \
+      ~{if defined(select_first([assemblyFilename, "generated.bam"])) then ("--assembly " +  '"' + select_first([assemblyFilename, "generated.bam"]) + '"') else ""} \
+      ~{if defined(blacklist) then ("--blacklist " +  '"' + blacklist + '"') else ""} \
       ~{sep=" " bams}
   >>>
   runtime {
     docker: "michaelfranklin/gridss:2.5.1-dev2"
-    cpu: if defined(runtime_cpu) then runtime_cpu else 1
-    memory: if defined(runtime_memory) then "~{runtime_memory}G" else "4G"
+    cpu: select_first([runtime_cpu, 1])
+    memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated.vcf"
-    File assembly = if defined(assemblyFilename) then assemblyFilename else "generated.bam"
+    File out = select_first([outputFilename, "generated.vcf"])
+    File assembly = select_first([assemblyFilename, "generated.bam"])
   }
 }

@@ -1,3 +1,4 @@
+#!/usr/bin/env cwl-runner
 arguments:
 - position: 0
   shellQuote: false

@@ -1,9 +1,21 @@
+#!/usr/bin/env cwl-runner
 class: Workflow
 cwlVersion: v1.0
+doc: "This is a genomics pipeline to align sequencing data (Fastq pairs) into BAMs:\n\
+  \n- Takes raw sequence data in the FASTQ format;\n- align to the reference genome\
+  \ using BWA MEM;\n- Marks duplicates using Picard;\n- Call the appropriate somatic\
+  \ variant callers (GATK / Strelka / VarDict);\n- Outputs the final variants in the\
+  \ VCF format.\n\n**Resources**\n\nThis pipeline has been tested using the HG38 reference\
+  \ set, available on Google Cloud Storage through:\n\n- https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/\n\
+  \nThis pipeline expects the assembly references to be as they appear in that storage\
+  \     (\".fai\", \".amb\", \".ann\", \".bwt\", \".pac\", \".sa\", \"^.dict\").\n\
+  The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be\
+  \ gzipped and tabix indexed.\n"
 id: WGSSomaticMultiCallers
 inputs:
   allele_freq_threshold:
     default: 0.05
+    doc: "The threshold for VarDict's allele frequency, default: 0.05 or 5%"
     id: allele_freq_threshold
     type: float
   combine_variants_columns:
@@ -11,36 +23,50 @@ inputs:
     - AD
     - DP
     - GT
+    doc: Columns to keep, seperated by space output vcf (unsorted)
     id: combine_variants_columns
     type:
       items: string
       type: array
   combine_variants_type:
     default: somatic
+    doc: germline | somatic
     id: combine_variants_type
     type: string
   cutadapt_adapters:
+    doc: 'Specifies a containment list for cutadapt, which contains a list of sequences
+      to determine valid overrepresented sequences from the FastQC report to trim
+      with Cuatadapt. The file must contain sets of named adapters in the form: ``name[tab]sequence``.
+      Lines prefixed with a hash will be ignored.'
     id: cutadapt_adapters
-    type: File
+    type:
+    - File
+    - 'null'
   gatk_intervals:
+    doc: List of intervals over which to split the GATK variant calling
     id: gatk_intervals
     type:
       items: File
       type: array
   gridss_blacklist:
+    doc: BED file containing regions to ignore.
     id: gridss_blacklist
     type: File
   known_indels:
+    doc: From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``
     id: known_indels
     secondaryFiles:
     - .tbi
     type: File
   mills_indels:
+    doc: From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``
     id: mills_indels
     secondaryFiles:
     - .tbi
     type: File
   normal_inputs:
+    doc: An array of NORMAL FastqGz pairs. These are aligned separately and merged
+      to create higher depth coverages from multiple sets of reads
     id: normal_inputs
     type:
       items:
@@ -48,10 +74,16 @@ inputs:
         type: array
       type: array
   normal_name:
-    default: NA24385_normal
+    doc: Sample name for the NORMAL sample from which to generate the readGroupHeaderLine
+      for BwaMem
     id: normal_name
     type: string
   reference:
+    doc: "The reference genome from which to align the reads. This requires a number\
+      \ indexes (can be generated with the 'IndexFasta' pipeline This pipeline has\
+      \ been tested using the HG38 reference set.\n\nThis pipeline expects the assembly\
+      \ references to be as they appear in the GCP example:\n\n- (\".fai\", \".amb\"\
+      , \".ann\", \".bwt\", \".pac\", \".sa\", \"^.dict\")."
     id: reference
     secondaryFiles:
     - .amb
@@ -63,23 +95,26 @@ inputs:
     - ^.dict
     type: File
   snps_1000gp:
+    doc: From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``
     id: snps_1000gp
     secondaryFiles:
     - .tbi
     type: File
   snps_dbsnp:
+    doc: From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``
     id: snps_dbsnp
     secondaryFiles:
     - .tbi
     type: File
   strelka_intervals:
+    doc: An interval for which to restrict the analysis to.
     id: strelka_intervals
     secondaryFiles:
     - .tbi
-    type:
-    - File
-    - 'null'
+    type: File
   tumor_inputs:
+    doc: An array of TUMOR FastqGz pairs. These are aligned separately and merged
+      to create higher depth coverages from multiple sets of reads
     id: tumor_inputs
     type:
       items:
@@ -87,13 +122,23 @@ inputs:
         type: array
       type: array
   tumor_name:
-    default: NA24385_tumour
+    doc: Sample name for the TUMOR sample from which to generate the readGroupHeaderLine
+      for BwaMem
     id: tumor_name
     type: string
   vardict_header_lines:
+    doc: "As with chromosomal sequences it is highly recommended (but not required)\
+      \ that the header include tags describing the contigs referred to in the VCF\
+      \ file. This furthermore allows these contigs to come from different files.\
+      \ The format is identical to that of a reference sequence, but with an additional\
+      \ URL tag to indicate where that sequence can be found. For example:\n\n.. code-block:\n\
+      \n   ##contig=<ID=ctg1,URL=ftp://somewhere.org/assembly.fa,...>\n\nSource: (1.2.5\
+      \ Alternative allele field format) https://samtools.github.io/hts-specs/VCFv4.1.pdf\
+      \ (edited) \n"
     id: vardict_header_lines
     type: File
   vardict_intervals:
+    doc: List of intervals over which to split the VarDict variant calling
     id: vardict_intervals
     type:
       items: File
@@ -101,16 +146,19 @@ inputs:
 label: WGS Somatic (Multi callers)
 outputs:
   gridss_assembly:
+    doc: Assembly returned by GRIDSS
     id: gridss_assembly
     outputSource: vc_gridss/out
     type: File
   normal_bam:
+    doc: Aligned and indexed NORMAL bam
     id: normal_bam
     outputSource: normal/out
     secondaryFiles:
     - .bai
     type: File
   normal_report:
+    doc: A zip file of the NORMAL FastQC quality reports.
     id: normal_report
     outputSource: normal/reports
     type:
@@ -119,12 +167,14 @@ outputs:
         type: array
       type: array
   tumor_bam:
+    doc: Aligned and indexed TUMOR bam
     id: tumor_bam
     outputSource: tumor/out
     secondaryFiles:
     - .bai
     type: File
   tumor_report:
+    doc: A zip file of the TUMOR FastQC quality reports.
     id: tumor_report
     outputSource: tumor/reports
     type:
@@ -133,22 +183,27 @@ outputs:
         type: array
       type: array
   variants_combined:
+    doc: Combined variants from all 3 callers
     id: variants_combined
     outputSource: combine_variants/vcf
     type: File
   variants_gatk:
+    doc: Merged variants from the GATK caller
     id: variants_gatk
     outputSource: vc_gatk_merge/out
     type: File
   variants_gridss:
+    doc: Variants from the GRIDSS variant caller
     id: variants_gridss
     outputSource: vc_gridss/out
     type: File
   variants_strelka:
+    doc: Variants from the Strelka variant caller
     id: variants_strelka
     outputSource: vc_strelka/out
     type: File
   variants_vardict:
+    doc: Merged variants from the VarDict caller
     id: variants_vardict
     outputSource: vc_vardict_merge/out
     type: File

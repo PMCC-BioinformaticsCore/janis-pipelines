@@ -24,28 +24,28 @@ task fastqc {
   }
   command <<<
     fastqc \
-      ~{"--outdir " + if defined(outdir) then outdir else "."} \
+      ~{if defined(select_first([outdir, "."])) then ("--outdir " +  '"' + select_first([outdir, "."]) + '"') else ""} \
       ~{true="--casava" false="" casava} \
       ~{true="--nano" false="" nano} \
       ~{true="--nofilter" false="" nofilter} \
-      ~{true="--extract" false="" if defined(extract) then extract else true} \
-      ~{"--java " + java} \
+      ~{true="--extract" false="" select_first([extract, true])} \
+      ~{if defined(java) then ("--java " +  '"' + java + '"') else ""} \
       ~{true="--noextract" false="" noextract} \
       ~{true="--nogroup" false="" nogroup} \
-      ~{"--format " + format} \
-      ~{"--threads " + if defined(threads) then threads else if defined(runtime_cpu) then runtime_cpu else 1} \
-      ~{"--contaminants " + contaminants} \
-      ~{"--adapters " + adapters} \
-      ~{"--limits " + limits} \
-      ~{"--kmers " + kmers} \
+      ~{if defined(format) then ("--format " +  '"' + format + '"') else ""} \
+      ~{if defined(select_first([threads, select_first([runtime_cpu, 1])])) then ("--threads " +  '"' + select_first([threads, select_first([runtime_cpu, 1])]) + '"') else ""} \
+      ~{if defined(contaminants) then ("--contaminants " +  '"' + contaminants + '"') else ""} \
+      ~{if defined(adapters) then ("--adapters " +  '"' + adapters + '"') else ""} \
+      ~{if defined(limits) then ("--limits " +  '"' + limits + '"') else ""} \
+      ~{if defined(kmers) then ("--kmers " +  '"' + kmers + '"') else ""} \
       ~{true="--quiet" false="" quiet} \
-      ~{"--dir " + dir} \
+      ~{if defined(dir) then ("--dir " +  '"' + dir + '"') else ""} \
       ~{sep=" " reads}
   >>>
   runtime {
     docker: "biocontainers/fastqc:v0.11.5_cv3"
-    cpu: if defined(runtime_cpu) then runtime_cpu else 1
-    memory: if defined(runtime_memory) then "~{runtime_memory}G" else "4G"
+    cpu: select_first([runtime_cpu, 1])
+    memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }
   output {

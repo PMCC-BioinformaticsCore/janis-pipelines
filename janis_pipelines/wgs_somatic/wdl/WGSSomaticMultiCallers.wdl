@@ -13,14 +13,14 @@ workflow WGSSomaticMultiCallers {
   input {
     Array[Array[File]] normal_inputs
     Array[Array[File]] tumor_inputs
-    String? normal_name
-    String? tumor_name
-    File cutadapt_adapters
-    File gridss_blacklist
+    String normal_name
+    String tumor_name
+    File? cutadapt_adapters
     Array[File] gatk_intervals
+    File gridss_blacklist
     Array[File] vardict_intervals
-    File? strelka_intervals
-    File? strelka_intervals_tbi
+    File strelka_intervals
+    File strelka_intervals_tbi
     File vardict_header_lines
     Float? allele_freq_threshold
     File reference
@@ -54,7 +54,7 @@ workflow WGSSomaticMultiCallers {
       reference=reference,
       reads=tumor_inputs,
       cutadapt_adapters=cutadapt_adapters,
-      sample_name=select_first([tumor_name, "NA24385_tumour"])
+      sample_name=tumor_name
   }
   call S.somatic_subpipeline as tumor {
     input:
@@ -68,7 +68,7 @@ workflow WGSSomaticMultiCallers {
       reference=reference,
       reads=normal_inputs,
       cutadapt_adapters=cutadapt_adapters,
-      sample_name=select_first([normal_name, "NA24385_normal"])
+      sample_name=normal_name
   }
   scatter (g in gatk_intervals) {
      call G.GATK4_SomaticVariantCaller as vc_gatk {
@@ -77,8 +77,8 @@ workflow WGSSomaticMultiCallers {
         normal_bam=tumor.out,
         tumor_bam_bai=normal.out_bai,
         tumor_bam=normal.out,
-        normal_name=select_first([normal_name, "NA24385_normal"]),
-        tumor_name=select_first([tumor_name, "NA24385_tumour"]),
+        normal_name=normal_name,
+        tumor_name=tumor_name,
         intervals=g,
         reference_amb=reference_amb,
         reference_ann=reference_ann,
@@ -139,8 +139,8 @@ workflow WGSSomaticMultiCallers {
         normal_bam=tumor.out,
         tumor_bam_bai=normal.out_bai,
         tumor_bam=normal.out,
-        normal_name=select_first([normal_name, "NA24385_normal"]),
-        tumor_name=select_first([tumor_name, "NA24385_tumour"]),
+        normal_name=normal_name,
+        tumor_name=tumor_name,
         intervals=v,
         allele_freq_threshold=select_first([allele_freq_threshold, 0.05]),
         header_lines=vardict_header_lines,
@@ -163,8 +163,8 @@ workflow WGSSomaticMultiCallers {
       vcfs=[vc_gatk_merge.out, vc_strelka.out, vc_vardict_merge.out],
       type=select_first([combine_variants_type, "somatic"]),
       columns=select_first([combine_variants_columns, ["AD", "DP", "GT"]]),
-      normal=select_first([normal_name, "NA24385_normal"]),
-      tumor=select_first([tumor_name, "NA24385_tumour"])
+      normal=normal_name,
+      tumor=tumor_name
   }
   call B.bcftoolssort as sortCombined {
     input:

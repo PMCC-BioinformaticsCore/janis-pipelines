@@ -7,7 +7,7 @@ task manta {
     File? config
     File bam
     File bam_bai
-    String runDir = "generated"
+    String? runDir = "generated"
     File reference
     File reference_amb
     File reference_ann
@@ -33,41 +33,41 @@ task manta {
   command <<<
      \
       configManta.py \
-      ~{"--config " + config} \
+      ~{if defined(config) then ("--config " +  '"' + config + '"') else ""} \
       --bam ~{bam} \
-      ~{"--runDir " + if defined(runDir) then runDir else "generated"} \
+      ~{if defined(select_first([runDir, "generated"])) then ("--runDir " +  '"' + select_first([runDir, "generated"]) + '"') else ""} \
       --referenceFasta ~{reference} \
-      ~{"--tumorBam " + tumorBam} \
+      ~{if defined(tumorBam) then ("--tumorBam " +  '"' + tumorBam + '"') else ""} \
       ~{true="--exome" false="" exome} \
-      ~{"--rna " + rna} \
-      ~{"--unstrandedRNA " + unstrandedRNA} \
-      ~{"--outputContig " + outputContig} \
-      ~{"--callRegions " + callRegions} \
-      ;~{if defined(runDir) then runDir else "generated"}/runWorkflow.py \
-      ~{"--mode " + if defined(mode) then mode else "local"} \
+      ~{if defined(rna) then ("--rna " +  '"' + rna + '"') else ""} \
+      ~{if defined(unstrandedRNA) then ("--unstrandedRNA " +  '"' + unstrandedRNA + '"') else ""} \
+      ~{if defined(outputContig) then ("--outputContig " +  '"' + outputContig + '"') else ""} \
+      ~{if defined(callRegions) then ("--callRegions " +  '"' + callRegions + '"') else ""} \
+      ;~{select_first([runDir, "generated"])}/runWorkflow.py \
+      ~{if defined(select_first([mode, "local"])) then ("--mode " +  '"' + select_first([mode, "local"]) + '"') else ""} \
       ~{true="--quiet" false="" quiet} \
-      ~{"--queue " + queue} \
-      ~{"--memGb " + memgb} \
-      ~{"--maxTaskRuntime " + maxTaskRuntime} \
-      -j ~{if defined(runtime_cpu) then runtime_cpu else 1}
+      ~{if defined(queue) then ("--queue " +  '"' + queue + '"') else ""} \
+      ~{if defined(memgb) then ("--memGb " +  '"' + memgb + '"') else ""} \
+      ~{if defined(maxTaskRuntime) then ("--maxTaskRuntime " +  '"' + maxTaskRuntime + '"') else ""} \
+      -j ~{select_first([runtime_cpu, 1])}
   >>>
   runtime {
     docker: "michaelfranklin/manta:1.5.0"
-    cpu: if defined(runtime_cpu) then runtime_cpu else 1
-    memory: if defined(runtime_memory) then "~{runtime_memory}G" else "4G"
+    cpu: select_first([runtime_cpu, 1])
+    memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }
   output {
-    File python = "~{if defined(runDir) then runDir else "generated"}/runWorkflow.py"
-    File pickle = "~{if defined(runDir) then runDir else "generated"}/runWorkflow.py.config.pickle"
-    File candidateSV = "~{if defined(runDir) then runDir else "generated"}/results/variants/candidateSV.vcf.gz"
-    File candidateSV_tbi = "~{if defined(runDir) then runDir else "generated"}/results/variants/candidateSV.vcf.gz.tbi"
-    File candidateSmallIndels = "~{if defined(runDir) then runDir else "generated"}/results/variants/candidateSmallIndels.vcf.gz"
-    File candidateSmallIndels_tbi = "~{if defined(runDir) then runDir else "generated"}/results/variants/candidateSmallIndels.vcf.gz.tbi"
-    File diploidSV = "~{if defined(runDir) then runDir else "generated"}/results/variants/diploidSV.vcf.gz"
-    File diploidSV_tbi = "~{if defined(runDir) then runDir else "generated"}/results/variants/diploidSV.vcf.gz.tbi"
-    File alignmentStatsSummary = "~{if defined(runDir) then runDir else "generated"}/results/stats/alignmentStatsSummary.txt"
-    File svCandidateGenerationStats = "~{if defined(runDir) then runDir else "generated"}/results/stats/svCandidateGenerationStats.tsv"
-    File svLocusGraphStats = "~{if defined(runDir) then runDir else "generated"}/results/stats/svLocusGraphStats.tsv"
+    File python = "~{select_first([runDir, "generated"])}/runWorkflow.py"
+    File pickle = "~{select_first([runDir, "generated"])}/runWorkflow.py.config.pickle"
+    File candidateSV = "~{select_first([runDir, "generated"])}/results/variants/candidateSV.vcf.gz"
+    File candidateSV_tbi = "~{select_first([runDir, "generated"])}/results/variants/candidateSV.vcf.gz.tbi"
+    File candidateSmallIndels = "~{select_first([runDir, "generated"])}/results/variants/candidateSmallIndels.vcf.gz"
+    File candidateSmallIndels_tbi = "~{select_first([runDir, "generated"])}/results/variants/candidateSmallIndels.vcf.gz.tbi"
+    File diploidSV = "~{select_first([runDir, "generated"])}/results/variants/diploidSV.vcf.gz"
+    File diploidSV_tbi = "~{select_first([runDir, "generated"])}/results/variants/diploidSV.vcf.gz.tbi"
+    File alignmentStatsSummary = "~{select_first([runDir, "generated"])}/results/stats/alignmentStatsSummary.txt"
+    File svCandidateGenerationStats = "~{select_first([runDir, "generated"])}/results/stats/svCandidateGenerationStats.tsv"
+    File svLocusGraphStats = "~{select_first([runDir, "generated"])}/results/stats/svLocusGraphStats.tsv"
   }
 }

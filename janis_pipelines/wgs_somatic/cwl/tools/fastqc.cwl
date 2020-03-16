@@ -1,3 +1,4 @@
+#!/usr/bin/env cwl-runner
 baseCommand: fastqc
 class: CommandLineTool
 cwlVersion: v1.0

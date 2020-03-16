@@ -16,7 +16,7 @@ workflow somatic_subpipeline {
     File reference_fai
     File reference_dict
     Array[Array[File]] reads
-    File cutadapt_adapters
+    File? cutadapt_adapters
     String sample_name
     String? align_and_sort_sortsam_tmpDir
   }
@@ -48,7 +48,7 @@ workflow somatic_subpipeline {
         fastq=Q.left,
         cutadapt_adapter=Q.right.right,
         cutadapt_removeMiddle3Adapter=Q.right.right,
-        sortsam_tmpDir=align_and_sort_sortsam_tmpDir
+        sortsam_tmpDir=select_first([align_and_sort_sortsam_tmpDir, "."])
     }
   }
   call M.mergeAndMarkBams as merge_and_mark {

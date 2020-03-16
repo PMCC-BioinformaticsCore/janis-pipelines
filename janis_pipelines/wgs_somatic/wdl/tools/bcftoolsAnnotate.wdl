@@ -5,7 +5,7 @@ task bcftoolsAnnotate {
     Int? runtime_cpu
     Int? runtime_memory
     File file
-    String outputFilename = "generated.vcf.gz"
+    String? outputFilename = "generated.vcf.gz"
     File? annotations
     String? collapse
     Array[String]? columns
@@ -26,33 +26,33 @@ task bcftoolsAnnotate {
   }
   command <<<
     bcftools annotate \
-      ~{"--output " + if defined(outputFilename) then outputFilename else "generated.vcf.gz"} \
-      ~{"--annotations " + annotations} \
-      ~{"--collapse " + collapse} \
+      ~{if defined(select_first([outputFilename, "generated.vcf.gz"])) then ("--output " +  '"' + select_first([outputFilename, "generated.vcf.gz"]) + '"') else ""} \
+      ~{if defined(annotations) then ("--annotations " +  '"' + annotations + '"') else ""} \
+      ~{if defined(collapse) then ("--collapse " +  '"' + collapse + '"') else ""} \
       ~{true="--columns " false="" defined(columns)}~{sep=" " columns} \
-      ~{"--exclude " + exclude} \
-      ~{"--header-lines " + headerLines} \
-      ~{"--set-id " + setId} \
-      ~{"--include " + include} \
+      ~{if defined(exclude) then ("--exclude " +  '"' + exclude + '"') else ""} \
+      ~{if defined(headerLines) then ("--header-lines " +  '"' + headerLines + '"') else ""} \
+      ~{if defined(setId) then ("--set-id " +  '"' + setId + '"') else ""} \
+      ~{if defined(include) then ("--include " +  '"' + include + '"') else ""} \
       ~{true="--keep-sites" false="" keepSites} \
-      ~{"--mark-sites " + markSites} \
-      ~{"--output-type " + outputType} \
-      ~{"--regions " + regions} \
-      ~{"--regions-file " + regionsFile} \
-      ~{"--rename-chrs " + renameChrs} \
+      ~{if defined(markSites) then ("--mark-sites " +  '"' + markSites + '"') else ""} \
+      ~{if defined(outputType) then ("--output-type " +  '"' + outputType + '"') else ""} \
+      ~{if defined(regions) then ("--regions " +  '"' + regions + '"') else ""} \
+      ~{if defined(regionsFile) then ("--regions-file " +  '"' + regionsFile + '"') else ""} \
+      ~{if defined(renameChrs) then ("--rename-chrs " +  '"' + renameChrs + '"') else ""} \
       ~{true="--samples " false="" defined(samples)}~{sep=" " samples} \
-      ~{"--samples-file " + samplesFile} \
-      ~{"--threads " + threads} \
+      ~{if defined(samplesFile) then ("--samples-file " +  '"' + samplesFile + '"') else ""} \
+      ~{if defined(threads) then ("--threads " +  '"' + threads + '"') else ""} \
       ~{true="--remove " false="" defined(remove)}~{sep=" " remove} \
       ~{file}
   >>>
   runtime {
     docker: "biocontainers/bcftools:v1.5_cv2"
-    cpu: if defined(runtime_cpu) then runtime_cpu else 1
-    memory: if defined(runtime_memory) then "~{runtime_memory}G" else "4G"
+    cpu: select_first([runtime_cpu, 1])
+    memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }
   output {
-    File out = if defined(outputFilename) then outputFilename else "generated.vcf.gz"
+    File out = select_first([outputFilename, "generated.vcf.gz"])
   }
 }

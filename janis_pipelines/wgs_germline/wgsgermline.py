@@ -88,11 +88,11 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             "cutadapt_adapters",
             File(optional=True),
             doc=InputDocumentation(
-                "Specifies a file which contains a list of sequences to determine valid overrepresented sequences from "
+                "Specifies a containment list for cutadapt, which contains a list of sequences to determine valid overrepresented sequences from "
                 "the FastQC report to trim with Cuatadapt. The file must contain sets of named adapters in the form: "
                 "``name[tab]sequence``. Lines prefixed with a hash will be ignored.",
                 quality=InputQualityType.static,
-                example=None,
+                example="https://github.com/csf-ngs/fastqc/blob/master/Contaminants/contaminant_list.txt",
             ),
         )
         self.input(
@@ -117,19 +117,30 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             "strelka_intervals",
             BedTabix,
             doc=InputDocumentation(
-                "An interval for which to restrict the analysis to. Recommended HG38 interval: ",
+                "An interval for which to restrict the analysis to.",
                 quality=InputQualityType.static,
                 example="BRCA1.bed.gz",
             ),
         )
 
         self.input(
-            "header_lines",
-            File(optional=True),
+            "vardict_header_lines",
+            File,
             doc=InputDocumentation(
-                "Header lines passed to BCFTools annotate as ``--header-lines``.",
+                """\
+As with chromosomal sequences it is highly recommended (but not required) that the header \
+include tags describing the contigs referred to in the VCF file. This furthermore allows \
+these contigs to come from different files. The format is identical to that of a reference \
+sequence, but with an additional URL tag to indicate where that sequence can be found. For example:
+
+.. code-block:
+
+   ##contig=<ID=ctg1,URL=ftp://somewhere.org/assembly.fa,...>
+
+Source: (1.2.5 Alternative allele field format) https://samtools.github.io/hts-specs/VCFv4.1.pdf (edited) 
+""",
                 quality=InputQualityType.static,
-                example=None,
+                example="https://gist.githubusercontent.com/illusional/5b75a0506f7327aca7d355f8ad5008f8/raw/e181c0569771e6a557d01a8a1f70c71e3598a269/headerLines.txt",
             ),
         )
 
@@ -254,7 +265,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 intervals=self.vardict_intervals,
                 sample_name=self.sample_name,
                 allele_freq_threshold=self.allele_freq_threshold,
-                header_lines=self.header_lines,
+                header_lines=self.vardict_header_lines,
             ),
             scatter="intervals",
         )
@@ -358,7 +369,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         ]
         meta.contributors = ["Michael Franklin", "Richard Lupat", "Jiaan Yu"]
         meta.dateCreated = date(2018, 12, 24)
-        meta.dateUpdated = date(2020, 3, 5)
+        meta.dateUpdated = date(2020, 3, 16)
 
         meta.short_documentation = (
             "A variant-calling WGS pipeline using GATK, VarDict and Strelka2."

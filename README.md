@@ -4,13 +4,20 @@
 
 This repository contains workflows written using [Janis](https://github.com/PMCC-BioinformaticsCore/janis).
 
-It can be installed through PIP with:
-
+These workflows are installed by default, but are available on PIP with:
 ```bash
 pip3 install janis-pipelines.pipelines
 ```
 
-This allows Janis to find these installed pipelines from the CLI (through entrypoint: `janis.extension=pipelines`) and means they can be imported from any Python file.
+## Documentation
+
+These pipelines are documented with run instructions here: https://janis.readthedocs.io/en/latest/pipelines/index.html
+
+## More information
+
+These pipelines are made available through the entrypoint: `janis.extension=pipelines`.
+
+They can be imported in Python with the following:
 
 ```python
 from janis_pipelines import WGSGermlineGATK
@@ -31,25 +38,10 @@ WGSGermlineGATK().translate("wdl")
 
 - [Alignment](https://github.com/PMCC-BioinformaticsCore/janis-examplepipelines/tree/master/workflows/alignment/)
 
-## Quickstart
 
-To use these pipelines, you will need to have Janis installed:
+## Reference files:
 
-```bash
-pip3 install janis-pipelines
-```
-
-Then you can run the pipeline through Janis:
-
-```bash
-WORKFLOW="https://raw.githubusercontent.com/PMCC-BioinformaticsCore/janis-pipelines/master/workflows/alignment/alignment.py"
-
-# Generate inputs file
-janis inputs WGSGermlineGATK > myinps.yml
-
-# Run workflow
-janis run --inputs myinps.yml WGSGermlineGATK
-```
+- Tested with `hg38` from [GCS: Broad Institute](https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/)
 
 
 ## WGS Germline pipeline

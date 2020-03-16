@@ -1,3 +1,4 @@
+#!/usr/bin/env cwl-runner
 baseCommand: combine_vcf.py
 class: CommandLineTool
 cwlVersion: v1.0
