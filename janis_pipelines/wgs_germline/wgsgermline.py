@@ -164,6 +164,7 @@ Source: (1.2.5 Alternative allele field format) https://samtools.github.io/hts-s
                 "From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``",
                 quality=InputQualityType.static,
                 example="HG38: https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/\n\n"
+                "(WARNING: The file available from the genomics-public-data resource on Google Cloud Storage is NOT compressed and indexed. This will need to be completed prior to starting the pipeline.\n\n"
                 "File: gs://genomics-public-data/references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.gz",
             ),
         )
@@ -309,6 +310,7 @@ Source: (1.2.5 Alternative allele field format) https://samtools.github.io/hts-s
             source=self.merge_and_mark.out,
             output_folder="bams",
             doc="Aligned and indexed bam.",
+            output_name=self.sample_name,
         )
 
         self.output(
@@ -410,5 +412,5 @@ if __name__ == "__main__":
             os.path.dirname(os.path.realpath(__file__)), "{language}"
         ),
     }
-    w.translate("cwl", **args)
+    # w.translate("cwl", **args)
     w.translate("wdl", **args)
