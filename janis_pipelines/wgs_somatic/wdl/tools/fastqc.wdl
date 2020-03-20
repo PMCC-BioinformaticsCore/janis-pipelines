@@ -43,8 +43,8 @@ task fastqc {
       ~{sep=" " reads}
   >>>
   runtime {
-    docker: "biocontainers/fastqc:v0.11.5_cv3"
     cpu: select_first([runtime_cpu, 1])
+    docker: "biocontainers/fastqc:v0.11.5_cv3"
     memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }

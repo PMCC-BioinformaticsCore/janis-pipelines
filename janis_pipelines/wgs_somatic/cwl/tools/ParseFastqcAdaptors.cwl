@@ -38,6 +38,8 @@ outputs:
     items: string
     type: array
 requirements:
+  DockerRequirement:
+    dockerPull: python:3.8.1
   InitialWorkDirRequirement:
     listing:
     - entry: "\nimport argparse, json, sys\nfrom typing import Optional, List, Dict,\

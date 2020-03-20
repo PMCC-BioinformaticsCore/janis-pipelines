@@ -82,8 +82,8 @@ task bcftoolsview {
       ~{file}
   >>>
   runtime {
-    docker: "biocontainers/bcftools:v1.5_cv2"
     cpu: select_first([runtime_cpu, 1])
+    docker: "biocontainers/bcftools:v1.5_cv2"
     memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }

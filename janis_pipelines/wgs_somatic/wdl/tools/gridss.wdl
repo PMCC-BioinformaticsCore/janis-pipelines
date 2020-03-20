@@ -28,8 +28,8 @@ task gridss {
       ~{sep=" " bams}
   >>>
   runtime {
-    docker: "michaelfranklin/gridss:2.5.1-dev2"
     cpu: select_first([runtime_cpu, 1])
+    docker: "michaelfranklin/gridss:2.5.1-dev2"
     memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }

@@ -25,8 +25,8 @@ task combinevariants {
       ~{if defined(priority) then ("--priority " +  '"' + priority + '"') else ""}
   >>>
   runtime {
-    docker: "michaelfranklin/pmacutil:0.0.4"
     cpu: select_first([runtime_cpu, 1])
+    docker: "michaelfranklin/pmacutil:0.0.4"
     memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }

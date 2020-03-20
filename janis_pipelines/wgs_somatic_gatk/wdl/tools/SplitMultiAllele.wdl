@@ -31,8 +31,8 @@ task SplitMultiAllele {
       sed 's/ID=AD,Number=./ID=AD,Number=1/'
   >>>
   runtime {
-    docker: "heuermh/vt"
     cpu: select_first([runtime_cpu, 1])
+    docker: "heuermh/vt"
     memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }

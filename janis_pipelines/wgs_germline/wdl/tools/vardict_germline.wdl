@@ -108,8 +108,8 @@ task vardict_germline {
       ~{if defined(select_first([outputFilename, "generated-.vardict.vcf.gz"])) then ("> " +  '"' + select_first([outputFilename, "generated-.vardict.vcf.gz"]) + '"') else ""}
   >>>
   runtime {
-    docker: "michaelfranklin/vardict:1.6.0"
     cpu: select_first([runtime_cpu, 1])
+    docker: "michaelfranklin/vardict:1.6.0"
     memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }

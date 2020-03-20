@@ -107,8 +107,8 @@ task cutadapt {
       ~{sep=" " fastq}
   >>>
   runtime {
-    docker: "quay.io/biocontainers/cutadapt:2.6--py36h516909a_0"
     cpu: select_first([runtime_cpu, 1])
+    docker: "quay.io/biocontainers/cutadapt:2.6--py36h516909a_0"
     memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }

@@ -105,8 +105,8 @@ task BwaMemSamtoolsView {
       -b
   >>>
   runtime {
-    docker: "michaelfranklin/bwasamtools:0.7.17-1.9"
     cpu: select_first([runtime_cpu, 1])
+    docker: "michaelfranklin/bwasamtools:0.7.17-1.9"
     memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }

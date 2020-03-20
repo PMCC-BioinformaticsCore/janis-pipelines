@@ -52,8 +52,8 @@ task manta {
       -j ~{select_first([runtime_cpu, 1])}
   >>>
   runtime {
-    docker: "michaelfranklin/manta:1.5.0"
     cpu: select_first([runtime_cpu, 1])
+    docker: "michaelfranklin/manta:1.5.0"
     memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }

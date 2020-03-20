@@ -17,8 +17,8 @@ task bcftoolssort {
       ~{vcf}
   >>>
   runtime {
-    docker: "michaelfranklin/bcftools:1.9"
     cpu: select_first([runtime_cpu, 1])
+    docker: "michaelfranklin/bcftools:1.9"
     memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }

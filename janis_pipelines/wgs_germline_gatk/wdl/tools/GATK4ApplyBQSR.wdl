@@ -31,8 +31,8 @@ task Gatk4ApplyBQSR {
     ln -f `echo '~{select_first([outputFilename, "generated.bam"])}' | sed 's/\.[^.]*$//'`.bai `echo '~{select_first([outputFilename, "generated.bam"])}' `.bai
   >>>
   runtime {
-    docker: "broadinstitute/gatk:4.1.3.0"
     cpu: select_first([runtime_cpu, 1])
+    docker: "broadinstitute/gatk:4.1.3.0"
     memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }

@@ -59,8 +59,8 @@ task strelka_germline {
       --jobs ~{select_first([runtime_cpu, 1])}
   >>>
   runtime {
-    docker: "michaelfranklin/strelka:2.9.10"
     cpu: select_first([runtime_cpu, 1])
+    docker: "michaelfranklin/strelka:2.9.10"
     memory: "~{select_first([runtime_memory, 4])}G"
     preemptible: 2
   }
