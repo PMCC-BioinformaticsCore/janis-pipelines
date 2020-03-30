@@ -11,12 +11,12 @@ task Gatk4Mutect2 {
     String normalSample
     String? outputFilename = "generated.vcf.gz"
     File reference
+    File reference_fai
     File reference_amb
     File reference_ann
     File reference_bwt
     File reference_pac
     File reference_sa
-    File reference_fai
     File reference_dict
     String? activityProfileOut
     Boolean? addOutputSamProgramRecord

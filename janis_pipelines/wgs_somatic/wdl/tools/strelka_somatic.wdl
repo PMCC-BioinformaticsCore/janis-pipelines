@@ -9,12 +9,12 @@ task strelka_somatic {
     File tumorBam
     File tumorBam_bai
     File reference
+    File reference_fai
     File reference_amb
     File reference_ann
     File reference_bwt
     File reference_pac
     File reference_sa
-    File reference_fai
     File reference_dict
     String? rundir = "generated"
     Array[String]? region

@@ -62,12 +62,12 @@ inputs:
       , \".ann\", \".bwt\", \".pac\", \".sa\", \"^.dict\")."
     id: reference
     secondaryFiles:
+    - .fai
     - .amb
     - .ann
     - .bwt
     - .pac
     - .sa
-    - .fai
     - ^.dict
     type: File
   snps_1000gp:
@@ -143,13 +143,13 @@ steps:
         source: cutadapt_adapters
       reads:
         id: reads
-        source: tumor_inputs
+        source: normal_inputs
       reference:
         id: reference
         source: reference
       sample_name:
         id: sample_name
-        source: tumor_name
+        source: normal_name
     out:
     - out
     - reports
@@ -169,13 +169,13 @@ steps:
         source: cutadapt_adapters
       reads:
         id: reads
-        source: normal_inputs
+        source: tumor_inputs
       reference:
         id: reference
         source: reference
       sample_name:
         id: sample_name
-        source: normal_name
+        source: tumor_name
     out:
     - out
     - reports

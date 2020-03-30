@@ -8,12 +8,12 @@ import "mergeAndMarkBams.wdl" as M
 workflow somatic_subpipeline {
   input {
     File reference
+    File reference_fai
     File reference_amb
     File reference_ann
     File reference_bwt
     File reference_pac
     File reference_sa
-    File reference_fai
     File reference_dict
     Array[Array[File]] reads
     File? cutadapt_adapters
@@ -37,12 +37,12 @@ workflow somatic_subpipeline {
      call B.BwaAligner as align_and_sort {
       input:
         sample_name=sample_name,
+        reference_fai=reference_fai,
         reference_amb=reference_amb,
         reference_ann=reference_ann,
         reference_bwt=reference_bwt,
         reference_pac=reference_pac,
         reference_sa=reference_sa,
-        reference_fai=reference_fai,
         reference_dict=reference_dict,
         reference=reference,
         fastq=Q.left,

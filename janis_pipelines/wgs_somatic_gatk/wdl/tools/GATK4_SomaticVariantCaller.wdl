@@ -15,12 +15,12 @@ workflow GATK4_SomaticVariantCaller {
     String tumor_name
     File? intervals
     File reference
+    File reference_fai
     File reference_amb
     File reference_ann
     File reference_bwt
     File reference_pac
     File reference_sa
-    File reference_fai
     File reference_dict
     File snps_dbsnp
     File snps_dbsnp_tbi
@@ -37,12 +37,12 @@ workflow GATK4_SomaticVariantCaller {
       bam=normal_bam,
       knownSites=[snps_dbsnp, snps_1000gp, known_indels, mills_indels],
       knownSites_tbi=[snps_dbsnp_tbi, snps_1000gp_tbi, known_indels_tbi, mills_indels_tbi],
+      reference_fai=reference_fai,
       reference_amb=reference_amb,
       reference_ann=reference_ann,
       reference_bwt=reference_bwt,
       reference_pac=reference_pac,
       reference_sa=reference_sa,
-      reference_fai=reference_fai,
       reference_dict=reference_dict,
       reference=reference,
       intervals=intervals
@@ -53,12 +53,12 @@ workflow GATK4_SomaticVariantCaller {
       bam=tumor_bam,
       knownSites=[snps_dbsnp, snps_1000gp, known_indels, mills_indels],
       knownSites_tbi=[snps_dbsnp_tbi, snps_1000gp_tbi, known_indels_tbi, mills_indels_tbi],
+      reference_fai=reference_fai,
       reference_amb=reference_amb,
       reference_ann=reference_ann,
       reference_bwt=reference_bwt,
       reference_pac=reference_pac,
       reference_sa=reference_sa,
-      reference_fai=reference_fai,
       reference_dict=reference_dict,
       reference=reference,
       intervals=intervals
@@ -67,12 +67,12 @@ workflow GATK4_SomaticVariantCaller {
     input:
       bam_bai=normal_bam_bai,
       bam=normal_bam,
+      reference_fai=reference_fai,
       reference_amb=reference_amb,
       reference_ann=reference_ann,
       reference_bwt=reference_bwt,
       reference_pac=reference_pac,
       reference_sa=reference_sa,
-      reference_fai=reference_fai,
       reference_dict=reference_dict,
       reference=reference,
       recalFile=base_recalibrator_normal.out,
@@ -82,12 +82,12 @@ workflow GATK4_SomaticVariantCaller {
     input:
       bam_bai=tumor_bam_bai,
       bam=tumor_bam,
+      reference_fai=reference_fai,
       reference_amb=reference_amb,
       reference_ann=reference_ann,
       reference_bwt=reference_bwt,
       reference_pac=reference_pac,
       reference_sa=reference_sa,
-      reference_fai=reference_fai,
       reference_dict=reference_dict,
       reference=reference,
       recalFile=base_recalibrator_tumor.out,
@@ -100,12 +100,12 @@ workflow GATK4_SomaticVariantCaller {
       normalBams_bai=[apply_bqsr_normal.out_bai],
       normalBams=[apply_bqsr_normal.out],
       normalSample=normal_name,
+      reference_fai=reference_fai,
       reference_amb=reference_amb,
       reference_ann=reference_ann,
       reference_bwt=reference_bwt,
       reference_pac=reference_pac,
       reference_sa=reference_sa,
-      reference_fai=reference_fai,
       reference_dict=reference_dict,
       reference=reference,
       intervals=intervals
@@ -113,12 +113,12 @@ workflow GATK4_SomaticVariantCaller {
   call S.SplitMultiAllele as split_multi_allele {
     input:
       vcf=mutect2.out,
+      reference_fai=reference_fai,
       reference_amb=reference_amb,
       reference_ann=reference_ann,
       reference_bwt=reference_bwt,
       reference_pac=reference_pac,
       reference_sa=reference_sa,
-      reference_fai=reference_fai,
       reference_dict=reference_dict,
       reference=reference
   }

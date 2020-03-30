@@ -70,12 +70,12 @@ inputs:
     shellQuote: false
   label: reference
   secondaryFiles:
+  - .fai
   - .amb
   - .ann
   - .bwt
   - .pac
   - .sa
-  - .fai
   - ^.dict
   type: File
 - doc: Tumor sample BAM or CRAM file. Only up to one tumor bam file accepted. [optional=null]

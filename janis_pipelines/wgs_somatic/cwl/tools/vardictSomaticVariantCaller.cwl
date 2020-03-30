@@ -24,12 +24,12 @@ inputs:
   reference:
     id: reference
     secondaryFiles:
+    - .fai
     - .amb
     - .ann
     - .bwt
     - .pac
     - .sa
-    - .fai
     - ^.dict
     type: File
   tumor_bam:

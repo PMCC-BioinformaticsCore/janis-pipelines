@@ -10,12 +10,12 @@ task Gatk4BaseRecalibrator {
     Array[File] knownSites
     Array[File] knownSites_tbi
     File reference
+    File reference_fai
     File reference_amb
     File reference_ann
     File reference_bwt
     File reference_pac
     File reference_sa
-    File reference_fai
     File reference_dict
     String? outputFilename = "generated.table"
     File? intervals

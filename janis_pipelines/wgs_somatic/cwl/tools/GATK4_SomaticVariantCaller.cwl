@@ -34,12 +34,12 @@ inputs:
   reference:
     id: reference
     secondaryFiles:
+    - .fai
     - .amb
     - .ann
     - .bwt
     - .pac
     - .sa
-    - .fai
     - ^.dict
     type: File
   snps_1000gp:

@@ -24,12 +24,12 @@ workflow WGSSomaticMultiCallers {
     File vardict_header_lines
     Float? allele_freq_threshold
     File reference
+    File reference_fai
     File reference_amb
     File reference_ann
     File reference_bwt
     File reference_pac
     File reference_sa
-    File reference_fai
     File reference_dict
     File snps_dbsnp
     File snps_dbsnp_tbi
@@ -44,31 +44,31 @@ workflow WGSSomaticMultiCallers {
   }
   call S.somatic_subpipeline as normal {
     input:
+      reference_fai=reference_fai,
       reference_amb=reference_amb,
       reference_ann=reference_ann,
       reference_bwt=reference_bwt,
       reference_pac=reference_pac,
       reference_sa=reference_sa,
-      reference_fai=reference_fai,
-      reference_dict=reference_dict,
-      reference=reference,
-      reads=tumor_inputs,
-      cutadapt_adapters=cutadapt_adapters,
-      sample_name=tumor_name
-  }
-  call S.somatic_subpipeline as tumor {
-    input:
-      reference_amb=reference_amb,
-      reference_ann=reference_ann,
-      reference_bwt=reference_bwt,
-      reference_pac=reference_pac,
-      reference_sa=reference_sa,
-      reference_fai=reference_fai,
       reference_dict=reference_dict,
       reference=reference,
       reads=normal_inputs,
       cutadapt_adapters=cutadapt_adapters,
       sample_name=normal_name
+  }
+  call S.somatic_subpipeline as tumor {
+    input:
+      reference_fai=reference_fai,
+      reference_amb=reference_amb,
+      reference_ann=reference_ann,
+      reference_bwt=reference_bwt,
+      reference_pac=reference_pac,
+      reference_sa=reference_sa,
+      reference_dict=reference_dict,
+      reference=reference,
+      reads=tumor_inputs,
+      cutadapt_adapters=cutadapt_adapters,
+      sample_name=tumor_name
   }
   scatter (g in gatk_intervals) {
      call G.GATK4_SomaticVariantCaller as vc_gatk {
@@ -80,12 +80,12 @@ workflow WGSSomaticMultiCallers {
         normal_name=normal_name,
         tumor_name=tumor_name,
         intervals=g,
+        reference_fai=reference_fai,
         reference_amb=reference_amb,
         reference_ann=reference_ann,
         reference_bwt=reference_bwt,
         reference_pac=reference_pac,
         reference_sa=reference_sa,
-        reference_fai=reference_fai,
         reference_dict=reference_dict,
         reference=reference,
         snps_dbsnp_tbi=snps_dbsnp_tbi,
@@ -108,12 +108,12 @@ workflow WGSSomaticMultiCallers {
       normal_bam=normal.out,
       tumor_bam_bai=tumor.out_bai,
       tumor_bam=tumor.out,
+      reference_fai=reference_fai,
       reference_amb=reference_amb,
       reference_ann=reference_ann,
       reference_bwt=reference_bwt,
       reference_pac=reference_pac,
       reference_sa=reference_sa,
-      reference_fai=reference_fai,
       reference_dict=reference_dict,
       reference=reference,
       intervals_tbi=strelka_intervals_tbi,
@@ -122,12 +122,12 @@ workflow WGSSomaticMultiCallers {
   call G3.gridss as vc_gridss {
     input:
       bams=[normal.out, tumor.out],
+      reference_fai=reference_fai,
       reference_amb=reference_amb,
       reference_ann=reference_ann,
       reference_bwt=reference_bwt,
       reference_pac=reference_pac,
       reference_sa=reference_sa,
-      reference_fai=reference_fai,
       reference_dict=reference_dict,
       reference=reference,
       blacklist=gridss_blacklist
@@ -144,12 +144,12 @@ workflow WGSSomaticMultiCallers {
         intervals=v,
         allele_freq_threshold=select_first([allele_freq_threshold, 0.05]),
         header_lines=vardict_header_lines,
+        reference_fai=reference_fai,
         reference_amb=reference_amb,
         reference_ann=reference_ann,
         reference_bwt=reference_bwt,
         reference_pac=reference_pac,
         reference_sa=reference_sa,
-        reference_fai=reference_fai,
         reference_dict=reference_dict,
         reference=reference
     }

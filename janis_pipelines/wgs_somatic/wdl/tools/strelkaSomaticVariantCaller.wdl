@@ -12,12 +12,12 @@ workflow strelkaSomaticVariantCaller {
     File tumor_bam
     File tumor_bam_bai
     File reference
+    File reference_fai
     File reference_amb
     File reference_ann
     File reference_bwt
     File reference_pac
     File reference_sa
-    File reference_fai
     File reference_dict
     File? intervals
     File? intervals_tbi
@@ -28,12 +28,12 @@ workflow strelkaSomaticVariantCaller {
     input:
       bam_bai=normal_bam_bai,
       bam=normal_bam,
+      reference_fai=reference_fai,
       reference_amb=reference_amb,
       reference_ann=reference_ann,
       reference_bwt=reference_bwt,
       reference_pac=reference_pac,
       reference_sa=reference_sa,
-      reference_fai=reference_fai,
       reference_dict=reference_dict,
       reference=reference,
       tumorBam_bai=tumor_bam_bai,
@@ -48,12 +48,12 @@ workflow strelkaSomaticVariantCaller {
       normalBam=normal_bam,
       tumorBam_bai=tumor_bam_bai,
       tumorBam=tumor_bam,
+      reference_fai=reference_fai,
       reference_amb=reference_amb,
       reference_ann=reference_ann,
       reference_bwt=reference_bwt,
       reference_pac=reference_pac,
       reference_sa=reference_sa,
-      reference_fai=reference_fai,
       reference_dict=reference_dict,
       reference=reference,
       indelCandidates_tbi=[manta.candidateSmallIndels_tbi],
@@ -70,12 +70,12 @@ workflow strelkaSomaticVariantCaller {
   call S2.SplitMultiAllele as split_multi_allele {
     input:
       vcf=bcf_view.out,
+      reference_fai=reference_fai,
       reference_amb=reference_amb,
       reference_ann=reference_ann,
       reference_bwt=reference_bwt,
       reference_pac=reference_pac,
       reference_sa=reference_sa,
-      reference_fai=reference_fai,
       reference_dict=reference_dict,
       reference=reference
   }
