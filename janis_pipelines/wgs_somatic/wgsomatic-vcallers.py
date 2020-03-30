@@ -34,8 +34,7 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
     def friendly_name(self):
         return "WGS Somatic (Multi callers)"
 
-    @staticmethod
-    def version():
+    def version(self):
         return "1.2.0"
 
     def constructor(self):

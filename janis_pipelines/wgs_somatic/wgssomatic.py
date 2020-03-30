@@ -228,8 +228,8 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         self.step(
             "normal",
             self.process_subpipeline(
-                reads=self.tumor_inputs,
-                sample_name=self.tumor_name,
+                reads=self.normal_inputs,
+                sample_name=self.normal_name,
                 reference=self.reference,
                 cutadapt_adapters=self.cutadapt_adapters,
             ),
@@ -237,8 +237,8 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         self.step(
             "tumor",
             self.process_subpipeline(
-                reads=self.normal_inputs,
-                sample_name=self.normal_name,
+                reads=self.tumor_inputs,
+                sample_name=self.tumor_name,
                 reference=self.reference,
                 cutadapt_adapters=self.cutadapt_adapters,
             ),

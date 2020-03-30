@@ -157,7 +157,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         )
 
         self.step(
-            "normal",
+            "tumor",
             self.process_subpipeline(
                 reads=self.tumor_inputs,
                 sample_name=self.tumor_name,
@@ -166,7 +166,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             ),
         )
         self.step(
-            "tumor",
+            "normal",
             self.process_subpipeline(
                 reads=self.normal_inputs,
                 sample_name=self.normal_name,
