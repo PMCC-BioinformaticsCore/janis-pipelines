@@ -101,6 +101,7 @@ workflow WGSSomaticGATK {
     File tumor_bam_bai = tumor.out_bai
     Array[Array[File]] normal_report = normal.reports
     Array[Array[File]] tumor_report = tumor.reports
-    File variants_gatk = sorted.out
+    File variants = sorted.out
+    Array[File] variants_split = vc_gatk.out
   }
 }

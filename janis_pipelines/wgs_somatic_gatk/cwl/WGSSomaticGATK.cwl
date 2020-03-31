@@ -126,10 +126,18 @@ outputs:
         items: File
         type: array
       type: array
-  variants_gatk:
-    id: variants_gatk
+  variants:
+    doc: Merged variants from the GATK caller
+    id: variants
     outputSource: sorted/out
     type: File
+  variants_split:
+    doc: Unmerged variants from the GATK caller (by interval)
+    id: variants_split
+    outputSource: vc_gatk/out
+    type:
+      items: File
+      type: array
 requirements:
   InlineJavascriptRequirement: {}
   ScatterFeatureRequirement: {}

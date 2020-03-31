@@ -81,12 +81,12 @@ inputs:
       , \".ann\", \".bwt\", \".pac\", \".sa\", \"^.dict\")."
     id: reference
     secondaryFiles:
+    - .fai
     - .amb
     - .ann
     - .bwt
     - .pac
     - .sa
-    - .fai
     - ^.dict
     type: File
   sample_name:
@@ -146,9 +146,9 @@ outputs:
         items: File
         type: array
       type: array
-  variants_combined:
+  variants:
     doc: Combined variants from all 3 callers
-    id: variants_combined
+    id: variants
     outputSource: sort_combined/out
     type: File
   variants_gatk:

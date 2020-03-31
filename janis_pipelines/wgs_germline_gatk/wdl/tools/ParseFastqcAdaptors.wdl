@@ -6,8 +6,6 @@ task ParseFastqcAdaptors {
     Int? runtime_memory
     Array[File] fastqc_datafiles
     File? cutadapt_adaptors_lookup
-    Int? runtime_cpu
-    Int? runtime_memory
   }
   command <<<
     

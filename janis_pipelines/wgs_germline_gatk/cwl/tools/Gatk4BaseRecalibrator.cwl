@@ -65,12 +65,12 @@ inputs:
     prefix: -R
   label: reference
   secondaryFiles:
+  - .fai
   - .amb
   - .ann
   - .bwt
   - .pac
   - .sa
-  - .fai
   - ^.dict
   type: File
 - default: generated.table

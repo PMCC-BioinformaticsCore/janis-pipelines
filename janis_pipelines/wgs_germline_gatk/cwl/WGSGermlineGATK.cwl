@@ -60,12 +60,12 @@ inputs:
       , \".ann\", \".bwt\", \".pac\", \".sa\", \"^.dict\")."
     id: reference
     secondaryFiles:
+    - .fai
     - .amb
     - .ann
     - .bwt
     - .pac
     - .sa
-    - .fai
     - ^.dict
     type: File
   sample_name:

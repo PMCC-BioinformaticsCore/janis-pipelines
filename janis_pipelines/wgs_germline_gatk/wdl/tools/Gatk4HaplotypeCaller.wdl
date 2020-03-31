@@ -40,12 +40,12 @@ task Gatk4HaplotypeCaller {
     File inputRead
     File inputRead_bai
     File reference
+    File reference_fai
     File reference_amb
     File reference_ann
     File reference_bwt
     File reference_pac
     File reference_sa
-    File reference_fai
     File reference_dict
     String? outputFilename = "generated.vcf.gz"
     File dbsnp

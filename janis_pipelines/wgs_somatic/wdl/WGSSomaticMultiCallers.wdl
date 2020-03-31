@@ -182,6 +182,6 @@ workflow WGSSomaticMultiCallers {
     File variants_strelka = vc_strelka.out
     File variants_vardict = vc_vardict_merge.out
     File variants_gridss = vc_gridss.out
-    File variants_combined = combine_variants.vcf
+    File variants = combine_variants.vcf
   }
 }

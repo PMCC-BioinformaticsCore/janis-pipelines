@@ -182,9 +182,9 @@ outputs:
         items: File
         type: array
       type: array
-  variants_combined:
+  variants:
     doc: Combined variants from all 3 callers
-    id: variants_combined
+    id: variants
     outputSource: combine_variants/vcf
     type: File
   variants_gatk:
