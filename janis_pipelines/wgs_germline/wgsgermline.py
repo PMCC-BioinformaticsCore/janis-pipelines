@@ -314,9 +314,10 @@ Source: (1.2.5 Alternative allele field format) https://samtools.github.io/hts-s
         )
 
         self.output(
-            "variants_combined",
+            "variants",
             source=self.sort_combined.out,
             output_folder="variants",
+            output_name=self.sample_name,
             doc="Combined variants from all 3 callers",
         )
 

@@ -196,6 +196,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             "bam",
             source=self.merge_and_mark.out,
             output_folder=["bams", self.sample_name],
+            output_name=self.sample_name,
             doc="Aligned and indexed bam.",
         )
         self.output(
@@ -208,6 +209,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             "variants",
             source=self.sort_combined.out,
             output_folder="variants",
+            output_name=self.sample_name,
             doc="Merged variants from the GATK caller",
         )
         self.output(

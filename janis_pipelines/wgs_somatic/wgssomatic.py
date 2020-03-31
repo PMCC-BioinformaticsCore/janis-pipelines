@@ -334,12 +334,14 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             "normal_bam",
             source=self.normal.out,
             output_folder="bams",
+            output_name=self.normal_name,
             doc="Aligned and indexed NORMAL bam",
         )
         self.output(
             "tumor_bam",
             source=self.tumor.out,
             output_folder="bams",
+            output_name=self.tumor_name,
             doc="Aligned and indexed TUMOR bam",
         )
         self.output(
@@ -374,7 +376,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             doc="Variants from the GRIDSS variant caller",
         )
         self.output(
-            "variants_combined",
+            "variants",
             source=self.combine_variants.vcf,
             output_folder="variants",
             doc="Combined variants from all 3 callers",

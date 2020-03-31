@@ -197,14 +197,36 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
 
         # Outputs
 
-        self.output("normal_bam", source=self.normal.out, output_folder="bams")
-        self.output("tumor_bam", source=self.tumor.out, output_folder="bams")
+        self.output(
+            "normal_bam",
+            source=self.normal.out,
+            output_folder="bams",
+            output_name=self.normal_name,
+        )
+
+        self.output(
+            "tumor_bam",
+            source=self.tumor.out,
+            output_folder="bams",
+            output_name=self.tumor_name,
+        )
         self.output(
             "normal_report", source=self.normal.reports, output_folder="reports"
         )
         self.output("tumor_report", source=self.tumor.reports, output_folder="reports")
 
-        self.output("variants_gatk", source=self.sorted.out, output_folder="variants")
+        self.output(
+            "variants",
+            source=self.sorted.out,
+            output_folder="variants",
+            doc="Merged variants from the GATK caller",
+        )
+        self.output(
+            "variants_split",
+            source=self.vc_gatk.out,
+            output_folder=["variants", "byInterval"],
+            doc="Unmerged variants from the GATK caller (by interval)",
+        )
 
     @staticmethod
     def process_subpipeline(**connections):
