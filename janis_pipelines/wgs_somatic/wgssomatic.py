@@ -14,7 +14,7 @@ from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
 from janis_bioinformatics.tools.pmac import CombineVariants_0_0_4
 from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
-from janis_bioinformatics.tools.papenfuss.gridss.gridss import Gridss_2_5_1
+from janis_bioinformatics.tools.papenfuss.gridss.gridss import Gridss_2_6_3
 from janis_bioinformatics.tools.variantcallers.illuminasomatic_strelka import (
     IlluminaSomaticVariantCaller,
 )
@@ -275,7 +275,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
 
         self.step(
             "vc_gridss",
-            Gridss_2_5_1(
+            Gridss_2_6_3(
                 bams=[self.normal.out, self.tumor.out],
                 reference=self.reference,
                 blacklist=self.gridss_blacklist,
