@@ -1,6 +1,0 @@
-allele_freq_threshold: 0.05
-combine_variants_columns:
-- AD
-- DP
-- GT
-combine_variants_type: somatic
