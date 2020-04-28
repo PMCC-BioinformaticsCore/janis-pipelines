@@ -44,7 +44,8 @@ inputs:
             return [
                     {
                         location: resolveSecondary(self.location, "^.bai"),
-                        basename: resolveSecondary(self.basename, ".bai")
+                        basename: resolveSecondary(self.basename, ".bai"),
+                        class: "File",
                     }
             ];
 

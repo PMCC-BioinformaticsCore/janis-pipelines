@@ -170,7 +170,8 @@ outputs:
             return [
                     {
                         path: resolveSecondary(self.path, "^.bai"),
-                        basename: resolveSecondary(self.basename, ".bai")
+                        basename: resolveSecondary(self.basename, ".bai"),
+                        class: "File",
                     }
             ];
 
