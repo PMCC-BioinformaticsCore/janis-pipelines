@@ -225,7 +225,10 @@ Source: (1.2.5 Alternative allele field format) https://samtools.github.io/hts-s
             scatter=["fastq", "cutadapt_adapter", "cutadapt_removeMiddle3Adapter"],
         )
         self.step(
-            "merge_and_mark", MergeAndMarkBams_4_1_3(bams=self.align_and_sort.out)
+            "merge_and_mark",
+            MergeAndMarkBams_4_1_3(
+                bams=self.align_and_sort.out, sampleName=self.sample_name
+            ),
         )
 
         # VARIANT CALLERS
@@ -413,5 +416,5 @@ if __name__ == "__main__":
             os.path.dirname(os.path.realpath(__file__)), "{language}"
         ),
     }
-    # w.translate("cwl", **args)
+    w.translate("cwl", **args)
     w.translate("wdl", **args)

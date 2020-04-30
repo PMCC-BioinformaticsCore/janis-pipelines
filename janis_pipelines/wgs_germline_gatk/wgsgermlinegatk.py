@@ -168,7 +168,12 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             scatter=["fastq", "cutadapt_adapter", "cutadapt_removeMiddle3Adapter"],
         )
 
-        self.step("merge_and_mark", MergeAndMarkBams_4_1_3(bams=self.align_and_sort))
+        self.step(
+            "merge_and_mark",
+            MergeAndMarkBams_4_1_3(
+                bams=self.align_and_sort, sampleName=self.sample_name
+            ),
+        )
 
         # VARIANT CALLERS
 
