@@ -53,8 +53,10 @@ inputs:
   - 'null'
 - id: outputFilename
   label: outputFilename
-  type: string
-  default: generated-.vardict.vcf
+  type:
+  - string
+  - 'null'
+  default: generated.vardict.vcf
   inputBinding:
     prefix: '>'
     position: 10

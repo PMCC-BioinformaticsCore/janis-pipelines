@@ -55,7 +55,9 @@ inputs:
   label: rundir
   doc: |-
     Name of directory to be created where all workflow scripts and output will be written. Each analysis requires a separate directory. (default: StrelkaSomaticWorkflow)
-  type: string
+  type:
+  - string
+  - 'null'
   default: generated
   inputBinding:
     prefix: --runDir=

@@ -46,15 +46,19 @@ inputs:
     position: 1
 - id: outputFilename
   label: outputFilename
-  type: string
-  default: generated.vcf
+  type:
+  - string
+  - 'null'
+  default: generated.svs.vcf
   inputBinding:
     prefix: --output
     position: 2
 - id: assemblyFilename
   label: assemblyFilename
-  type: string
-  default: generated.bam
+  type:
+  - string
+  - 'null'
+  default: generated.assembled.bam
   inputBinding:
     prefix: --assembly
     position: 3
