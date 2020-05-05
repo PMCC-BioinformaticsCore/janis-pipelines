@@ -26,7 +26,11 @@ from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWork
 from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_0, Gatk4SortSam_4_1_3
 from janis_bioinformatics.tools.variantcallers import GatkGermlineVariantCaller_4_1_3
-from janis_bioinformatics.tools.pmac import ParseFastqcAdaptors
+from janis_bioinformatics.tools.pmac import (
+    ParseFastqcAdaptors,
+    AnnotateDepthOfCoverage_0_1_0,
+    PerformanceSummaryGenome_0_1_0,
+)
 
 
 class WGSGermlineGATK(BioinformaticsWorkflow):
@@ -89,6 +93,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 example="https://github.com/csf-ngs/fastqc/blob/master/Contaminants/contaminant_list.txt",
             ),
         )
+        ## gatk_intervals is not a good name -- might get user confused with .intervals format file by gatk (a file format that's similar to bed) and it is not specific to gatk -- can be renamed as variant_calling_split_bed?
         self.input(
             "gatk_intervals",
             Array(Bed),
@@ -98,7 +103,15 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 example="BRCA1.bed",
             ),
         )
-
+        self.input(
+            "targeted_region_bed",
+            Bed(),
+            doc=InputDocumentation(
+                "Targeted genes / exons in bed format",
+                quality=InputQualityType.static,
+                example="BRCA1.bed",
+            ),
+        )
         self.input(
             "snps_dbsnp",
             VcfTabix,
@@ -170,6 +183,25 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
 
         self.step("merge_and_mark", MergeAndMarkBams_4_1_3(bams=self.align_and_sort))
 
+        # STATISCIS of BAM
+        self.step(
+            "annotate_doc",
+            AnnotateDepthOfCoverage_0_1_0(
+                bam=self.merge_and_mark,
+                bed=self.targeted_region_bed,
+                reference=self.reference,
+                sample_name=self.sample_name,
+            ),
+        )
+        self.step(
+            "performance_summary",
+            PerformanceSummaryGenome_0_1_0(
+                bam=self.merge_and_mark,
+                bed=self.targeted_region_bed,
+                sample_name=self.sample_name,
+            ),
+        )
+
         # VARIANT CALLERS
 
         # GATK
@@ -204,6 +236,30 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             source=self.fastqc.out,
             output_folder=["reports", self.sample_name],
             doc="A zip file of the FastQC quality report.",
+        )
+        self.output(
+            "depth_of_coverage",
+            source=self.annotate_doc.out,
+            output_folder=["depth_of_coverage", self.sample_name],
+            doc="Annotated GATK Depth of Coverage summary",
+        )
+        self.output(
+            "summary",
+            source=self.performance_summary.performanceSummaryOut,
+            output_folder=["performance_summary", self.sample_name],
+            doc="Performance summary on targeted region",
+        )
+        self.output(
+            "gene_summary",
+            source=self.performance_summary.geneFileOut,
+            output_folder=["performance_summary", self.sample_name],
+            doc="Gene summary on targeted region",
+        )
+        self.output(
+            "region_summary",
+            source=self.performance_summary.regionFileOut,
+            output_folder=["performance_summary", self.sample_name],
+            doc="Region summary on targeted region",
         )
         self.output(
             "variants",
