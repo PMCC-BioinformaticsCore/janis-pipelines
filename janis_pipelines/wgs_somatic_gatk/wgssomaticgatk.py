@@ -14,7 +14,11 @@ from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWork
 from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
 from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
-from janis_bioinformatics.tools.pmac import ParseFastqcAdaptors
+from janis_bioinformatics.tools.pmac import (
+    ParseFastqcAdaptors,
+    AnnotateDepthOfCoverage_0_1_0,
+    PerformanceSummaryGenome_0_1_0,
+)
 from janis_core import (
     String,
     WorkflowBuilder,
@@ -96,7 +100,15 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
                 example="BRCA1.bed",
             ),
         )
-
+        self.input(
+            "targeted_region_bed",
+            Bed(),
+            doc=InputDocumentation(
+                "Targeted genes / exons in bed format",
+                quality=InputQualityType.static,
+                example="BRCA1.bed",
+            ),
+        )
         self.input(
             "reference",
             FastaWithDict,
@@ -163,6 +175,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 sample_name=self.tumor_name,
                 reference=self.reference,
                 cutadapt_adapters=self.cutadapt_adapters,
+                targeted_region_bed=self.targeted_region_bed,
             ),
         )
         self.step(
@@ -172,6 +185,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 sample_name=self.normal_name,
                 reference=self.reference,
                 cutadapt_adapters=self.cutadapt_adapters,
+                targeted_region_bed=self.targeted_region_bed,
             ),
         )
 
@@ -210,10 +224,53 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             output_folder="bams",
             output_name=self.tumor_name,
         )
+
         self.output(
             "normal_report", source=self.normal.reports, output_folder="reports"
         )
         self.output("tumor_report", source=self.tumor.reports, output_folder="reports")
+
+        self.output(
+            "normal_doc",
+            source=self.normal.depth_of_coverage,
+            output_folder=["summary", "doc"],
+        )
+        self.output(
+            "tumor_doc",
+            source=self.tumor.depth_of_coverage,
+            output_folder=["summary", "doc"],
+        )
+
+        self.output(
+            "normal_summary",
+            source=self.normal.summary,
+            output_folder=["summary", self.normal_name],
+        )
+        self.output(
+            "tumor_summary",
+            source=self.tumor.summary,
+            output_folder=["summary", self.tumor_name],
+        )
+        self.output(
+            "normal_gene_summary",
+            source=self.normal.gene_summary,
+            output_folder=["summary", self.normal_name],
+        )
+        self.output(
+            "tumor_gene_summary",
+            source=self.tumor.gene_summary,
+            output_folder=["summary", self.tumor_name],
+        )
+        self.output(
+            "normal_region_summary",
+            source=self.normal.region_summary,
+            output_folder=["summary", self.normal_name],
+        )
+        self.output(
+            "tumor_region_summary",
+            source=self.tumor.region_summary,
+            output_folder=["summary", self.tumor_name],
+        )
 
         self.output(
             "variants",
@@ -235,7 +292,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         w.input("reference", FastaWithDict)
         w.input("reads", Array(FastqGzPair))
         w.input("cutadapt_adapters", File(optional=True))
-
+        w.input("targeted_region_bed", Bed)
         w.input("sample_name", String)
 
         w.step("fastqc", FastQC_0_11_5(reads=w.reads), scatter="reads")
@@ -264,8 +321,33 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
 
         w.step("merge_and_mark", MergeAndMarkBams_4_1_3(bams=w.align_and_sort.out))
 
+        w.step(
+            "annotate_doc",
+            AnnotateDepthOfCoverage_0_1_0(
+                bam=w.merge_and_mark.out,
+                bed=w.targeted_region_bed,
+                reference=w.reference,
+                sample_name=w.sample_name,
+            ),
+        )
+
+        w.step(
+            "performance_summary",
+            PerformanceSummaryGenome_0_1_0(
+                bam=w.merge_and_mark.out,
+                bed=w.targeted_region_bed,
+                sample_name=w.sample_name,
+            ),
+        )
+
         w.output("out", source=w.merge_and_mark.out)
         w.output("reports", source=w.fastqc.out)
+        w.output("depth_of_coverage", source=w.annotate_doc.out)
+        w.output(
+            "summary", source=w.performance_summary.performanceSummaryOut,
+        )
+        w.output("gene_summary", source=w.performance_summary.geneFileOut)
+        w.output("region_summary", source=w.performance_summary.regionFileOut)
 
         return w(**connections)
 
