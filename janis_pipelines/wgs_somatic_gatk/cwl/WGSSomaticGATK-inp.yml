@@ -1,0 +1,20 @@
+gatk_intervals: null
+known_indels:
+  class: File
+  path: null
+mills_indels:
+  class: File
+  path: null
+normal_inputs: null
+normal_name: null
+reference:
+  class: File
+  path: null
+snps_1000gp:
+  class: File
+  path: null
+snps_dbsnp:
+  class: File
+  path: null
+tumor_inputs: null
+tumor_name: null

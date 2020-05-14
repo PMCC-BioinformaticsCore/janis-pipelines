@@ -1,0 +1,35 @@
+align_and_sort_sortsam_tmpDir: ./tmp
+allele_freq_threshold: 0.05
+combine_variants_columns:
+- AC
+- AN
+- AF
+- AD
+- DP
+- GT
+combine_variants_type: germline
+fastqs: null
+gatk_intervals: null
+known_indels:
+  class: File
+  path: null
+mills_indels:
+  class: File
+  path: null
+reference:
+  class: File
+  path: null
+sample_name: null
+snps_1000gp:
+  class: File
+  path: null
+snps_dbsnp:
+  class: File
+  path: null
+strelka_intervals:
+  class: File
+  path: null
+vardict_header_lines:
+  class: File
+  path: null
+vardict_intervals: null

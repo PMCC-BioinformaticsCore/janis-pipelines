@@ -319,7 +319,10 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             scatter=["fastq", "cutadapt_adapter", "cutadapt_removeMiddle3Adapter"],
         )
 
-        w.step("merge_and_mark", MergeAndMarkBams_4_1_3(bams=w.align_and_sort.out))
+        w.step(
+            "merge_and_mark",
+            MergeAndMarkBams_4_1_3(bams=w.align_and_sort.out, sampleName=w.sample_name),
+        )
 
         w.step(
             "annotate_doc",

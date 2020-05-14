@@ -111,6 +111,9 @@ steps:
       bams:
         id: bams
         source: align_and_sort/out
+      sampleName:
+        id: sampleName
+        source: sample_name
     run: mergeAndMarkBams.cwl
     out:
     - out

@@ -1,0 +1,19 @@
+align_and_sort_sortsam_tmpDir: .
+fastqs: null
+gatk_intervals: null
+known_indels:
+  class: File
+  path: null
+mills_indels:
+  class: File
+  path: null
+reference:
+  class: File
+  path: null
+sample_name: null
+snps_1000gp:
+  class: File
+  path: null
+snps_dbsnp:
+  class: File
+  path: null
