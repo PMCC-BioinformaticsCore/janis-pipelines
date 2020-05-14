@@ -234,42 +234,50 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             "normal_doc",
             source=self.normal.depth_of_coverage,
             output_folder=["summary", "doc"],
+            doc="A text file of depth of coverage summary of NORMAL bam",
         )
         self.output(
             "tumor_doc",
             source=self.tumor.depth_of_coverage,
             output_folder=["summary", "doc"],
+            doc="A text file of depth of coverage summary of TUMOR bam",
         )
 
         self.output(
             "normal_summary",
             source=self.normal.summary,
             output_folder=["summary", self.normal_name],
+            doc="A text file of performance summary of NORMAL bam",
         )
         self.output(
             "tumor_summary",
             source=self.tumor.summary,
             output_folder=["summary", self.tumor_name],
+            doc="A text file of performance summary of TUMOR bam",
         )
         self.output(
             "normal_gene_summary",
             source=self.normal.gene_summary,
             output_folder=["summary", self.normal_name],
+            doc="A text file of gene coverage summary of NORMAL bam",
         )
         self.output(
             "tumor_gene_summary",
             source=self.tumor.gene_summary,
             output_folder=["summary", self.tumor_name],
+            doc="A text file of gene coverage summary of TUMOR bam",
         )
         self.output(
             "normal_region_summary",
             source=self.normal.region_summary,
             output_folder=["summary", self.normal_name],
+            doc="A text file of region coverage summary of NORMAL bam",
         )
         self.output(
             "tumor_region_summary",
             source=self.tumor.region_summary,
             output_folder=["summary", self.tumor_name],
+            doc="A text file of region coverage summary of TUMOR bam",
         )
 
         self.output(
