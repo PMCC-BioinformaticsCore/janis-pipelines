@@ -1,7 +1,7 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
 cwlVersion: v1.0
-label: Gatk4ApplyBQSR
+label: 'GATK4: Apply base quality score recalibration'
 doc: |-
   Apply base quality score recalibration: This tool performs the second pass in a two-stage 
   process called Base Quality Score Recalibration (BQSR). Specifically, it recalibrates the 
@@ -21,11 +21,13 @@ doc: |-
   - You should only run ApplyBQSR with the covariates table created from the input BAM or CRAM file(s).
   - Original qualities can be retained in the output file under the "OQ" tag if desired. 
       See the `--emit-original-quals` argument for details.
+
 requirements:
-  DockerRequirement:
-    dockerPull: broadinstitute/gatk:4.1.3.0
-  InlineJavascriptRequirement: {}
-  ShellCommandRequirement: {}
+- class: ShellCommandRequirement
+- class: InlineJavascriptRequirement
+- class: DockerRequirement
+  dockerPull: broadinstitute/gatk:4.1.3.0
+
 inputs:
 - id: bam
   label: bam
@@ -103,6 +105,7 @@ inputs:
   inputBinding:
     prefix: --tmp-dir
     position: 11
+
 outputs:
 - id: out
   label: out
@@ -128,8 +131,10 @@ outputs:
 
     }
   outputBinding:
-    glob: $(inputs.outputFilename)
+    glob: $(inputs.bam.basename.replace(/.bam$/, "")).recalibrated.bam
+
 baseCommand:
 - gatk
 - ApplyBQSR
+arguments: []
 id: Gatk4ApplyBQSR

@@ -1,17 +1,19 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
 cwlVersion: v1.0
-label: bcftoolsview
+label: 'BCFTools: View'
 doc: |-
   ________________________________
    
           View, subset and filter VCF or BCF files by position and filtering expression
           Convert between VCF and BCF. Former bcftools subset.
+
 requirements:
-  DockerRequirement:
-    dockerPull: biocontainers/bcftools:v1.5_cv2
-  InlineJavascriptRequirement: {}
-  ShellCommandRequirement: {}
+- class: ShellCommandRequirement
+- class: InlineJavascriptRequirement
+- class: DockerRequirement
+  dockerPull: biocontainers/bcftools:v1.5_cv2
+
 inputs:
 - id: file
   label: file
@@ -351,10 +353,12 @@ inputs:
   inputBinding:
     prefix: --exclude-private
     position: 1
+
 outputs:
 - id: out
   label: out
   type: stdout
+
 baseCommand:
 - bcftools
 - view

@@ -1,7 +1,7 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
 cwlVersion: v1.0
-label: cutadapt
+label: Cutadapt
 doc: |
   cutadapt version 2.4
   Copyright (C) 2010-2019 Marcel Martin <marcel.martin@scilifelab.se>
@@ -25,11 +25,13 @@ doc: |
   http://dx.doi.org/10.14806/ej.17.1.200
   Run "cutadapt - -help" to see all command-line options.
   See https://cutadapt.readthedocs.io/ for full documentation.
+
 requirements:
-  DockerRequirement:
-    dockerPull: quay.io/biocontainers/cutadapt:2.6--py36h516909a_0
-  InlineJavascriptRequirement: {}
-  ShellCommandRequirement: {}
+- class: ShellCommandRequirement
+- class: InlineJavascriptRequirement
+- class: DockerRequirement
+  dockerPull: quay.io/biocontainers/cutadapt:2.6--py36h516909a_0
+
 inputs:
 - id: fastq
   label: fastq
@@ -48,6 +50,7 @@ inputs:
       prefix: -a
     items: string
   - 'null'
+  inputBinding: {}
 - id: outputFilename
   label: outputFilename
   doc: |-
@@ -413,6 +416,7 @@ inputs:
       separate: true
     items: string
   - 'null'
+  inputBinding: {}
 - id: removeMiddle5Adapter
   label: removeMiddle5Adapter
   doc: 5' adapter to be removed from second read in a pair.
@@ -499,6 +503,7 @@ inputs:
   inputBinding:
     prefix: --too-long-paired-output
     separate: true
+
 outputs:
 - id: out
   label: out
@@ -507,5 +512,7 @@ outputs:
     items: File
   outputBinding:
     glob: '*.fastq.gz'
+
 baseCommand: cutadapt
+arguments: []
 id: cutadapt

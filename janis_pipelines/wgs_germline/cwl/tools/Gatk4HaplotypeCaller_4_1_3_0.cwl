@@ -1,7 +1,7 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
 cwlVersion: v1.0
-label: Gatk4HaplotypeCaller
+label: 'GATK4: Haplotype Caller'
 doc: |-
   Call germline SNPs and indels via local re-assembly of haplotypes
       
@@ -25,11 +25,13 @@ doc: |-
   Finally, HaplotypeCaller is also able to correctly handle the splice junctions that make RNAseq a challenge 
   for most variant callers, on the condition that the input read data has previously been processed according 
   to our recommendations as documented (https://software.broadinstitute.org/gatk/documentation/article?id=4067).
+
 requirements:
-  DockerRequirement:
-    dockerPull: broadinstitute/gatk:4.1.3.0
-  InlineJavascriptRequirement: {}
-  ShellCommandRequirement: {}
+- class: ShellCommandRequirement
+- class: InlineJavascriptRequirement
+- class: DockerRequirement
+  dockerPull: broadinstitute/gatk:4.1.3.0
+
 inputs:
 - id: activityProfileOut
   label: activityProfileOut
@@ -390,6 +392,7 @@ inputs:
   - 'null'
   inputBinding:
     prefix: --intervals
+
 outputs:
 - id: out
   label: out
@@ -397,8 +400,10 @@ outputs:
     A raw, unfiltered, highly sensitive callset in VCF format. File to which variants should be written
   type: File
   outputBinding:
-    glob: $(inputs.outputFilename)
+    glob: $(inputs.inputRead.basename.replace(/.bam$/, "")).vcf.gz
+
 baseCommand:
 - gatk
 - HaplotypeCaller
+arguments: []
 id: Gatk4HaplotypeCaller

@@ -1,12 +1,14 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
 cwlVersion: v1.0
-label: trimIUPAC
+label: Trim IUPAC Bases
+
 requirements:
-  DockerRequirement:
-    dockerPull: michaelfranklin/pmacutil:0.0.5
-  InlineJavascriptRequirement: {}
-  ShellCommandRequirement: {}
+- class: ShellCommandRequirement
+- class: InlineJavascriptRequirement
+- class: DockerRequirement
+  dockerPull: michaelfranklin/pmacutil:0.0.5
+
 inputs:
 - id: vcf
   label: vcf
@@ -22,11 +24,14 @@ inputs:
   default: generated.trimmed.vcf
   inputBinding:
     position: 2
+
 outputs:
 - id: out
   label: out
   type: File
   outputBinding:
-    glob: $(inputs.outputFilename)
+    glob: generated.trimmed.vcf
+
 baseCommand: trimIUPAC.py
+arguments: []
 id: trimIUPAC

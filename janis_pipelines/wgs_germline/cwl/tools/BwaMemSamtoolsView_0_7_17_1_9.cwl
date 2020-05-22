@@ -1,12 +1,14 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
 cwlVersion: v1.0
-label: BwaMemSamtoolsView
+label: Bwa mem + Samtools View
+
 requirements:
-  DockerRequirement:
-    dockerPull: michaelfranklin/bwasamtools:0.7.17-1.9
-  InlineJavascriptRequirement: {}
-  ShellCommandRequirement: {}
+- class: ShellCommandRequirement
+- class: InlineJavascriptRequirement
+- class: DockerRequirement
+  dockerPull: michaelfranklin/bwasamtools:0.7.17-1.9
+
 inputs:
 - id: reference
   label: reference
@@ -57,11 +59,13 @@ inputs:
   doc: |-
     Used to construct the readGroupHeaderLine with format: '@RG\tID:{name}\tSM:{name}\tLB:{name}\tPL:ILLUMINA'
   type: string
+  inputBinding: {}
 - id: platformTechnology
   label: platformTechnology
   doc: '(ReadGroup: PL) Used to construct the readGroupHeaderLine, defaults: ILLUMINA'
   type: string
   default: ILLUMINA
+  inputBinding: {}
 - id: minimumSeedLength
   label: minimumSeedLength
   doc: |-
@@ -428,12 +432,13 @@ inputs:
     prefix: --output-fmt
     position: 8
     shellQuote: false
+
 outputs:
 - id: out
   label: out
   type: File
   outputBinding:
-    glob: $(inputs.outputFilename)
+    glob: $(inputs.sampleName).bam
 arguments:
 - position: 0
   valueFrom: bwa

@@ -1,15 +1,17 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
 cwlVersion: v1.0
-label: fastqc
+label: FastQC
 doc: |-
   FastQC is a program designed to spot potential problems in high througput sequencing datasets. It runs a set of analyses on one or more raw sequence files in fastq or bam format and produces a report which summarises the results.
   FastQC will highlight any areas where this library looks unusual and where you should take a closer look. The program is not tied to any specific type of sequencing technique and can be used to look at libraries coming from a large number of different experiment types (Genomic Sequencing, ChIP-Seq, RNA-Seq, BS-Seq etc etc).
+
 requirements:
-  DockerRequirement:
-    dockerPull: biocontainers/fastqc:v0.11.5_cv3
-  InlineJavascriptRequirement: {}
-  ShellCommandRequirement: {}
+- class: ShellCommandRequirement
+- class: InlineJavascriptRequirement
+- class: DockerRequirement
+  dockerPull: biocontainers/fastqc:v0.11.5_cv3
+
 inputs:
 - id: reads
   label: reads
@@ -160,6 +162,7 @@ inputs:
   - 'null'
   inputBinding:
     prefix: --dir
+
 outputs:
 - id: out
   label: out
@@ -175,5 +178,7 @@ outputs:
     items: File
   outputBinding:
     glob: '*/fastqc_data.txt'
+
 baseCommand: fastqc
+arguments: []
 id: fastqc

@@ -1,17 +1,19 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
 cwlVersion: v1.0
-label: Gatk4GatherVcfs
+label: 'GATK4: Gather VCFs'
 doc: |-
   GatherVcfs (Picard)
               
   Gathers multiple VCF files from a scatter operation into a single VCF file. 
   Input files must be supplied in genomic order and must not have events at overlapping positions.
+
 requirements:
-  DockerRequirement:
-    dockerPull: broadinstitute/gatk:4.1.3.0
-  InlineJavascriptRequirement: {}
-  ShellCommandRequirement: {}
+- class: ShellCommandRequirement
+- class: InlineJavascriptRequirement
+- class: DockerRequirement
+  dockerPull: broadinstitute/gatk:4.1.3.0
+
 inputs:
 - id: vcfs
   label: vcfs
@@ -21,6 +23,7 @@ inputs:
     inputBinding:
       prefix: --INPUT
     items: File
+  inputBinding: {}
 - id: outputFilename
   label: outputFilename
   doc: '[default: null] (-O) Output VCF file.'
@@ -144,13 +147,16 @@ inputs:
   - 'null'
   inputBinding:
     prefix: --VERBOSITY
+
 outputs:
 - id: out
   label: out
   type: File
   outputBinding:
-    glob: $(inputs.outputFilename)
+    glob: generated.gathered.vcf
+
 baseCommand:
 - gatk
 - GatherVcfs
+arguments: []
 id: Gatk4GatherVcfs

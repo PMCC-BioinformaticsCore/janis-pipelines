@@ -1,12 +1,14 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
 cwlVersion: v1.0
-label: SplitMultiAllele
+label: Split Multiple Alleles
+
 requirements:
-  DockerRequirement:
-    dockerPull: heuermh/vt
-  InlineJavascriptRequirement: {}
-  ShellCommandRequirement: {}
+- class: ShellCommandRequirement
+- class: InlineJavascriptRequirement
+- class: DockerRequirement
+  dockerPull: heuermh/vt
+
 inputs:
 - id: vcf
   label: vcf
@@ -40,12 +42,13 @@ inputs:
     position: 10
     valueFrom: $(inputs.vcf.basename.replace(/.vcf.gz$/, "")).norm.vcf
     shellQuote: false
+
 outputs:
 - id: out
   label: out
   type: File
   outputBinding:
-    glob: $(inputs.outputFilename)
+    glob: $(inputs.vcf.basename.replace(/.vcf.gz$/, "")).norm.vcf
 arguments:
 - position: 0
   valueFrom: zcat

@@ -1,12 +1,14 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
 cwlVersion: v1.0
-label: Gatk4SplitReads
+label: 'GATK4: SplitReads'
+
 requirements:
-  DockerRequirement:
-    dockerPull: broadinstitute/gatk:4.1.3.0
-  InlineJavascriptRequirement: {}
-  ShellCommandRequirement: {}
+- class: ShellCommandRequirement
+- class: InlineJavascriptRequirement
+- class: DockerRequirement
+  dockerPull: broadinstitute/gatk:4.1.3.0
+
 inputs:
 - id: outputFilename
   label: outputFilename
@@ -577,6 +579,7 @@ inputs:
   - 'null'
   inputBinding:
     prefix: --soft-clipped-ratio-threshold
+
 outputs:
 - id: out
   label: out
@@ -604,7 +607,9 @@ outputs:
     }
   outputBinding:
     glob: $(inputs.bam.basename)
+
 baseCommand:
 - gatk
 - SplitReads
+arguments: []
 id: Gatk4SplitReads

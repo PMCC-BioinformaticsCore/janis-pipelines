@@ -1,12 +1,14 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
 cwlVersion: v1.0
-label: vardict_germline
+label: VarDict (Germline)
+
 requirements:
-  DockerRequirement:
-    dockerPull: michaelfranklin/vardict:1.6.0
-  InlineJavascriptRequirement: {}
-  ShellCommandRequirement: {}
+- class: ShellCommandRequirement
+- class: InlineJavascriptRequirement
+- class: DockerRequirement
+  dockerPull: michaelfranklin/vardict:1.6.0
+
 inputs:
 - id: intervals
   label: intervals
@@ -486,12 +488,14 @@ inputs:
     prefix: -f
     position: 5
     shellQuote: false
+
 outputs:
 - id: out
   label: out
   type: File
   outputBinding:
-    glob: $(inputs.outputFilename)
+    glob: generated.vardict.vcf.gz
+
 baseCommand: VarDict
 arguments:
 - position: 3

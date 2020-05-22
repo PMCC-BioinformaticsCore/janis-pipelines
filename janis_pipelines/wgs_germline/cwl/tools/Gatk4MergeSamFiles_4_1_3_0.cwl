@@ -1,13 +1,15 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
 cwlVersion: v1.0
-label: Gatk4MergeSamFiles
+label: 'GATK4: Merge SAM Files'
 doc: Merges multiple SAM/BAM files into one file
+
 requirements:
-  DockerRequirement:
-    dockerPull: broadinstitute/gatk:4.1.3.0
-  InlineJavascriptRequirement: {}
-  ShellCommandRequirement: {}
+- class: ShellCommandRequirement
+- class: InlineJavascriptRequirement
+- class: DockerRequirement
+  dockerPull: broadinstitute/gatk:4.1.3.0
+
 inputs:
 - id: bams
   label: bams
@@ -25,6 +27,7 @@ inputs:
   type:
   - string
   - 'null'
+  inputBinding: {}
 - id: outputFilename
   label: outputFilename
   doc: SAM/BAM file to write merged result to
@@ -200,6 +203,7 @@ inputs:
   inputBinding:
     prefix: --verbosity
     position: 11
+
 outputs:
 - id: out
   label: out
@@ -225,8 +229,10 @@ outputs:
 
     }
   outputBinding:
-    glob: $(inputs.outputFilename)
+    glob: '$(inputs.sampleName ? inputs.sampleName : "generated").merged.bam'
+
 baseCommand:
 - gatk
 - MergeSamFiles
+arguments: []
 id: Gatk4MergeSamFiles

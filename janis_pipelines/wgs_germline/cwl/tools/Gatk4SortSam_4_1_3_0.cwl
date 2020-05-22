@@ -1,13 +1,15 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
 cwlVersion: v1.0
-label: Gatk4SortSam
+label: 'GATK4: SortSAM'
 doc: Sorts a SAM/BAM/CRAM file.
+
 requirements:
-  DockerRequirement:
-    dockerPull: broadinstitute/gatk:4.1.3.0
-  InlineJavascriptRequirement: {}
-  ShellCommandRequirement: {}
+- class: ShellCommandRequirement
+- class: InlineJavascriptRequirement
+- class: DockerRequirement
+  dockerPull: broadinstitute/gatk:4.1.3.0
+
 inputs:
 - id: bam
   label: bam
@@ -155,6 +157,7 @@ inputs:
   inputBinding:
     prefix: --verbosity
     position: 11
+
 outputs:
 - id: out
   label: out
@@ -180,8 +183,10 @@ outputs:
 
     }
   outputBinding:
-    glob: $(inputs.outputFilename)
+    glob: $(inputs.bam.basename.replace(/.bam$/, "")).sorted.bam
+
 baseCommand:
 - gatk
 - SortSam
+arguments: []
 id: Gatk4SortSam

@@ -1,13 +1,15 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
 cwlVersion: v1.0
-label: bcftoolssort
+label: 'BCFTools: Sort'
 doc: "About:   Sort VCF/BCF file.\nUsage:   bcftools sort [OPTIONS] <FILE.vcf>"
+
 requirements:
-  DockerRequirement:
-    dockerPull: michaelfranklin/bcftools:1.9
-  InlineJavascriptRequirement: {}
-  ShellCommandRequirement: {}
+- class: ShellCommandRequirement
+- class: InlineJavascriptRequirement
+- class: DockerRequirement
+  dockerPull: michaelfranklin/bcftools:1.9
+
 inputs:
 - id: vcf
   label: vcf
@@ -40,13 +42,16 @@ inputs:
   - 'null'
   inputBinding:
     prefix: --temp-dir
+
 outputs:
 - id: out
   label: out
   type: File
   outputBinding:
-    glob: $(inputs.outputFilename)
+    glob: generated.sorted.vcf.gz
+
 baseCommand:
 - bcftools
 - sort
+arguments: []
 id: bcftoolssort

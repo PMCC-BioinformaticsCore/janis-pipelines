@@ -1,7 +1,7 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
 cwlVersion: v1.0
-label: combinevariants
+label: Combine Variants
 doc: |2
 
   usage: combine_vcf.py [-h] -i I --columns COLUMNS -o O --type
@@ -30,11 +30,13 @@ doc: |2
 
   optional arguments:
     -h, --help            show this help message and exit
+
 requirements:
-  DockerRequirement:
-    dockerPull: michaelfranklin/pmacutil:0.0.4
-  InlineJavascriptRequirement: {}
-  ShellCommandRequirement: {}
+- class: ShellCommandRequirement
+- class: InlineJavascriptRequirement
+- class: DockerRequirement
+  dockerPull: michaelfranklin/pmacutil:0.0.4
+
 inputs:
 - id: outputFilename
   label: outputFilename
@@ -61,6 +63,7 @@ inputs:
     inputBinding:
       prefix: -i
     items: File
+  inputBinding: {}
 - id: type
   label: type
   doc: germline | somatic
@@ -76,6 +79,7 @@ inputs:
       prefix: --columns
     items: string
   - 'null'
+  inputBinding: {}
 - id: normal
   label: normal
   doc: Sample id of germline vcf, or normal sample id of somatic vcf
@@ -100,16 +104,19 @@ inputs:
   - 'null'
   inputBinding:
     prefix: --priority
+
 outputs:
 - id: vcf
   label: vcf
   type: File
   outputBinding:
-    glob: $(inputs.outputFilename)
+    glob: generated.combined.vcf
 - id: tsv
   label: tsv
   type: File
   outputBinding:
-    glob: $(inputs.regions)
+    glob: generated.tsv
+
 baseCommand: combine_vcf.py
+arguments: []
 id: combinevariants

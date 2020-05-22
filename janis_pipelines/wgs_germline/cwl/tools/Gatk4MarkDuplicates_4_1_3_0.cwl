@@ -1,7 +1,7 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
 cwlVersion: v1.0
-label: Gatk4MarkDuplicates
+label: 'GATK4: Mark Duplicates'
 doc: |-
   MarkDuplicates (Picard): Identifies duplicate reads.
 
@@ -46,11 +46,13 @@ doc: |-
   reads are not excluded from the duplication test and can be marked as duplicate reads.
 
   If desired, duplicates can be removed using the REMOVE_DUPLICATE and REMOVE_SEQUENCING_DUPLICATES options.
+
 requirements:
-  DockerRequirement:
-    dockerPull: broadinstitute/gatk:4.1.3.0
-  InlineJavascriptRequirement: {}
-  ShellCommandRequirement: {}
+- class: ShellCommandRequirement
+- class: InlineJavascriptRequirement
+- class: DockerRequirement
+  dockerPull: broadinstitute/gatk:4.1.3.0
+
 inputs:
 - id: bam
   label: bam
@@ -229,6 +231,7 @@ inputs:
   inputBinding:
     prefix: --verbosity
     position: 11
+
 outputs:
 - id: out
   label: out
@@ -254,13 +257,15 @@ outputs:
 
     }
   outputBinding:
-    glob: $(inputs.outputFilename)
+    glob: $(inputs.bam.basename.replace(/.bam$/, "")).markduped.bam
 - id: metrics
   label: metrics
   type: File
   outputBinding:
-    glob: $(inputs.metricsFilename)
+    glob: generated.metrics.txt
+
 baseCommand:
 - gatk
 - MarkDuplicates
+arguments: []
 id: Gatk4MarkDuplicates

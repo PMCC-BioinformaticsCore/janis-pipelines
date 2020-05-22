@@ -1,7 +1,7 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
 cwlVersion: v1.0
-label: Gatk4BaseRecalibrator
+label: 'GATK4: Base Recalibrator'
 doc: |-
   First pass of the base quality score recalibration. Generates a recalibration table based on various covariates. 
   The default covariates are read group, reported quality score, machine cycle, and nucleotide context.
@@ -12,11 +12,13 @@ doc: |-
   Since there is a large amount of data one can then calculate an empirical probability of error given the 
   particular covariates seen at this site, where p(error) = num mismatches / num observations. The output file is a 
   table (of the several covariate values, num observations, num mismatches, empirical quality score).
+
 requirements:
-  DockerRequirement:
-    dockerPull: broadinstitute/gatk:4.1.3.0
-  InlineJavascriptRequirement: {}
-  ShellCommandRequirement: {}
+- class: ShellCommandRequirement
+- class: InlineJavascriptRequirement
+- class: DockerRequirement
+  dockerPull: broadinstitute/gatk:4.1.3.0
+
 inputs:
 - id: tmpDir
   label: tmpDir
@@ -99,13 +101,16 @@ inputs:
   - 'null'
   inputBinding:
     prefix: --intervals
+
 outputs:
 - id: out
   label: out
   type: File
   outputBinding:
-    glob: $(inputs.outputFilename)
+    glob: $(inputs.bam.basename.replace(/.bam$/, "")).table
+
 baseCommand:
 - gatk
 - BaseRecalibrator
+arguments: []
 id: Gatk4BaseRecalibrator

@@ -1,7 +1,7 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
 cwlVersion: v1.0
-label: strelka_germline
+label: Strelka (Germline)
 doc: |-
   Strelka2 is a fast and accurate small variant caller optimized for analysis of germline variation 
   in small cohorts and somatic variation in tumor/normal sample pairs. The germline caller employs 
@@ -27,11 +27,13 @@ doc: |-
   coverage over all indel sizes (in additional to SVs and SNVs). 
 
   See the user guide for a full description of capabilities and limitations
+
 requirements:
-  DockerRequirement:
-    dockerPull: michaelfranklin/strelka:2.9.10
-  InlineJavascriptRequirement: {}
-  ShellCommandRequirement: {}
+- class: ShellCommandRequirement
+- class: InlineJavascriptRequirement
+- class: DockerRequirement
+  dockerPull: michaelfranklin/strelka:2.9.10
+
 inputs:
 - id: bam
   label: bam
@@ -228,6 +230,7 @@ inputs:
     prefix: --mailTo
     position: 3
     shellQuote: false
+
 outputs:
 - id: configPickle
   label: configPickle

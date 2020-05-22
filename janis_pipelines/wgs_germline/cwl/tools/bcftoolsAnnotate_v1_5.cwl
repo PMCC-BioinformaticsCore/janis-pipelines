@@ -1,13 +1,15 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
 cwlVersion: v1.0
-label: bcftoolsAnnotate
+label: 'BCFTools: Annotate'
 doc: "------------------------------------\n\nAdd or remove annotations."
+
 requirements:
-  DockerRequirement:
-    dockerPull: biocontainers/bcftools:v1.5_cv2
-  InlineJavascriptRequirement: {}
-  ShellCommandRequirement: {}
+- class: ShellCommandRequirement
+- class: InlineJavascriptRequirement
+- class: DockerRequirement
+  dockerPull: biocontainers/bcftools:v1.5_cv2
+
 inputs:
 - id: file
   label: file
@@ -173,13 +175,16 @@ inputs:
   - 'null'
   inputBinding:
     prefix: --remove
+
 outputs:
 - id: out
   label: out
   type: File
   outputBinding:
-    glob: $(inputs.outputFilename)
+    glob: generated.vcf.gz
+
 baseCommand:
 - bcftools
 - annotate
+arguments: []
 id: bcftoolsAnnotate

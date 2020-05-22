@@ -1,7 +1,7 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
 cwlVersion: v1.0
-label: manta
+label: Manta
 doc: |-
   Manta calls structural variants (SVs) and indels from mapped paired-end sequencing reads. 
   It is optimized for analysis of germline variation in small sets of individuals and somatic 
@@ -18,11 +18,13 @@ doc: |-
   unmatched tumor samples as well. Manta accepts input read mappings from BAM or CRAM files and 
   reports all SV and indel inferences in VCF 4.1 format. See the user guide for a full description 
   of capabilities and limitations.
+
 requirements:
-  DockerRequirement:
-    dockerPull: michaelfranklin/manta:1.5.0
-  InlineJavascriptRequirement: {}
-  ShellCommandRequirement: {}
+- class: ShellCommandRequirement
+- class: InlineJavascriptRequirement
+- class: DockerRequirement
+  dockerPull: michaelfranklin/manta:1.5.0
+
 inputs:
 - id: config
   label: config
@@ -192,6 +194,7 @@ inputs:
     prefix: --maxTaskRuntime
     position: 3
     shellQuote: false
+
 outputs:
 - id: python
   label: python
