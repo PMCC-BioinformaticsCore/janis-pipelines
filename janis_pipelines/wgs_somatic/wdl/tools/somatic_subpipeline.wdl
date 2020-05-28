@@ -1,9 +1,9 @@
 version development
 
-import "fastqc.wdl" as F
-import "ParseFastqcAdaptors.wdl" as P
-import "BwaAligner.wdl" as B
-import "mergeAndMarkBams.wdl" as M
+import "fastqc_v0_11_5.wdl" as F
+import "ParseFastqcAdaptors_v0_1_0.wdl" as P
+import "BwaAligner_1_0_0.wdl" as B
+import "mergeAndMarkBams_4_1_3.wdl" as M
 
 workflow somatic_subpipeline {
   input {

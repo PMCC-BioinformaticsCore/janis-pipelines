@@ -346,7 +346,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         )
         self.output(
             "gridss_assembly",
-            source=self.vc_gridss.out,
+            source=self.vc_gridss.assembly,
             output_folder="bams",
             doc="Assembly returned by GRIDSS",
         )
