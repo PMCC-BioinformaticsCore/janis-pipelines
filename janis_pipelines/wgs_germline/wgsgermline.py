@@ -14,7 +14,10 @@ from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWork
 from janis_bioinformatics.tools.common import MergeAndMarkBams_4_1_3
 from janis_bioinformatics.tools.common.bwaaligner import BwaAligner
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
-from janis_bioinformatics.tools.pmac import CombineVariants_0_0_4
+from janis_bioinformatics.tools.pmac import (
+    CombineVariants_0_0_4,
+    GenerateVardictHeaderLines,
+)
 from janis_bioinformatics.tools.variantcallers import (
     GatkGermlineVariantCaller_4_1_3,
     IlluminaGermlineVariantCaller,
@@ -120,27 +123,6 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 "An interval for which to restrict the analysis to.",
                 quality=InputQualityType.static,
                 example="BRCA1.bed.gz",
-            ),
-        )
-
-        self.input(
-            "vardict_header_lines",
-            File,
-            doc=InputDocumentation(
-                """\
-As with chromosomal sequences it is highly recommended (but not required) that the header \
-include tags describing the contigs referred to in the VCF file. This furthermore allows \
-these contigs to come from different files. The format is identical to that of a reference \
-sequence, but with an additional URL tag to indicate where that sequence can be found. For example:
-
-.. code-block:
-
-   ##contig=<ID=ctg1,URL=ftp://somewhere.org/assembly.fa,...>
-
-Source: (1.2.5 Alternative allele field format) https://samtools.github.io/hts-specs/VCFv4.1.pdf (edited) 
-""",
-                quality=InputQualityType.static,
-                example="https://gist.githubusercontent.com/illusional/5b75a0506f7327aca7d355f8ad5008f8/raw/e181c0569771e6a557d01a8a1f70c71e3598a269/headerLines.txt",
             ),
         )
 
@@ -262,6 +244,10 @@ Source: (1.2.5 Alternative allele field format) https://samtools.github.io/hts-s
 
         # Vardict
         self.step(
+            "generate_vardict_headerlines",
+            GenerateVardictHeaderLines(reference=self.reference),
+        )
+        self.step(
             "vc_vardict",
             VardictGermlineVariantCaller(
                 bam=self.merge_and_mark.out,
@@ -269,7 +255,7 @@ Source: (1.2.5 Alternative allele field format) https://samtools.github.io/hts-s
                 intervals=self.vardict_intervals,
                 sample_name=self.sample_name,
                 allele_freq_threshold=self.allele_freq_threshold,
-                header_lines=self.vardict_header_lines,
+                header_lines=self.generate_vardict_headerlines.out,
             ),
             scatter="intervals",
         )
