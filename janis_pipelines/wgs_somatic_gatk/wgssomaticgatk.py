@@ -192,8 +192,8 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         self.step(
             "vc_gatk",
             GatkSomaticVariantCaller_4_1_3(
-                normal_bam=self.tumor.out,
-                tumor_bam=self.normal.out,
+                normal_bam=self.normal.out,
+                tumor_bam=self.tumor.out,
                 normal_name=self.normal_name,
                 tumor_name=self.tumor_name,
                 intervals=self.gatk_intervals,

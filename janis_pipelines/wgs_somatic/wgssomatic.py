@@ -12,7 +12,10 @@ from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
 from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
 from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
-from janis_bioinformatics.tools.pmac import CombineVariants_0_0_4
+from janis_bioinformatics.tools.pmac import (
+    CombineVariants_0_0_4,
+    GenerateVardictHeaderLines,
+)
 from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
 from janis_bioinformatics.tools.papenfuss.gridss.gridss import Gridss_2_6_2
 from janis_bioinformatics.tools.variantcallers.illuminasomatic_strelka import (
@@ -147,27 +150,6 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
         )
 
         self.input(
-            "vardict_header_lines",
-            File,
-            doc=InputDocumentation(
-                """\
-As with chromosomal sequences it is highly recommended (but not required) that the header \
-include tags describing the contigs referred to in the VCF file. This furthermore allows \
-these contigs to come from different files. The format is identical to that of a reference \
-sequence, but with an additional URL tag to indicate where that sequence can be found. For example:
-
-.. code-block:
-
-   ##contig=<ID=ctg1,URL=ftp://somewhere.org/assembly.fa,...>
-
-Source: (1.2.5 Alternative allele field format) https://samtools.github.io/hts-specs/VCFv4.1.pdf (edited) 
-""",
-                quality=InputQualityType.static,
-                example="https://gist.githubusercontent.com/illusional/5b75a0506f7327aca7d355f8ad5008f8/raw/e181c0569771e6a557d01a8a1f70c71e3598a269/headerLines.txt",
-            ),
-        )
-
-        self.input(
             "allele_freq_threshold",
             Float,
             default=0.05,
@@ -297,13 +279,17 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         )
 
         self.step(
+            "generate_vardict_headerlines",
+            GenerateVardictHeaderLines(reference=self.reference),
+        )
+        self.step(
             "vc_vardict",
             VardictSomaticVariantCaller(
                 normal_bam=self.tumor.out,
                 tumor_bam=self.normal.out,
                 normal_name=self.normal_name,
                 tumor_name=self.tumor_name,
-                header_lines=self.vardict_header_lines,
+                header_lines=self.generate_vardict_headerlines.out,
                 intervals=self.vardict_intervals,
                 reference=self.reference,
                 allele_freq_threshold=self.allele_freq_threshold,
@@ -410,7 +396,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         )
         self.output(
             "gridss_assembly",
-            source=self.vc_gridss.out,
+            source=self.vc_gridss.assembly,
             output_folder="bams",
             doc="Assembly returned by GRIDSS",
         )

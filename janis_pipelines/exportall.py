@@ -13,17 +13,23 @@ workflows = [
 
 
 def export_workflows(wfs=workflows):
-    import inspect, os.path
+    import inspect, os.path, shutil
 
     for W in workflows:
         w = W()
+
+        outputdir = os.path.dirname(os.path.realpath(inspect.getfile(W)))
+        dirs_to_remove = ["cwl", "wdl"]
+        for od in dirs_to_remove:
+            odd = os.path.join(outputdir, od)
+            if os.path.exists(odd):
+                shutil.rmtree(odd)
+
         args = {
             "to_console": False,
             "to_disk": True,
             "validate": True,
-            "export_path": os.path.join(
-                os.path.dirname(os.path.realpath(inspect.getfile(W))), "{language}"
-            ),
+            "export_path": os.path.join(outputdir, "{language}"),
         }
         w.translate("cwl", **args)
         w.translate("wdl", **args)
