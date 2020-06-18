@@ -1,4 +1,6 @@
 from datetime import date
+from janis_unix.tools import UncompressArchive
+from janis_unix.data_types import TextFile
 
 from janis_bioinformatics.data_types import (
     FastaWithDict,
@@ -7,26 +9,33 @@ from janis_bioinformatics.data_types import (
     Bed,
     BedTabix,
 )
-
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
 from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
-from janis_bioinformatics.tools.common import MergeAndMarkBams_4_1_3
+from janis_bioinformatics.tools.common import (
+    MergeAndMarkBams_4_1_3,
+    GATKBaseRecalBQSRWorkflow_4_1_3,
+)
 from janis_bioinformatics.tools.common.bwaaligner import BwaAligner
+from janis_bioinformatics.tools.htslib import BGZipLatest
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
 from janis_bioinformatics.tools.pmac import (
     CombineVariants_0_0_4,
     GenerateVardictHeaderLines,
+    ParseFastqcAdaptors,
+    AnnotateDepthOfCoverage_0_1_0,
+    PerformanceSummaryGenome_0_1_0,
+    AddBamStatsGermline_0_1_0,
 )
 from janis_bioinformatics.tools.variantcallers import (
     GatkGermlineVariantCaller_4_1_3,
     IlluminaGermlineVariantCaller,
     VardictGermlineVariantCaller,
 )
-from janis_bioinformatics.tools.variantcallers.gridssgermline import (
-    GridssGermlineVariantCaller,
-)
-from janis_bioinformatics.tools.pmac import ParseFastqcAdaptors
+
+# from janis_bioinformatics.tools.variantcallers.gridssgermline import (
+#     GridssGermlineVariantCaller,
+# )
 
 from janis_core import (
     Array,
@@ -136,7 +145,24 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 example=None,
             ),
         )
-
+        self.input(
+            "gene_bed",
+            Bed(),
+            doc=InputDocumentation(
+                "Targeted genes / exons in bed format for calcualting coverages",
+                quality=InputQualityType.static,
+                example="BRCA1.bed",
+            ),
+        )
+        # for fast processing wgs bam
+        # to do: create genome file like vardict header
+        self.input(
+            "genome_file",
+            TextFile(),
+            doc=InputDocumentation(
+                "Genome file for bedtools query", quality=InputQualityType.static,
+            ),
+        )
         # self.input("gridssBlacklist", Bed)
 
         self.input(
@@ -183,7 +209,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
 
         # STEPS
 
-        self.step("fastqc", FastQC_0_11_5(reads=self.fastqs), scatter="reads"),
+        self.step("fastqc", FastQC_0_11_5(reads=self.fastqs), scatter="reads")
 
         self.step(
             "getfastqc_adapters",
@@ -213,24 +239,57 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             ),
         )
 
+        # STATISTICS of BAM
+        self.step(
+            "annotate_doc",
+            AnnotateDepthOfCoverage_0_1_0(
+                bam=self.merge_and_mark,
+                bed=self.gene_bed,
+                reference=self.reference,
+                sample_name=self.sample_name,
+            ),
+        )
+
+        self.step(
+            "performance_summary",
+            PerformanceSummaryGenome_0_1_0(
+                bam=self.merge_and_mark,
+                bed=self.gene_bed,
+                genome_file=self.genome_file,
+                sample_name=self.sample_name,
+            ),
+        )
+
         # VARIANT CALLERS
 
         # GATK
         self.step(
-            "vc_gatk",
-            GatkGermlineVariantCaller_4_1_3(
-                bam=self.merge_and_mark.out,
-                intervals=self.gatk_intervals,
+            "bqsr",
+            GATKBaseRecalBQSRWorkflow_4_1_3(
+                bam=self.merge_and_mark,
                 reference=self.reference,
                 snps_dbsnp=self.snps_dbsnp,
                 snps_1000gp=self.snps_1000gp,
                 known_indels=self.known_indels,
                 mills_indels=self.mills_indels,
             ),
+        )
+        self.step(
+            "vc_gatk",
+            GatkGermlineVariantCaller_4_1_3(
+                bam=self.bqsr.out,
+                intervals=self.gatk_intervals,
+                reference=self.reference,
+                snps_dbsnp=self.snps_dbsnp,
+            ),
             scatter="intervals",
         )
-
         self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out))
+        self.step("gatk_compressvcf", BGZipLatest(file=self.vc_gatk_merge.out))
+        self.step("gatk_sort_combined", BcfToolsSort_1_9(vcf=self.gatk_compressvcf.out))
+        self.step(
+            "gatk_uncompressvcf", UncompressArchive(file=self.gatk_sort_combined.out)
+        )
 
         # Strelka
         self.step(
@@ -260,6 +319,14 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             scatter="intervals",
         )
         self.step("vc_vardict_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_vardict.out))
+        self.step("vardict_compressvcf", BGZipLatest(file=self.vc_vardict_merge.out))
+        self.step(
+            "vardict_sort_combined", BcfToolsSort_1_9(vcf=self.vardict_compressvcf.out)
+        )
+        self.step(
+            "vardict_uncompressvcf",
+            UncompressArchive(file=self.vardict_sort_combined.out),
+        )
 
         # GRIDSS
         # self.step(
@@ -272,21 +339,28 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         # )
 
         # Combine
-
         self.step(
             "combine_variants",
             CombineVariants_0_0_4(
                 vcfs=[
-                    self.vc_gatk_merge.out,
+                    self.gatk_uncompressvcf.out,
                     self.vc_strelka.out,
-                    self.vc_vardict_merge.out,
+                    self.vardict_uncompressvcf.out,
                     # self.vc_gridss.out,
                 ],
                 type="germline",
                 columns=["AC", "AN", "AF", "AD", "DP", "GT"],
             ),
         )
-        self.step("sort_combined", BcfToolsSort_1_9(vcf=self.combine_variants.vcf))
+        self.step("combined_compress", BGZipLatest(file=self.combine_variants.out))
+        self.step("sort_combined", BcfToolsSort_1_9(vcf=self.combined_compress.out))
+        self.step("combined_uncompress", UncompressArchive(file=self.sort_combined.out))
+        self.step(
+            "addbamstats",
+            AddBamStatsGermline_0_1_0(
+                bam=self.merge_and_mark, vcf=self.combined_uncompress.out
+            ),
+        )
 
         self.output(
             "reports",
@@ -301,25 +375,47 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             doc="Aligned and indexed bam.",
             output_name=self.sample_name,
         )
-
         self.output(
-            "variants",
-            source=self.sort_combined.out,
+            "doc_out",
+            source=self.annotate_doc.out,
+            output_folder=["performance_summary", self.sample_name],
+            doc="A text file of depth of coverage summary of bam",
+        )
+        self.output(
+            "summary",
+            source=self.performance_summary.performanceSummaryOut,
+            output_folder=["performance_summary", self.sample_name],
+            doc="A text file of performance summary of bam",
+        )
+        self.output(
+            "gene_summary",
+            source=self.performance_summary.geneFileOut,
+            output_folder=["performance_summary", self.sample_name],
+            doc="A text file of gene coverage summary of bam",
+        )
+        self.output(
+            "region_summary",
+            source=self.performance_summary.regionFileOut,
+            output_folder=["performance_summary", self.sample_name],
+            doc="A text file of region coverage summary of bam",
+        )
+        self.output(
+            "variants_combined",
+            source=self.addbamstats.out,
             output_folder="variants",
-            output_name=self.sample_name,
             doc="Combined variants from all 3 callers",
         )
 
         self.output(
             "variants_gatk",
-            source=self.vc_gatk_merge.out,
+            source=self.gatk_sort_combined.out,
             output_folder="variants",
             output_name="gatk",
             doc="Merged variants from the GATK caller",
         )
         self.output(
             "variants_vardict",
-            source=self.vc_vardict_merge.out,
+            source=self.vardict_sort_combined.out,
             output_folder=["variants"],
             output_name="vardict",
             doc="Merged variants from the VarDict caller",
