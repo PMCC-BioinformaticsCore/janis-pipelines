@@ -223,6 +223,9 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             ),
         )
 
+        # VARIANT CALLERS
+
+        # GATK
         self.step(
             "bqsr",
             GATKBaseRecalBQSRWorkflow_4_1_3(
@@ -234,10 +237,6 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 mills_indels=self.mills_indels,
             ),
         )
-
-        # VARIANT CALLERS
-
-        # GATK
         self.step(
             "vc_gatk",
             GatkGermlineVariantCaller_4_1_3(
