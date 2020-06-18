@@ -11,13 +11,19 @@ from janis_bioinformatics.data_types import (
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
 from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
-from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
+from janis_bioinformatics.tools.common import (
+    BwaAligner,
+    MergeAndMarkBams_4_1_3,
+    GATKBaseRecalBQSRWorkflow_4_1_3,
+)
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
+from janis_bioinformatics.tools.htslib import BGZipLatest
 from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
 from janis_bioinformatics.tools.pmac import (
     ParseFastqcAdaptors,
     AnnotateDepthOfCoverage_0_1_0,
     PerformanceSummaryGenome_0_1_0,
+    AddBamStatsSomatic_0_1_0,
 )
 from janis_core import (
     String,
@@ -27,6 +33,8 @@ from janis_core import (
     InputDocumentation,
     InputQualityType,
 )
+from janis_unix.tools import UncompressArchive
+from janis_unix.data_types import TextFile
 
 
 class WGSSomaticGATK(BioinformaticsWorkflow):
@@ -38,7 +46,7 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
 
     @staticmethod
     def version():
-        return "1.2.0"
+        return "1.2.1"
 
     def constructor(self):
 
@@ -101,12 +109,19 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
             ),
         )
         self.input(
-            "targeted_region_bed",
+            "gene_bed",
             Bed(),
             doc=InputDocumentation(
-                "Targeted genes / exons in bed format",
+                "Targeted genes / exons in bed format for calcualting coverages",
                 quality=InputQualityType.static,
                 example="BRCA1.bed",
+            ),
+        )
+        self.input(
+            "genome_file",
+            TextFile(),
+            doc=InputDocumentation(
+                "Genome file for bedtools query", quality=InputQualityType.static,
             ),
         )
         self.input(
@@ -167,6 +182,23 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 "File: gs://genomics-public-data/references/hg38/v0/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz",
             ),
         )
+        self.input(
+            "gnomad",
+            VcfTabix(),
+            doc=InputDocumentation(
+                "The genome Aggregation Database (gnomAD)",
+                quality=InputQualityType.static,
+            ),
+        )
+        self.input(
+            "panel_of_normals",
+            VcfTabix(optional=True),
+            doc=InputDocumentation(
+                "VCF file of sites observed in normal.",
+                quality=InputQualityType.static,
+                example="gs://gatk-best-practices/somatic-b37/Mutect2-exome-panel.vcf or gs://gatk-best-practices/somatic-b37/Mutect2-WGS-panel-b37.vcf for hg19/b37",
+            ),
+        )
 
         self.step(
             "tumor",
@@ -175,7 +207,12 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 sample_name=self.tumor_name,
                 reference=self.reference,
                 cutadapt_adapters=self.cutadapt_adapters,
-                targeted_region_bed=self.targeted_region_bed,
+                gene_bed=self.gene_bed,
+                genome_file=self.genome_file,
+                snps_dbsnp=self.snps_dbsnp,
+                snps_1000gp=self.snps_1000gp,
+                known_indels=self.known_indels,
+                mills_indels=self.mills_indels,
             ),
         )
         self.step(
@@ -185,32 +222,49 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 sample_name=self.normal_name,
                 reference=self.reference,
                 cutadapt_adapters=self.cutadapt_adapters,
-                targeted_region_bed=self.targeted_region_bed,
+                gene_bed=self.gene_bed,
+                genome_file=self.genome_file,
+                snps_dbsnp=self.snps_dbsnp,
+                snps_1000gp=self.snps_1000gp,
+                known_indels=self.known_indels,
+                mills_indels=self.mills_indels,
             ),
         )
 
+        # no splitting bam
         self.step(
             "vc_gatk",
             GatkSomaticVariantCaller_4_1_3(
                 normal_bam=self.normal.out,
                 tumor_bam=self.tumor.out,
                 normal_name=self.normal_name,
-                tumor_name=self.tumor_name,
                 intervals=self.gatk_intervals,
                 reference=self.reference,
-                snps_dbsnp=self.snps_dbsnp,
-                snps_1000gp=self.snps_1000gp,
-                known_indels=self.known_indels,
-                mills_indels=self.mills_indels,
+                gnomad=self.gnomad,
+                panel_of_normals=self.panel_of_normals,
             ),
             scatter="intervals",
         )
 
-        self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk))
-        self.step("sorted", BcfToolsSort_1_9(vcf=self.vc_gatk_merge.out))
+        self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out))
+        # sort
+        self.step("compressvcf", BGZipLatest(file=self.vc_gatk_merge.out))
+        self.step("sort_combined", BcfToolsSort_1_9(vcf=self.compressvcf.out))
+        self.step("uncompressvcf", UncompressArchive(file=self.sort_combined.out))
+
+        self.step(
+            "addbamstats",
+            AddBamStatsSomatic_0_1_0(
+                normal_id=self.normal_name,
+                tumor_id=self.tumor_name,
+                normal_bam=self.normal.out,
+                tumor_bam=self.tumor.out,
+                vcf=self.uncompressvcf.out,
+            ),
+        )
 
         # Outputs
-
+        # BAM
         self.output(
             "normal_bam",
             source=self.normal.out,
@@ -224,25 +278,25 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             output_folder="bams",
             output_name=self.tumor_name,
         )
-
+        # FASTQC
         self.output(
             "normal_report", source=self.normal.reports, output_folder="reports"
         )
         self.output("tumor_report", source=self.tumor.reports, output_folder="reports")
-
+        # COVERAGE
         self.output(
             "normal_doc",
             source=self.normal.depth_of_coverage,
-            output_folder=["summary", "doc"],
+            output_folder=["summary", self.normal_name],
             doc="A text file of depth of coverage summary of NORMAL bam",
         )
         self.output(
             "tumor_doc",
             source=self.tumor.depth_of_coverage,
-            output_folder=["summary", "doc"],
+            output_folder=["summary", self.tumor_name],
             doc="A text file of depth of coverage summary of TUMOR bam",
         )
-
+        # BAM PERFORMANCE
         self.output(
             "normal_summary",
             source=self.normal.summary,
@@ -279,10 +333,10 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             output_folder=["summary", self.tumor_name],
             doc="A text file of region coverage summary of TUMOR bam",
         )
-
+        # VCF
         self.output(
             "variants",
-            source=self.sorted.out,
+            source=self.sort_combined.out,
             output_folder="variants",
             doc="Merged variants from the GATK caller",
         )
@@ -292,6 +346,12 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             output_folder=["variants", "byInterval"],
             doc="Unmerged variants from the GATK caller (by interval)",
         )
+        self.output(
+            "variants_final",
+            source=self.addbamstats.out,
+            output_folder="variants",
+            doc="Final vcf",
+        )
 
     @staticmethod
     def process_subpipeline(**connections):
@@ -300,8 +360,13 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         w.input("reference", FastaWithDict)
         w.input("reads", Array(FastqGzPair))
         w.input("cutadapt_adapters", File(optional=True))
-        w.input("targeted_region_bed", Bed)
+        w.input("gene_bed", Bed)
+        w.input("genome_file", TextFile)
         w.input("sample_name", String)
+        w.input("snps_dbsnp", VcfTabix)
+        w.input("snps_1000gp", VcfTabix)
+        w.input("known_indels", VcfTabix)
+        w.input("mills_indels", VcfTabix)
 
         w.step("fastqc", FastQC_0_11_5(reads=w.reads), scatter="reads")
 
@@ -336,7 +401,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             "annotate_doc",
             AnnotateDepthOfCoverage_0_1_0(
                 bam=w.merge_and_mark.out,
-                bed=w.targeted_region_bed,
+                bed=w.gene_bed,
                 reference=w.reference,
                 sample_name=w.sample_name,
             ),
@@ -346,12 +411,25 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             "performance_summary",
             PerformanceSummaryGenome_0_1_0(
                 bam=w.merge_and_mark.out,
-                bed=w.targeted_region_bed,
+                bed=w.gene_bed,
                 sample_name=w.sample_name,
+                genome_file=w.genome_file,
             ),
         )
 
-        w.output("out", source=w.merge_and_mark.out)
+        w.step(
+            "bqsr",
+            GATKBaseRecalBQSRWorkflow_4_1_3(
+                bam=w.merge_and_mark,
+                reference=w.reference,
+                snps_dbsnp=w.snps_dbsnp,
+                snps_1000gp=w.snps_1000gp,
+                known_indels=w.known_indels,
+                mills_indels=w.mills_indels,
+            ),
+        )
+
+        w.output("out", source=w.bqsr.out)
         w.output("reports", source=w.fastqc.out)
         w.output("depth_of_coverage", source=w.annotate_doc.out)
         w.output(
@@ -367,7 +445,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
 
         meta.keywords = ["wgs", "cancer", "somatic", "variants", "gatk"]
         meta.dateUpdated = date(2019, 10, 16)
-        meta.dateUpdated = date(2020, 3, 16)
+        meta.dateUpdated = date(2020, 6, 18)
 
         meta.contributors = ["Michael Franklin", "Richard Lupat", "Jiaan Yu"]
         meta.short_documentation = "A somatic tumor-normal variant-calling WGS pipeline using only GATK Mutect2"
