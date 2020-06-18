@@ -31,7 +31,7 @@ from janis_bioinformatics.tools.common import (
     GATKBaseRecalBQSRWorkflow_4_1_3,
 )
 from janis_bioinformatics.tools.htslib import BGZipLatest
-from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_0, Gatk4SortSam_4_1_3
+from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3, Gatk4SortSam_4_1_3
 from janis_bioinformatics.tools.variantcallers import GatkGermlineVariantCaller_4_1_3
 from janis_bioinformatics.tools.pmac import (
     ParseFastqcAdaptors,
@@ -249,7 +249,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             scatter="intervals",
         )
 
-        self.step("vc_gatk_merge", Gatk4GatherVcfs_4_0(vcfs=self.vc_gatk.out))
+        self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out))
         # sort
         self.step("compressvcf", BGZipLatest(file=self.vc_gatk_merge.out))
         self.step("sort_combined", BcfToolsSort_1_9(vcf=self.compressvcf.out))
