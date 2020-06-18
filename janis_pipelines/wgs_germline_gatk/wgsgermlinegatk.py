@@ -11,6 +11,8 @@ from janis_core import (
     InputDocumentation,
     InputQualityType,
 )
+from janis_unix.tools import UncompressArchive
+from janis_unix.data_types import TextFile
 
 from janis_bioinformatics.data_types import (
     FastaWithDict,
@@ -23,13 +25,19 @@ from janis_bioinformatics.data_types import (
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
 from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
-from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
+from janis_bioinformatics.tools.common import (
+    BwaAligner,
+    MergeAndMarkBams_4_1_3,
+    GATKBaseRecalBQSRWorkflow_4_1_3,
+)
+from janis_bioinformatics.tools.htslib import BGZipLatest
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_0, Gatk4SortSam_4_1_3
 from janis_bioinformatics.tools.variantcallers import GatkGermlineVariantCaller_4_1_3
 from janis_bioinformatics.tools.pmac import (
     ParseFastqcAdaptors,
     AnnotateDepthOfCoverage_0_1_0,
     PerformanceSummaryGenome_0_1_0,
+    AddBamStatsGermline_0_1_0,
 )
 
 
@@ -42,7 +50,7 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
 
     @staticmethod
     def version():
-        return "1.2.0"
+        return "1.2.1"
 
     def constructor(self):
 
@@ -93,7 +101,6 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 example="https://github.com/csf-ngs/fastqc/blob/master/Contaminants/contaminant_list.txt",
             ),
         )
-        ## gatk_intervals is not a good name -- might get user confused with .intervals format file by gatk (a file format that's similar to bed) and it is not specific to gatk -- can be renamed as variant_calling_split_bed?
         self.input(
             "gatk_intervals",
             Array(Bed),
@@ -104,12 +111,19 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             ),
         )
         self.input(
-            "targeted_region_bed",
+            "gene_bed",
             Bed(),
             doc=InputDocumentation(
-                "Targeted genes / exons in bed format",
+                "Targeted genes / exons in bed format for calcualting coverages",
                 quality=InputQualityType.static,
                 example="BRCA1.bed",
+            ),
+        )
+        self.input(
+            "genome_file",
+            TextFile(),
+            doc=InputDocumentation(
+                "Genome file for bedtools query", quality=InputQualityType.static,
             ),
         )
         self.input(
@@ -188,22 +202,36 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             ),
         )
 
-        # STATISCIS of BAM
+        # STATISTICS of BAM
         self.step(
             "annotate_doc",
             AnnotateDepthOfCoverage_0_1_0(
                 bam=self.merge_and_mark,
-                bed=self.targeted_region_bed,
+                bed=self.gene_bed,
                 reference=self.reference,
                 sample_name=self.sample_name,
             ),
         )
+
         self.step(
             "performance_summary",
             PerformanceSummaryGenome_0_1_0(
                 bam=self.merge_and_mark,
-                bed=self.targeted_region_bed,
+                bed=self.gene_bed,
+                genome_file=self.genome_file,
                 sample_name=self.sample_name,
+            ),
+        )
+
+        self.step(
+            "bqsr",
+            GATKBaseRecalBQSRWorkflow_4_1_3(
+                bam=self.merge_and_mark,
+                reference=self.reference,
+                snps_dbsnp=self.snps_dbsnp,
+                snps_1000gp=self.snps_1000gp,
+                known_indels=self.known_indels,
+                mills_indels=self.mills_indels,
             ),
         )
 
@@ -213,22 +241,28 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         self.step(
             "vc_gatk",
             GatkGermlineVariantCaller_4_1_3(
-                bam=self.merge_and_mark,
+                bam=self.bqsr.out,
                 intervals=self.gatk_intervals,
                 reference=self.reference,
                 snps_dbsnp=self.snps_dbsnp,
-                snps_1000gp=self.snps_1000gp,
-                known_indels=self.known_indels,
-                mills_indels=self.mills_indels,
             ),
             scatter="intervals",
         )
 
         self.step("vc_gatk_merge", Gatk4GatherVcfs_4_0(vcfs=self.vc_gatk.out))
         # sort
+        self.step("compressvcf", BGZipLatest(file=self.vc_gatk_merge.out))
+        self.step("sort_combined", BcfToolsSort_1_9(vcf=self.compressvcf.out))
+        self.step("uncompressvcf", UncompressArchive(file=self.sort_combined.out))
 
-        self.step("sort_combined", BcfToolsSort_1_9(vcf=self.vc_gatk_merge.out))
+        self.step(
+            "addbamstats",
+            AddBamStatsGermline_0_1_0(
+                bam=self.merge_and_mark, vcf=self.uncompressvcf.out
+            ),
+        )
 
+        # RESULTS
         self.output(
             "bam",
             source=self.merge_and_mark.out,
@@ -243,28 +277,28 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             doc="A zip file of the FastQC quality report.",
         )
         self.output(
-            "depth_of_coverage",
+            "doc_out",
             source=self.annotate_doc.out,
-            output_folder=["depth_of_coverage", self.sample_name],
-            doc="Annotated GATK Depth of Coverage summary",
+            output_folder=["performance_summary", self.sample_name],
+            doc="A text file of depth of coverage summary of bam",
         )
         self.output(
             "summary",
             source=self.performance_summary.performanceSummaryOut,
             output_folder=["performance_summary", self.sample_name],
-            doc="Performance summary on targeted region",
+            doc="A text file of performance summary of bam",
         )
         self.output(
             "gene_summary",
             source=self.performance_summary.geneFileOut,
             output_folder=["performance_summary", self.sample_name],
-            doc="Gene summary on targeted region",
+            doc="A text file of gene coverage summary of bam",
         )
         self.output(
             "region_summary",
             source=self.performance_summary.regionFileOut,
             output_folder=["performance_summary", self.sample_name],
-            doc="Region summary on targeted region",
+            doc="A text file of region coverage summary of bam",
         )
         self.output(
             "variants",
@@ -278,6 +312,12 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             source=self.vc_gatk.out,
             output_folder=["variants", "byInterval"],
             doc="Unmerged variants from the GATK caller (by interval)",
+        )
+        self.output(
+            "variants_final",
+            source=self.addbamstats.out,
+            output_folder="variants",
+            doc="Final vcf",
         )
 
     def bind_metadata(self):
