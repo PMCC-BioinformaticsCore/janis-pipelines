@@ -1,8 +1,18 @@
 from datetime import date
 
+from janis_core import (
+    String,
+    WorkflowBuilder,
+    Array,
+    WorkflowMetadata,
+    InputDocumentation,
+    InputQualityType,
+)
+from janis_unix.tools import UncompressArchive
+from janis_unix.data_types import TextFile
+
 from janis_bioinformatics.data_types import (
     FastaWithDict,
-    Fastq,
     VcfTabix,
     Bed,
     FastqGzPair,
@@ -25,16 +35,6 @@ from janis_bioinformatics.tools.pmac import (
     PerformanceSummaryGenome_0_1_0,
     AddBamStatsSomatic_0_1_0,
 )
-from janis_core import (
-    String,
-    WorkflowBuilder,
-    Array,
-    WorkflowMetadata,
-    InputDocumentation,
-    InputQualityType,
-)
-from janis_unix.tools import UncompressArchive
-from janis_unix.data_types import TextFile
 
 
 class WGSSomaticGATK(BioinformaticsWorkflow):
@@ -50,6 +50,7 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
 
     def constructor(self):
 
+        # INPUTS
         self.input(
             "normal_inputs",
             Array(FastqGzPair),
@@ -68,7 +69,6 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
                 example='["tumor_R1.fastq.gz", "tumor_R2.fastq.gz"]',
             ),
         )
-
         self.input(
             "normal_name",
             String(),
@@ -87,7 +87,6 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
                 example="NA24385_tumor",
             ),
         )
-
         self.input(
             "cutadapt_adapters",
             File(optional=True),
@@ -140,7 +139,6 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 "File: gs://genomics-public-data/references/hg38/v0/Homo_sapiens_assembly38.fasta",
             ),
         )
-
         self.input(
             "snps_dbsnp",
             VcfTabix,
@@ -200,6 +198,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             ),
         )
 
+        # STEPS
         self.step(
             "tumor",
             self.process_subpipeline(
@@ -231,12 +230,11 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             ),
         )
 
-        # no splitting bam
         self.step(
             "vc_gatk",
             GatkSomaticVariantCaller_4_1_3(
-                normal_bam=self.normal.out,
-                tumor_bam=self.tumor.out,
+                normal_bam=self.normal.bqsr_bam,
+                tumor_bam=self.tumor.bqsr_bam,
                 normal_name=self.normal_name,
                 intervals=self.gatk_intervals,
                 reference=self.reference,
@@ -247,7 +245,6 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         )
 
         self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out))
-        # sort
         self.step("compressvcf", BGZipLatest(file=self.vc_gatk_merge.out))
         self.step("sort_combined", BcfToolsSort_1_9(vcf=self.compressvcf.out))
         self.step("uncompressvcf", UncompressArchive(file=self.sort_combined.out))
@@ -264,20 +261,6 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         )
 
         # Outputs
-        # BAM
-        self.output(
-            "normal_bam",
-            source=self.normal.out,
-            output_folder="bams",
-            output_name=self.normal_name,
-        )
-
-        self.output(
-            "tumor_bam",
-            source=self.tumor.out,
-            output_folder="bams",
-            output_name=self.tumor_name,
-        )
         # FASTQC
         self.output(
             "normal_report", source=self.normal.reports, output_folder="reports"
@@ -333,6 +316,20 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             output_folder=["summary", self.tumor_name],
             doc="A text file of region coverage summary of TUMOR bam",
         )
+        # BAM
+        self.output(
+            "normal_bam",
+            source=self.normal.out,
+            output_folder="bams",
+            output_name=self.normal_name,
+        )
+
+        self.output(
+            "tumor_bam",
+            source=self.tumor.out,
+            output_folder="bams",
+            output_name=self.tumor_name,
+        )
         # VCF
         self.output(
             "variants",
@@ -357,17 +354,19 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
     def process_subpipeline(**connections):
         w = WorkflowBuilder("somatic_subpipeline")
 
-        w.input("reference", FastaWithDict)
+        # INPUTS
         w.input("reads", Array(FastqGzPair))
+        w.input("sample_name", String)
+        w.input("reference", FastaWithDict)
         w.input("cutadapt_adapters", File(optional=True))
         w.input("gene_bed", Bed)
         w.input("genome_file", TextFile)
-        w.input("sample_name", String)
         w.input("snps_dbsnp", VcfTabix)
         w.input("snps_1000gp", VcfTabix)
         w.input("known_indels", VcfTabix)
         w.input("mills_indels", VcfTabix)
 
+        # STEPS
         w.step("fastqc", FastQC_0_11_5(reads=w.reads), scatter="reads")
 
         w.step(
@@ -429,7 +428,9 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             ),
         )
 
-        w.output("out", source=w.bqsr.out)
+        # OUTPUTS
+        w.output("out", source=w.merge_and_mark.out)
+        w.output("bqsr_bam", source=w.bqsr.out)
         w.output("reports", source=w.fastqc.out)
         w.output("depth_of_coverage", source=w.annotate_doc.out)
         w.output(
