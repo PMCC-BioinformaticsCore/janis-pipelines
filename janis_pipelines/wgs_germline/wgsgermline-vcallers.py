@@ -225,7 +225,7 @@ class WGSGermlineMultiCallersVariantsOnly(BioinformaticsWorkflow):
         self.output(
             "variants_vardict_split",
             source=self.vc_vardict.out,
-            output_folder=["variants", "variants"],
+            output_folder=["variants", "vardict"],
             doc="Unmerged variants from the VarDict caller (by interval)",
         )
 

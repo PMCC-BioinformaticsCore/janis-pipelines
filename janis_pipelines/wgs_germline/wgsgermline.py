@@ -459,7 +459,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         self.output(
             "variants_vardict_split",
             source=self.vc_vardict.out,
-            output_folder=["variants", "variants"],
+            output_folder=["variants", "vardict"],
             doc="Unmerged variants from the VarDict caller (by interval)",
         )
 
