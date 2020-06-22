@@ -56,7 +56,7 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
 
     @staticmethod
     def version():
-        return "1.2.1"
+        return "1.3.0"
 
     def constructor(self):
 
@@ -302,6 +302,14 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             scatter="intervals",
         )
         self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out))
+        self.step("vc_gatk_compressvcf", BGZipLatest(file=self.vc_gatk_merge.out))
+        self.step(
+            "vc_gatk_sort_combined", BcfToolsSort_1_9(vcf=self.vc_gatk_compressvcf.out)
+        )
+        self.step(
+            "vc_gatk_uncompressvcf",
+            UncompressArchive(file=self.vc_gatk_sort_combined.out),
+        )
 
         self.step(
             "vc_strelka",
@@ -332,6 +340,15 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             scatter="intervals",
         )
         self.step("vc_vardict_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_vardict.out))
+        self.step("vc_vardict_compressvcf", BGZipLatest(file=self.vc_vardict_merge.out))
+        self.step(
+            "vc_vardict_sort_combined",
+            BcfToolsSort_1_9(vcf=self.vc_vardict_compressvcf.out),
+        )
+        self.step(
+            "vc_vardict_uncompressvcf",
+            UncompressArchive(file=self.vc_vardict_sort_combined.out),
+        )
 
         self.step(
             "combine_variants",
@@ -339,17 +356,17 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 normal=self.normal_name,
                 tumor=self.tumor_name,
                 vcfs=[
-                    self.vc_gatk_merge.out,
+                    self.vc_gatk_uncompressvcf.out,
                     self.vc_strelka.out,
-                    self.vc_vardict_merge.out,
+                    self.vc_vardict_uncompressvcf.out,
                 ],
                 type="somatic",
                 columns=["AD", "DP", "GT"],
             ),
         )
-        self.step("compressvcf", BGZipLatest(file=self.combine_variants.out))
-        self.step("sort_combined", BcfToolsSort_1_9(vcf=self.compressvcf.out))
-        self.step("uncompressvcf", UncompressArchive(file=self.sort_combined.out))
+        self.step("combined_compress", BGZipLatest(file=self.combine_variants.out))
+        self.step("combined_sort", BcfToolsSort_1_9(vcf=self.combined_compress.out))
+        self.step("combined_uncompress", UncompressArchive(file=self.combined_sort.out))
 
         self.step(
             "addbamstats",
@@ -358,7 +375,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 tumor_id=self.tumor_name,
                 normal_bam=self.normal.out,
                 tumor_bam=self.tumor.out,
-                vcf=self.uncompressvcf.out,
+                vcf=self.combined_uncompress.out,
             ),
         )
 
@@ -446,18 +463,37 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         )
         # VCF
         self.output(
-            "variants_gatk", source=self.vc_gatk_merge.out, output_folder="variants"
-        )
-        self.output(
-            "variants_strelka", source=self.vc_strelka.out, output_folder="variants"
+            "variants_gatk",
+            source=self.vc_gatk_sort_combined.out,
+            output_folder="variants",
+            output_name="gatk",
+            doc="Merged variants from the GATK caller",
         )
         self.output(
             "variants_vardict",
-            source=self.vc_vardict_merge.out,
+            source=self.vc_vardict_sort_combined.out,
             output_folder="variants",
+            output_name="vardict",
+            doc="Merged variants from the VarDict caller",
         )
         self.output(
-            "variants_combined", source=self.addbamstats.out, output_folder="variants",
+            "variants_strelka",
+            source=self.vc_strelka.out,
+            output_folder="variants",
+            output_name="strelka",
+            doc="Variants from the Strelka variant caller",
+        )
+        self.output(
+            "variants_gatk_split",
+            source=self.vc_gatk.out,
+            output_folder=["variants", "gatk"],
+            doc="Unmerged variants from the GATK caller (by interval)",
+        )
+        self.output(
+            "variants_vardict_split",
+            source=self.vc_vardict.out,
+            output_folder=["variants", "vardict"],
+            doc="Unmerged variants from the VarDict caller (by interval)",
         )
 
     @staticmethod
