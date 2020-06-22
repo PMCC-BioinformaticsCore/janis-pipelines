@@ -31,7 +31,7 @@ from janis_bioinformatics.tools.common import (
     GATKBaseRecalBQSRWorkflow_4_1_3,
 )
 from janis_bioinformatics.tools.htslib import BGZipLatest
-from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3, Gatk4SortSam_4_1_3
+from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
 from janis_bioinformatics.tools.variantcallers import GatkGermlineVariantCaller_4_1_3
 from janis_bioinformatics.tools.pmac import (
     ParseFastqcAdaptors,
@@ -50,7 +50,7 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
 
     @staticmethod
     def version():
-        return "1.2.1"
+        return "1.3.0"
 
     def constructor(self):
 
@@ -249,26 +249,23 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         )
 
         self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out))
-        # sort
-        self.step("compressvcf", BGZipLatest(file=self.vc_gatk_merge.out))
-        self.step("sort_combined", BcfToolsSort_1_9(vcf=self.compressvcf.out))
-        self.step("uncompressvcf", UncompressArchive(file=self.sort_combined.out))
+        self.step("vc_gatk_compressvcf", BGZipLatest(file=self.vc_gatk_merge.out))
+        self.step(
+            "vc_gatk_sort_combined", BcfToolsSort_1_9(vcf=self.vc_gatk_compressvcf.out)
+        )
+        self.step(
+            "vc_gatk_uncompressvcf",
+            UncompressArchive(file=self.vc_gatk_sort_combined.out),
+        )
 
         self.step(
             "addbamstats",
             AddBamStatsGermline_0_1_0(
-                bam=self.merge_and_mark, vcf=self.uncompressvcf.out
+                bam=self.merge_and_mark, vcf=self.vc_gatk_uncompressvcf.out
             ),
         )
 
         # RESULTS
-        self.output(
-            "bam",
-            source=self.merge_and_mark.out,
-            output_folder=["bams", self.sample_name],
-            output_name=self.sample_name,
-            doc="Aligned and indexed bam.",
-        )
         self.output(
             "reports",
             source=self.fastqc.out,
@@ -300,8 +297,15 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             doc="A text file of region coverage summary of bam",
         )
         self.output(
+            "bam",
+            source=self.merge_and_mark.out,
+            output_folder=["bams", self.sample_name],
+            output_name=self.sample_name,
+            doc="Aligned and indexed bam.",
+        )
+        self.output(
             "variants",
-            source=self.sort_combined.out,
+            source=self.vc_gatk_sort_combined.out,
             output_folder="variants",
             output_name=self.sample_name,
             doc="Merged variants from the GATK caller",
@@ -325,7 +329,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         meta.keywords = ["wgs", "cancer", "germline", "variants", "gatk"]
         meta.contributors = ["Michael Franklin", "Richard Lupat", "Jiaan Yu"]
         meta.dateCreated = date(2018, 12, 24)
-        meta.dateUpdated = date(2020, 3, 16)
+        meta.dateUpdated = date(2020, 6, 22)
         meta.short_documentation = "A variant-calling WGS pipeline using only the GATK Haplotype variant caller."
         meta.documentation = """\
 This is a genomics pipeline to align sequencing data (Fastq pairs) into BAMs and call variants using GATK. The final variants are outputted in the VCF format.
