@@ -1,8 +1,11 @@
 from datetime import date
 
+
+from janis_core import String, Array, Float, WorkflowMetadata
+from janis_unix.tools import UncompressArchive
+
 from janis_bioinformatics.data_types import (
     FastaWithDict,
-    FastqGzPair,
     VcfTabix,
     Bed,
     BedTabix,
@@ -16,6 +19,7 @@ from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
 from janis_bioinformatics.tools.pmac import (
     CombineVariants_0_0_4,
     GenerateVardictHeaderLines,
+    AddBamStatsSomatic_0_1_0,
 )
 from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
 from janis_bioinformatics.tools.variantcallers.illuminasomatic_strelka import (
@@ -24,10 +28,6 @@ from janis_bioinformatics.tools.variantcallers.illuminasomatic_strelka import (
 from janis_bioinformatics.tools.variantcallers.vardictsomatic_variants import (
     VardictSomaticVariantCaller,
 )
-from janis_bioinformatics.tools.pmac import AddBamStatsSomatic_0_1_0
-
-from janis_core import String, WorkflowBuilder, File, Array, Float, WorkflowMetadata
-from janis_unix.tools import UncompressArchive
 
 
 class WGSSomaticMultiCallers(BioinformaticsWorkflow):
@@ -38,7 +38,7 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
         return "WGS Somatic (Multi callers)"
 
     def version(self):
-        return "1.2.0"
+        return "1.2.1"
 
     def constructor(self):
         self.input("normal", BamBai)
