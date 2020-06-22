@@ -8,23 +8,26 @@ from janis_bioinformatics.data_types import (
     BedTabix,
     BamBai,
 )
-from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
 from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
-from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
+from janis_bioinformatics.tools.common import GATKBaseRecalBQSRWorkflow_4_1_3
+from janis_bioinformatics.tools.htslib import BGZipLatest
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
-from janis_bioinformatics.tools.pmac import CombineVariants_0_0_4
+from janis_bioinformatics.tools.pmac import (
+    CombineVariants_0_0_4,
+    GenerateVardictHeaderLines,
+)
 from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
-from janis_bioinformatics.tools.papenfuss.gridss.gridss import Gridss_2_6_3
 from janis_bioinformatics.tools.variantcallers.illuminasomatic_strelka import (
     IlluminaSomaticVariantCaller,
 )
 from janis_bioinformatics.tools.variantcallers.vardictsomatic_variants import (
     VardictSomaticVariantCaller,
 )
-from janis_bioinformatics.tools.pmac import ParseFastqcAdaptors
+from janis_bioinformatics.tools.pmac import AddBamStatsSomatic_0_1_0
 
 from janis_core import String, WorkflowBuilder, File, Array, Float, WorkflowMetadata
+from janis_unix.tools import UncompressArchive
 
 
 class WGSSomaticMultiCallers(BioinformaticsWorkflow):
@@ -40,17 +43,13 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
     def constructor(self):
         self.input("normal", BamBai)
         self.input("tumor", BamBai)
-
-        self.input("normal_name", String(), value="NA24385_normal")
-        self.input("tumor_name", String(), value="NA24385_tumour")
-
-        self.input("gridss_blacklist", Bed)
+        self.input("normal_name", String())
+        self.input("tumor_name", String())
 
         self.input("gatk_intervals", Array(Bed))
         self.input("vardict_intervals", Array(Bed))
         self.input("strelka_intervals", BedTabix(optional=True))
 
-        self.input("vardict_header_lines", File)
         self.input("allele_freq_threshold", Float, default=0.05)
 
         self.input("reference", FastaWithDict)
@@ -58,25 +57,46 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
         self.input("snps_1000gp", VcfTabix)
         self.input("known_indels", VcfTabix)
         self.input("mills_indels", VcfTabix)
+        self.input("gnomad", VcfTabix)
+        self.input("panel_of_normals", VcfTabix(optional=True))
 
+        # STEPS
         self.step(
-            "vc_gatk",
-            GatkSomaticVariantCaller_4_1_3(
-                normal_bam=self.tumor,
-                tumor_bam=self.normal,
-                normal_name=self.normal_name,
-                tumor_name=self.tumor_name,
-                intervals=self.gatk_intervals,
+            "normal_bqsr",
+            GATKBaseRecalBQSRWorkflow_4_1_3(
+                bam=self.normal,
                 reference=self.reference,
                 snps_dbsnp=self.snps_dbsnp,
                 snps_1000gp=self.snps_1000gp,
                 known_indels=self.known_indels,
                 mills_indels=self.mills_indels,
             ),
+        )
+        self.step(
+            "tumor_bqsr",
+            GATKBaseRecalBQSRWorkflow_4_1_3(
+                bam=self.tumor,
+                reference=self.reference,
+                snps_dbsnp=self.snps_dbsnp,
+                snps_1000gp=self.snps_1000gp,
+                known_indels=self.known_indels,
+                mills_indels=self.mills_indels,
+            ),
+        )
+        self.step(
+            "vc_gatk",
+            GatkSomaticVariantCaller_4_1_3(
+                normal_bam=self.normal_bqsr.out,
+                tumor_bam=self.tumor_bqsr.out,
+                normal_name=self.normal_name,
+                intervals=self.gatk_intervals,
+                reference=self.reference,
+                gnomad=self.gnomad,
+                panel_of_normals=self.panel_of_normals,
+            ),
             scatter="intervals",
         )
-
-        self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk))
+        self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out))
 
         self.step(
             "vc_strelka",
@@ -89,29 +109,23 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
         )
 
         self.step(
-            "vc_gridss",
-            Gridss_2_6_3(
-                bams=[self.normal, self.tumor],
-                reference=self.reference,
-                blacklist=self.gridss_blacklist,
-            ),
+            "generate_vardict_headerlines",
+            GenerateVardictHeaderLines(reference=self.reference),
         )
-
         self.step(
             "vc_vardict",
             VardictSomaticVariantCaller(
-                normal_bam=self.tumor,
-                tumor_bam=self.normal,
+                normal_bam=self.normal,
+                tumor_bam=self.tumor,
                 normal_name=self.normal_name,
                 tumor_name=self.tumor_name,
-                header_lines=self.vardict_header_lines,
+                header_lines=self.generate_vardict_headerlines.out,
                 intervals=self.vardict_intervals,
                 reference=self.reference,
                 allele_freq_threshold=self.allele_freq_threshold,
             ),
             scatter="intervals",
         )
-
         self.step("vc_vardict_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_vardict.out))
 
         self.step(
@@ -128,12 +142,22 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
                 columns=["AD", "DP", "GT"],
             ),
         )
-        self.step("sortCombined", BcfToolsSort_1_9(vcf=self.combine_variants.vcf))
+        self.step("compressvcf", BGZipLatest(file=self.combine_variants.out))
+        self.step("sort_combined", BcfToolsSort_1_9(vcf=self.compressvcf.out))
+        self.step("uncompressvcf", UncompressArchive(file=self.sort_combined.out))
+
+        self.step(
+            "addbamstats",
+            AddBamStatsSomatic_0_1_0(
+                normal_id=self.normal_name,
+                tumor_id=self.tumor_name,
+                normal_bam=self.normal,
+                tumor_bam=self.tumor,
+                vcf=self.uncompressvcf.out,
+            ),
+        )
 
         # Outputs
-
-        self.output("gridss_assembly", source=self.vc_gridss.out, output_folder="bams")
-
         self.output(
             "variants_gatk", source=self.vc_gatk_merge.out, output_folder="variants"
         )
@@ -146,10 +170,5 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
             output_folder="variants",
         )
         self.output(
-            "variants_gridss", source=self.vc_gridss.out, output_folder="variants"
-        )
-        self.output(
-            "variants_combined",
-            source=self.combine_variants.vcf,
-            output_folder="variants",
+            "variants_combined", source=self.addbamstats.out, output_folder="variants",
         )
