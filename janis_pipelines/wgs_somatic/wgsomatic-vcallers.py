@@ -1,6 +1,5 @@
 from datetime import date
 
-
 from janis_core import String, Array, Float, WorkflowMetadata
 from janis_unix.tools import UncompressArchive
 
@@ -21,11 +20,9 @@ from janis_bioinformatics.tools.pmac import (
     GenerateVardictHeaderLines,
     AddBamStatsSomatic_0_1_0,
 )
-from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
-from janis_bioinformatics.tools.variantcallers.illuminasomatic_strelka import (
+from janis_bioinformatics.tools.variantcallers import (
+    GatkSomaticVariantCaller_4_1_3,
     IlluminaSomaticVariantCaller,
-)
-from janis_bioinformatics.tools.variantcallers.vardictsomatic_variants import (
     VardictSomaticVariantCaller,
 )
 
@@ -38,7 +35,7 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
         return "WGS Somatic (Multi callers)"
 
     def version(self):
-        return "1.2.1"
+        return "1.3.0"
 
     def constructor(self):
         self.input("normal", BamBai)
@@ -97,6 +94,14 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
             scatter="intervals",
         )
         self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out))
+        self.step("vc_gatk_compressvcf", BGZipLatest(file=self.vc_gatk_merge.out))
+        self.step(
+            "vc_gatk_sort_combined", BcfToolsSort_1_9(vcf=self.vc_gatk_compressvcf.out)
+        )
+        self.step(
+            "vc_gatk_uncompressvcf",
+            UncompressArchive(file=self.vc_gatk_sort_combined.out),
+        )
 
         self.step(
             "vc_strelka",
@@ -127,6 +132,15 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
             scatter="intervals",
         )
         self.step("vc_vardict_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_vardict.out))
+        self.step("vc_vardict_compressvcf", BGZipLatest(file=self.vc_vardict_merge.out))
+        self.step(
+            "vc_vardict_sort_combined",
+            BcfToolsSort_1_9(vcf=self.vc_vardict_compressvcf.out),
+        )
+        self.step(
+            "vc_vardict_uncompressvcf",
+            UncompressArchive(file=self.vc_vardict_sort_combined.out),
+        )
 
         self.step(
             "combine_variants",
@@ -134,17 +148,17 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
                 normal=self.normal_name,
                 tumor=self.tumor_name,
                 vcfs=[
-                    self.vc_gatk_merge.out,
+                    self.vc_gatk_uncompressvcf.out,
                     self.vc_strelka.out,
-                    self.vc_vardict_merge.out,
+                    self.vc_vardict_uncompressvcf.out,
                 ],
                 type="somatic",
                 columns=["AD", "DP", "GT"],
             ),
         )
-        self.step("compressvcf", BGZipLatest(file=self.combine_variants.out))
-        self.step("sort_combined", BcfToolsSort_1_9(vcf=self.compressvcf.out))
-        self.step("uncompressvcf", UncompressArchive(file=self.sort_combined.out))
+        self.step("combined_compress", BGZipLatest(file=self.combine_variants.out))
+        self.step("combined_sort", BcfToolsSort_1_9(vcf=self.combined_compress.out))
+        self.step("combined_uncompress", UncompressArchive(file=self.combined_sort.out))
 
         self.step(
             "addbamstats",
@@ -153,22 +167,36 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
                 tumor_id=self.tumor_name,
                 normal_bam=self.normal,
                 tumor_bam=self.tumor,
-                vcf=self.uncompressvcf.out,
+                vcf=self.combined_uncompress.out,
             ),
         )
 
         # Outputs
         self.output(
-            "variants_gatk", source=self.vc_gatk_merge.out, output_folder="variants"
+            "variants_gatk",
+            source=self.vc_gatk_sort_combined.out,
+            output_folder="variants",
         )
         self.output(
             "variants_strelka", source=self.vc_strelka.out, output_folder="variants"
         )
         self.output(
             "variants_vardict",
-            source=self.vc_vardict_merge.out,
+            source=self.vc_vardict_sort_combined.out,
             output_folder="variants",
         )
         self.output(
             "variants_combined", source=self.addbamstats.out, output_folder="variants",
+        )
+        self.output(
+            "variants_gatk_split",
+            source=self.vc_gatk.out,
+            output_folder=["variants", "gatk"],
+            doc="Unmerged variants from the GATK caller (by interval)",
+        )
+        self.output(
+            "variants_vardict_split",
+            source=self.vc_vardict.out,
+            output_folder=["variants", "variants"],
+            doc="Unmerged variants from the VarDict caller (by interval)",
         )
