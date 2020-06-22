@@ -26,10 +26,6 @@ from janis_bioinformatics.tools.variantcallers import (
     VardictGermlineVariantCaller,
 )
 
-# from janis_bioinformatics.tools.variantcallers.gridssgermline import (
-#     GridssGermlineVariantCaller,
-# )
-
 
 class WGSGermlineMultiCallersVariantsOnly(BioinformaticsWorkflow):
     def id(self):
@@ -40,7 +36,7 @@ class WGSGermlineMultiCallersVariantsOnly(BioinformaticsWorkflow):
 
     @staticmethod
     def version():
-        return "1.2.1"
+        return "1.3.0"
 
     def constructor(self):
 
@@ -49,7 +45,6 @@ class WGSGermlineMultiCallersVariantsOnly(BioinformaticsWorkflow):
             String,
             doc="Sample name from which to generate the readGroupHeaderLine for BwaMem",
         )
-
         self.input(
             "bam",
             BamBai,
@@ -75,16 +70,12 @@ class WGSGermlineMultiCallersVariantsOnly(BioinformaticsWorkflow):
             BedTabix,
             doc="An interval for which to restrict the analysis to. Recommended HG38 interval: ",
         )
-
         self.input(
             "allele_freq_threshold",
             Float,
             default=0.05,
             doc="The threshold for VarDict's allele frequency, default: 0.05 or 5%",
         )
-
-        # self.input("gridssBlacklist", Bed)
-
         self.input(
             "snps_dbsnp",
             VcfTabix,
@@ -107,7 +98,6 @@ class WGSGermlineMultiCallersVariantsOnly(BioinformaticsWorkflow):
         )
 
         # VARIANT CALLERS
-
         # GATK
         self.step(
             "bqsr",
@@ -131,10 +121,13 @@ class WGSGermlineMultiCallersVariantsOnly(BioinformaticsWorkflow):
             scatter="intervals",
         )
         self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out))
-        self.step("gatk_compressvcf", BGZipLatest(file=self.vc_gatk_merge.out))
-        self.step("gatk_sort_combined", BcfToolsSort_1_9(vcf=self.gatk_compressvcf.out))
+        self.step("vc_gatk_compressvcf", BGZipLatest(file=self.vc_gatk_merge.out))
         self.step(
-            "gatk_uncompressvcf", UncompressArchive(file=self.gatk_sort_combined.out)
+            "vc_gatk_sort_combined", BcfToolsSort_1_9(vcf=self.vc_gatk_compressvcf.out)
+        )
+        self.step(
+            "vc_gatk_uncompressvcf",
+            UncompressArchive(file=self.vc_gatk_sort_combined.out),
         )
 
         # Strelka
@@ -163,41 +156,32 @@ class WGSGermlineMultiCallersVariantsOnly(BioinformaticsWorkflow):
             scatter="intervals",
         )
         self.step("vc_vardict_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_vardict.out))
-        self.step("vardict_compressvcf", BGZipLatest(file=self.vc_vardict_merge.out))
+        self.step("vc_vardict_compressvcf", BGZipLatest(file=self.vc_vardict_merge.out))
         self.step(
-            "vardict_sort_combined", BcfToolsSort_1_9(vcf=self.vardict_compressvcf.out)
+            "vc_vardict_sort_combined",
+            BcfToolsSort_1_9(vcf=self.vc_vardict_compressvcf.out),
         )
         self.step(
-            "vardict_uncompressvcf",
-            UncompressArchive(file=self.vardict_sort_combined.out),
+            "vc_vardict_uncompressvcf",
+            UncompressArchive(file=self.vc_vardict_sort_combined.out),
         )
-        # GRIDSS
-        # self.step(
-        #     "vc_gridss",
-        #     GridssGermlineVariantCaller(
-        #         bam=self.merge_and_mark.out,
-        #         reference=self.reference,
-        #         blacklist=self.gridssBlacklist,
-        #     ),
-        # )
 
         # Combine
         self.step(
             "combine_variants",
             CombineVariants_0_0_4(
                 vcfs=[
-                    self.gatk_uncompressvcf.out,
+                    self.vc_gatk_uncompressvcf.out,
                     self.vc_strelka.out,
-                    self.vardict_uncompressvcf.out,
-                    # self.vc_gridss.out,
+                    self.vc_vardict_uncompressvcf.out,
                 ],
                 type="germline",
                 columns=["AC", "AN", "AF", "AD", "DP", "GT"],
             ),
         )
         self.step("combined_compress", BGZipLatest(file=self.combine_variants.out))
-        self.step("sort_combined", BcfToolsSort_1_9(vcf=self.combined_compress.out))
-        self.step("combined_uncompress", UncompressArchive(file=self.sort_combined.out))
+        self.step("combined_sort", BcfToolsSort_1_9(vcf=self.combined_compress.out))
+        self.step("combined_uncompress", UncompressArchive(file=self.combined_sort.out))
         self.step(
             "addbamstats",
             AddBamStatsGermline_0_1_0(bam=self.bam, vcf=self.combined_uncompress.out),
@@ -212,14 +196,14 @@ class WGSGermlineMultiCallersVariantsOnly(BioinformaticsWorkflow):
 
         self.output(
             "variants_gatk",
-            source=self.gatk_sort_combined.out,
+            source=self.vc_gatk_sort_combined.out,
             output_folder="variants",
             output_name="gatk",
             doc="Merged variants from the GATK caller",
         )
         self.output(
             "variants_vardict",
-            source=self.vardict_sort_combined.out,
+            source=self.vc_vardict_sort_combined.out,
             output_folder=["variants"],
             output_name="vardict",
             doc="Merged variants from the VarDict caller",
@@ -245,8 +229,6 @@ class WGSGermlineMultiCallersVariantsOnly(BioinformaticsWorkflow):
             doc="Unmerged variants from the VarDict caller (by interval)",
         )
 
-        # self.output("variants_gridss", source=self.vc_gridss.out)
-
     def bind_metadata(self):
         meta: WorkflowMetadata = self.metadata
 
@@ -261,7 +243,7 @@ class WGSGermlineMultiCallersVariantsOnly(BioinformaticsWorkflow):
         ]
         meta.contributors = ["Michael Franklin", "Richard Lupat", "Jiaan Yu"]
         meta.dateCreated = date(2018, 12, 24)
-        meta.dateUpdated = date(2020, 6, 18)
+        meta.dateUpdated = date(2020, 6, 22)
 
         meta.short_documentation = "A (VARIANT ONLY) variant-calling WGS pipeline using GATK, VarDict and Strelka2."
         meta.documentation = """\
