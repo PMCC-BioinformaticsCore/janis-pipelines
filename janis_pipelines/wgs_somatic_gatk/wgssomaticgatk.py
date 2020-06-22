@@ -46,7 +46,7 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
 
     @staticmethod
     def version():
-        return "1.2.1"
+        return "1.3.0"
 
     def constructor(self):
 
@@ -245,9 +245,14 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         )
 
         self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out))
-        self.step("compressvcf", BGZipLatest(file=self.vc_gatk_merge.out))
-        self.step("sort_combined", BcfToolsSort_1_9(vcf=self.compressvcf.out))
-        self.step("uncompressvcf", UncompressArchive(file=self.sort_combined.out))
+        self.step("vc_gatk_compressvcf", BGZipLatest(file=self.vc_gatk_merge.out))
+        self.step(
+            "vc_gatk_sort_combined", BcfToolsSort_1_9(vcf=self.vc_gatk_compressvcf.out)
+        )
+        self.step(
+            "vc_gatk_uncompressvcf",
+            UncompressArchive(file=self.vc_gatk_sort_combined.out),
+        )
 
         self.step(
             "addbamstats",
@@ -256,7 +261,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 tumor_id=self.tumor_name,
                 normal_bam=self.normal.out,
                 tumor_bam=self.tumor.out,
-                vcf=self.uncompressvcf.out,
+                vcf=self.vc_gatk_uncompressvcf.out,
             ),
         )
 
@@ -332,8 +337,8 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         )
         # VCF
         self.output(
-            "variants",
-            source=self.sort_combined.out,
+            "variants_gatk",
+            source=self.vc_gatk_sort_combined.out,
             output_folder="variants",
             doc="Merged variants from the GATK caller",
         )
