@@ -16,7 +16,7 @@ from janis_bioinformatics.tools.common import GATKBaseRecalBQSRWorkflow_4_1_3
 from janis_bioinformatics.tools.htslib import BGZipLatest
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
 from janis_bioinformatics.tools.pmac import (
-    CombineVariants_0_0_4,
+    CombineVariants_0_0_8,
     AddBamStatsGermline_0_1_0,
     GenerateVardictHeaderLines,
 )
@@ -169,7 +169,7 @@ class WGSGermlineMultiCallersVariantsOnly(BioinformaticsWorkflow):
         # Combine
         self.step(
             "combine_variants",
-            CombineVariants_0_0_4(
+            CombineVariants_0_0_8(
                 vcfs=[
                     self.vc_gatk_uncompressvcf.out,
                     self.vc_strelka.out,
