@@ -26,12 +26,12 @@ from janis_bioinformatics.tools.common import (
     MergeAndMarkBams_4_1_3,
     GATKBaseRecalBQSRWorkflow_4_1_3,
 )
+from janis_bioinformatics.tools.gatk3 import GATK3DepthOfCoverageLatest
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
 from janis_bioinformatics.tools.htslib import BGZipLatest
 from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
 from janis_bioinformatics.tools.pmac import (
     ParseFastqcAdaptors,
-    AnnotateDepthOfCoverage_0_1_0,
     PerformanceSummaryGenome_0_1_0,
     AddBamStatsSomatic_0_1_0,
 )
@@ -103,15 +103,6 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
             Array(Bed),
             doc=InputDocumentation(
                 "List of intervals over which to split the GATK variant calling",
-                quality=InputQualityType.static,
-                example="BRCA1.bed",
-            ),
-        )
-        self.input(
-            "gene_bed",
-            Bed(),
-            doc=InputDocumentation(
-                "Targeted genes / exons in bed format for calcualting coverages",
                 quality=InputQualityType.static,
                 example="BRCA1.bed",
             ),
@@ -206,7 +197,6 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 sample_name=self.tumor_name,
                 reference=self.reference,
                 cutadapt_adapters=self.cutadapt_adapters,
-                gene_bed=self.gene_bed,
                 genome_file=self.genome_file,
                 snps_dbsnp=self.snps_dbsnp,
                 snps_1000gp=self.snps_1000gp,
@@ -221,7 +211,6 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 sample_name=self.normal_name,
                 reference=self.reference,
                 cutadapt_adapters=self.cutadapt_adapters,
-                gene_bed=self.gene_bed,
                 genome_file=self.genome_file,
                 snps_dbsnp=self.snps_dbsnp,
                 snps_1000gp=self.snps_1000gp,
@@ -364,7 +353,6 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         w.input("sample_name", String)
         w.input("reference", FastaWithDict)
         w.input("cutadapt_adapters", File(optional=True))
-        w.input("gene_bed", Bed)
         w.input("genome_file", TextFile)
         w.input("snps_dbsnp", VcfTabix)
         w.input("snps_1000gp", VcfTabix)
@@ -403,11 +391,12 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
 
         w.step(
             "annotate_doc",
-            AnnotateDepthOfCoverage_0_1_0(
+            GATK3DepthOfCoverageLatest(
                 bam=w.merge_and_mark.out,
-                bed=w.gene_bed,
                 reference=w.reference,
-                sample_name=w.sample_name,
+                countType="COUNT_FRAGMENTS_REQUIRE_SAME_BASE",
+                summaryCoverageThreshold=[1, 50, 100, 300, 500],
+                outputPrefix=w.sample_name,
             ),
         )
 
@@ -415,7 +404,6 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             "performance_summary",
             PerformanceSummaryGenome_0_1_0(
                 bam=w.merge_and_mark.out,
-                bed=w.gene_bed,
                 sample_name=w.sample_name,
                 genome_file=w.genome_file,
             ),
@@ -437,7 +425,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         w.output("out", source=w.merge_and_mark.out)
         w.output("bqsr_bam", source=w.bqsr.out)
         w.output("reports", source=w.fastqc.out)
-        w.output("depth_of_coverage", source=w.annotate_doc.out)
+        w.output("depth_of_coverage", source=w.annotate_doc.sampleIntervalSummary)
         w.output(
             "summary", source=w.performance_summary.performanceSummaryOut,
         )
