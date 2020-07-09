@@ -30,6 +30,7 @@ from janis_bioinformatics.tools.gatk3 import GATK3DepthOfCoverageLatest
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
 from janis_bioinformatics.tools.htslib import BGZipLatest
 from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
+from janis_bioinformatics.tools.papenfuss import Gridss_2_6_2
 from janis_bioinformatics.tools.pmac import (
     ParseFastqcAdaptors,
     PerformanceSummaryGenome_0_1_0,
@@ -112,6 +113,15 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
             TextFile(),
             doc=InputDocumentation(
                 "Genome file for bedtools query", quality=InputQualityType.static,
+            ),
+        )
+        self.input(
+            "gridss_blacklist",
+            Bed,
+            doc=InputDocumentation(
+                "BED file containing regions to ignore.",
+                quality=InputQualityType.static,
+                example="https://github.com/PapenfussLab/gridss#blacklist",
             ),
         )
         self.input(
@@ -219,6 +229,16 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             ),
         )
 
+        # GRIDSS
+        self.step(
+            "vc_gridss",
+            Gridss_2_6_2(
+                bams=[self.normal.out, self.tumor.out],
+                reference=self.reference,
+                blacklist=self.gridss_blacklist,
+            ),
+        )
+
         self.step(
             "vc_gatk",
             GatkSomaticVariantCaller_4_1_3(
@@ -286,29 +306,18 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             output_folder=["summary", self.tumor_name],
             doc="A text file of performance summary of TUMOR bam",
         )
+        # GRIDSS
         self.output(
-            "normal_gene_summary",
-            source=self.normal.gene_summary,
-            output_folder=["summary", self.normal_name],
-            doc="A text file of gene coverage summary of NORMAL bam",
+            "gridss_assembly",
+            source=self.vc_gridss.assembly,
+            output_folder="gridss",
+            doc="Assembly returned by GRIDSS",
         )
         self.output(
-            "tumor_gene_summary",
-            source=self.tumor.gene_summary,
-            output_folder=["summary", self.tumor_name],
-            doc="A text file of gene coverage summary of TUMOR bam",
-        )
-        self.output(
-            "normal_region_summary",
-            source=self.normal.region_summary,
-            output_folder=["summary", self.normal_name],
-            doc="A text file of region coverage summary of NORMAL bam",
-        )
-        self.output(
-            "tumor_region_summary",
-            source=self.tumor.region_summary,
-            output_folder=["summary", self.tumor_name],
-            doc="A text file of region coverage summary of TUMOR bam",
+            "variants_gridss",
+            source=self.vc_gridss.out,
+            output_folder="gridss",
+            doc="Variants from the GRIDSS variant caller",
         )
         # BAM
         self.output(
@@ -429,8 +438,6 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         w.output(
             "summary", source=w.performance_summary.performanceSummaryOut,
         )
-        w.output("gene_summary", source=w.performance_summary.geneFileOut)
-        w.output("region_summary", source=w.performance_summary.regionFileOut)
 
         return w(**connections)
 
@@ -500,3 +507,4 @@ if __name__ == "__main__":
     # op = os.path.dirname(os.path.realpath(__file__)) + "/cwl/WGSGermlineGATK.py"
 
     # main.run(*["--validate", op], logger_handler=logging.Handler())
+
