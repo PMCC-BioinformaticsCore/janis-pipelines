@@ -34,6 +34,7 @@ from janis_bioinformatics.tools.htslib import BGZipLatest
 from janis_bioinformatics.tools.gatk3 import GATK3DepthOfCoverageLatest
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
 from janis_bioinformatics.tools.variantcallers import GatkGermlineVariantCaller_4_1_3
+from janis_bioinformatics.tools.papenfuss.gridss.gridss import Gridss_2_6_2
 from janis_bioinformatics.tools.pmac import (
     ParseFastqcAdaptors,
     PerformanceSummaryGenome_0_1_0,
@@ -115,6 +116,15 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             TextFile(),
             doc=InputDocumentation(
                 "Genome file for bedtools query", quality=InputQualityType.static,
+            ),
+        )
+        self.input(
+            "gridss_blacklist",
+            Bed,
+            doc=InputDocumentation(
+                "BED file containing regions to ignore.",
+                quality=InputQualityType.static,
+                example="https://github.com/PapenfussLab/gridss#blacklist",
             ),
         )
         self.input(
@@ -214,6 +224,16 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             ),
         )
 
+        # GRIDSS
+        self.step(
+            "vc_gridss",
+            Gridss_2_6_2(
+                bams=[self.merge_and_mark.out],
+                reference=self.reference,
+                blacklist=self.gridss_blacklist,
+            ),
+        )
+
         # VARIANT CALLERS
 
         # GATK
@@ -274,6 +294,19 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             source=self.performance_summary.performanceSummaryOut,
             output_folder=["performance_summary", self.sample_name],
             doc="A text file of performance summary of bam",
+        )
+        # GRIDSS
+        self.output(
+            "gridss_assembly",
+            source=self.vc_gridss.assembly,
+            output_folder="gridss",
+            doc="Assembly returned by GRIDSS",
+        )
+        self.output(
+            "variants_gridss",
+            source=self.vc_gridss.out,
+            output_folder="gridss",
+            doc="Variants from the GRIDSS variant caller",
         )
         self.output(
             "bam",
