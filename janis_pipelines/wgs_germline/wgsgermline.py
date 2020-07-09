@@ -369,7 +369,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         # COVERGAE
         self.output(
             "doc_out",
-            source=self.annotate_doc.out,
+            source=self.annotate_doc.sampleIntervalSummary,
             output_folder=["performance_summary", self.sample_name],
             doc="A text file of depth of coverage summary of bam",
         )
