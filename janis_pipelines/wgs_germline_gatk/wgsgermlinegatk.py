@@ -31,11 +31,11 @@ from janis_bioinformatics.tools.common import (
     GATKBaseRecalBQSRWorkflow_4_1_3,
 )
 from janis_bioinformatics.tools.htslib import BGZipLatest
+from janis_bioinformatics.tools.gatk3 import GATK3DepthOfCoverageLatest
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
 from janis_bioinformatics.tools.variantcallers import GatkGermlineVariantCaller_4_1_3
 from janis_bioinformatics.tools.pmac import (
     ParseFastqcAdaptors,
-    AnnotateDepthOfCoverage_0_1_0,
     PerformanceSummaryGenome_0_1_0,
     AddBamStatsGermline_0_1_0,
 )
@@ -106,15 +106,6 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             Array(Bed),
             doc=InputDocumentation(
                 "List of intervals over which to split the GATK variant calling",
-                quality=InputQualityType.static,
-                example="BRCA1.bed",
-            ),
-        )
-        self.input(
-            "gene_bed",
-            Bed(),
-            doc=InputDocumentation(
-                "Targeted genes / exons in bed format for calcualting coverages",
                 quality=InputQualityType.static,
                 example="BRCA1.bed",
             ),
@@ -205,11 +196,12 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         # STATISTICS of BAM
         self.step(
             "annotate_doc",
-            AnnotateDepthOfCoverage_0_1_0(
+            GATK3DepthOfCoverageLatest(
                 bam=self.merge_and_mark,
-                bed=self.gene_bed,
                 reference=self.reference,
-                sample_name=self.sample_name,
+                outputPrefix=self.sample_name,
+                countType="COUNT_FRAGMENTS_REQUIRE_SAME_BASE",
+                summaryCoverageThreshold=[1, 50, 100, 300, 500],
             ),
         )
 
@@ -217,7 +209,6 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             "performance_summary",
             PerformanceSummaryGenome_0_1_0(
                 bam=self.merge_and_mark,
-                bed=self.gene_bed,
                 genome_file=self.genome_file,
                 sample_name=self.sample_name,
             ),
@@ -274,7 +265,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         )
         self.output(
             "doc_out",
-            source=self.annotate_doc.out,
+            source=self.annotate_doc.sampleIntervalSummary,
             output_folder=["performance_summary", self.sample_name],
             doc="A text file of depth of coverage summary of bam",
         )
@@ -283,18 +274,6 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             source=self.performance_summary.performanceSummaryOut,
             output_folder=["performance_summary", self.sample_name],
             doc="A text file of performance summary of bam",
-        )
-        self.output(
-            "gene_summary",
-            source=self.performance_summary.geneFileOut,
-            output_folder=["performance_summary", self.sample_name],
-            doc="A text file of gene coverage summary of bam",
-        )
-        self.output(
-            "region_summary",
-            source=self.performance_summary.regionFileOut,
-            output_folder=["performance_summary", self.sample_name],
-            doc="A text file of region coverage summary of bam",
         )
         self.output(
             "bam",
