@@ -28,8 +28,10 @@ from janis_bioinformatics.tools.common import (
     GATKBaseRecalBQSRWorkflow_4_1_3,
 )
 from janis_bioinformatics.tools.htslib import BGZipLatest
-from janis_bioinformatics.tools.gatk3 import GATK3DepthOfCoverageLatest
-from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
+from janis_bioinformatics.tools.gatk4 import (
+    Gatk4GatherVcfs_4_1_3,
+    Gatk4DepthOfCoverage_4_1_6,
+)
 from janis_bioinformatics.tools.pmac import (
     CombineVariants_0_0_8,
     GenerateVardictHeaderLines,
@@ -235,12 +237,15 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
 
         # STATISTICS of BAM
         self.step(
-            "annotate_doc",
-            GATK3DepthOfCoverageLatest(
+            "coverage",
+            Gatk4DepthOfCoverage_4_1_6(
                 bam=self.merge_and_mark,
                 reference=self.reference,
                 outputPrefix=self.sample_name,
-                countType="COUNT_FRAGMENTS_REQUIRE_SAME_BASE",
+                intervals=self.gatk_intervals,
+                # current version gatk 4.1.6.0 only support --count-type as COUNT_READS
+                # countType="COUNT_FRAGMENTS_REQUIRE_SAME_BASE",
+                omitDepthOutputAtEachBase=True,
                 summaryCoverageThreshold=[1, 50, 100, 300, 500],
             ),
         )
@@ -368,8 +373,8 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         )
         # COVERGAE
         self.output(
-            "doc_out",
-            source=self.annotate_doc.sampleIntervalSummary,
+            "sample_coverage",
+            source=self.coverage.out_sampleSummary,
             output_folder=["performance_summary", self.sample_name],
             doc="A text file of depth of coverage summary of bam",
         )
