@@ -1,8 +1,18 @@
 from datetime import date
 
+from janis_core import (
+    String,
+    WorkflowBuilder,
+    Array,
+    WorkflowMetadata,
+    InputDocumentation,
+    InputQualityType,
+)
+from janis_unix.tools import UncompressArchive
+from janis_unix.data_types import TextFile
+
 from janis_bioinformatics.data_types import (
     FastaWithDict,
-    Fastq,
     VcfTabix,
     Bed,
     FastqGzPair,
@@ -11,17 +21,22 @@ from janis_bioinformatics.data_types import (
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
 from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
-from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
-from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
+from janis_bioinformatics.tools.common import (
+    BwaAligner,
+    MergeAndMarkBams_4_1_3,
+    GATKBaseRecalBQSRWorkflow_4_1_3,
+)
+from janis_bioinformatics.tools.gatk4 import (
+    Gatk4GatherVcfs_4_1_3,
+    Gatk4DepthOfCoverage_4_1_6,
+)
+from janis_bioinformatics.tools.htslib import BGZipLatest
 from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
-from janis_bioinformatics.tools.pmac import ParseFastqcAdaptors
-from janis_core import (
-    String,
-    WorkflowBuilder,
-    Array,
-    WorkflowMetadata,
-    InputDocumentation,
-    InputQualityType,
+from janis_bioinformatics.tools.papenfuss import Gridss_2_6_2
+from janis_bioinformatics.tools.pmac import (
+    ParseFastqcAdaptors,
+    PerformanceSummaryGenome_0_1_0,
+    AddBamStatsSomatic_0_1_0,
 )
 
 
@@ -34,10 +49,11 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
 
     @staticmethod
     def version():
-        return "1.2.0"
+        return "1.3.0"
 
     def constructor(self):
 
+        # INPUTS
         self.input(
             "normal_inputs",
             Array(FastqGzPair),
@@ -56,7 +72,6 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
                 example='["tumor_R1.fastq.gz", "tumor_R2.fastq.gz"]',
             ),
         )
-
         self.input(
             "normal_name",
             String(),
@@ -75,7 +90,6 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
                 example="NA24385_tumor",
             ),
         )
-
         self.input(
             "cutadapt_adapters",
             File(optional=True),
@@ -96,7 +110,22 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
                 example="BRCA1.bed",
             ),
         )
-
+        self.input(
+            "genome_file",
+            TextFile(),
+            doc=InputDocumentation(
+                "Genome file for bedtools query", quality=InputQualityType.static,
+            ),
+        )
+        self.input(
+            "gridss_blacklist",
+            Bed,
+            doc=InputDocumentation(
+                "BED file containing regions to ignore.",
+                quality=InputQualityType.static,
+                example="https://github.com/PapenfussLab/gridss#blacklist",
+            ),
+        )
         self.input(
             "reference",
             FastaWithDict,
@@ -113,7 +142,6 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 "File: gs://genomics-public-data/references/hg38/v0/Homo_sapiens_assembly38.fasta",
             ),
         )
-
         self.input(
             "snps_dbsnp",
             VcfTabix,
@@ -155,7 +183,25 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 "File: gs://genomics-public-data/references/hg38/v0/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz",
             ),
         )
+        self.input(
+            "gnomad",
+            VcfTabix(),
+            doc=InputDocumentation(
+                "The genome Aggregation Database (gnomAD)",
+                quality=InputQualityType.static,
+            ),
+        )
+        self.input(
+            "panel_of_normals",
+            VcfTabix(optional=True),
+            doc=InputDocumentation(
+                "VCF file of sites observed in normal.",
+                quality=InputQualityType.static,
+                example="gs://gatk-best-practices/somatic-b37/Mutect2-exome-panel.vcf or gs://gatk-best-practices/somatic-b37/Mutect2-WGS-panel-b37.vcf for hg19/b37",
+            ),
+        )
 
+        # STEPS
         self.step(
             "tumor",
             self.process_subpipeline(
@@ -163,6 +209,12 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 sample_name=self.tumor_name,
                 reference=self.reference,
                 cutadapt_adapters=self.cutadapt_adapters,
+                genome_file=self.genome_file,
+                gatk_intervals=self.gatk_intervals,
+                snps_dbsnp=self.snps_dbsnp,
+                snps_1000gp=self.snps_1000gp,
+                known_indels=self.known_indels,
+                mills_indels=self.mills_indels,
             ),
         )
         self.step(
@@ -172,31 +224,106 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 sample_name=self.normal_name,
                 reference=self.reference,
                 cutadapt_adapters=self.cutadapt_adapters,
+                genome_file=self.genome_file,
+                gatk_intervals=self.gatk_intervals,
+                snps_dbsnp=self.snps_dbsnp,
+                snps_1000gp=self.snps_1000gp,
+                known_indels=self.known_indels,
+                mills_indels=self.mills_indels,
+            ),
+        )
+
+        # GRIDSS
+        self.step(
+            "vc_gridss",
+            Gridss_2_6_2(
+                bams=[self.normal.out, self.tumor.out],
+                reference=self.reference,
+                blacklist=self.gridss_blacklist,
             ),
         )
 
         self.step(
             "vc_gatk",
             GatkSomaticVariantCaller_4_1_3(
-                normal_bam=self.normal.out,
-                tumor_bam=self.tumor.out,
+                normal_bam=self.normal.bqsr_bam,
+                tumor_bam=self.tumor.bqsr_bam,
                 normal_name=self.normal_name,
-                tumor_name=self.tumor_name,
                 intervals=self.gatk_intervals,
                 reference=self.reference,
-                snps_dbsnp=self.snps_dbsnp,
-                snps_1000gp=self.snps_1000gp,
-                known_indels=self.known_indels,
-                mills_indels=self.mills_indels,
+                gnomad=self.gnomad,
+                panel_of_normals=self.panel_of_normals,
             ),
             scatter="intervals",
         )
 
-        self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk))
-        self.step("sorted", BcfToolsSort_1_9(vcf=self.vc_gatk_merge.out))
+        self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out))
+        self.step("vc_gatk_compressvcf", BGZipLatest(file=self.vc_gatk_merge.out))
+        self.step(
+            "vc_gatk_sort_combined", BcfToolsSort_1_9(vcf=self.vc_gatk_compressvcf.out)
+        )
+        self.step(
+            "vc_gatk_uncompressvcf",
+            UncompressArchive(file=self.vc_gatk_sort_combined.out),
+        )
+
+        self.step(
+            "addbamstats",
+            AddBamStatsSomatic_0_1_0(
+                normal_id=self.normal_name,
+                tumor_id=self.tumor_name,
+                normal_bam=self.normal.out,
+                tumor_bam=self.tumor.out,
+                vcf=self.vc_gatk_uncompressvcf.out,
+            ),
+        )
 
         # Outputs
-
+        # FASTQC
+        self.output(
+            "normal_report", source=self.normal.reports, output_folder="reports"
+        )
+        self.output("tumor_report", source=self.tumor.reports, output_folder="reports")
+        # COVERAGE
+        self.output(
+            "normal_coverage",
+            source=self.normal.depth_of_coverage,
+            output_folder=["summary", self.normal_name],
+            doc="A text file of depth of coverage summary of NORMAL bam",
+        )
+        self.output(
+            "tumor_coverage",
+            source=self.tumor.depth_of_coverage,
+            output_folder=["summary", self.tumor_name],
+            doc="A text file of depth of coverage summary of TUMOR bam",
+        )
+        # BAM PERFORMANCE
+        self.output(
+            "normal_summary",
+            source=self.normal.summary,
+            output_folder=["summary", self.normal_name],
+            doc="A text file of performance summary of NORMAL bam",
+        )
+        self.output(
+            "tumor_summary",
+            source=self.tumor.summary,
+            output_folder=["summary", self.tumor_name],
+            doc="A text file of performance summary of TUMOR bam",
+        )
+        # GRIDSS
+        self.output(
+            "gridss_assembly",
+            source=self.vc_gridss.assembly,
+            output_folder="gridss",
+            doc="Assembly returned by GRIDSS",
+        )
+        self.output(
+            "variants_gridss",
+            source=self.vc_gridss.out,
+            output_folder="gridss",
+            doc="Variants from the GRIDSS variant caller",
+        )
+        # BAM
         self.output(
             "normal_bam",
             source=self.normal.out,
@@ -210,14 +337,10 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             output_folder="bams",
             output_name=self.tumor_name,
         )
+        # VCF
         self.output(
-            "normal_report", source=self.normal.reports, output_folder="reports"
-        )
-        self.output("tumor_report", source=self.tumor.reports, output_folder="reports")
-
-        self.output(
-            "variants",
-            source=self.sorted.out,
+            "variants_gatk",
+            source=self.vc_gatk_sort_combined.out,
             output_folder="variants",
             doc="Merged variants from the GATK caller",
         )
@@ -227,17 +350,30 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             output_folder=["variants", "byInterval"],
             doc="Unmerged variants from the GATK caller (by interval)",
         )
+        self.output(
+            "variants_final",
+            source=self.addbamstats.out,
+            output_folder="variants",
+            doc="Final vcf",
+        )
 
     @staticmethod
     def process_subpipeline(**connections):
         w = WorkflowBuilder("somatic_subpipeline")
 
-        w.input("reference", FastaWithDict)
+        # INPUTS
         w.input("reads", Array(FastqGzPair))
-        w.input("cutadapt_adapters", File(optional=True))
-
         w.input("sample_name", String)
+        w.input("reference", FastaWithDict)
+        w.input("cutadapt_adapters", File(optional=True))
+        w.input("genome_file", TextFile)
+        w.input("gatk_intervals", Array(Bed))
+        w.input("snps_dbsnp", VcfTabix)
+        w.input("snps_1000gp", VcfTabix)
+        w.input("known_indels", VcfTabix)
+        w.input("mills_indels", VcfTabix)
 
+        # STEPS
         w.step("fastqc", FastQC_0_11_5(reads=w.reads), scatter="reads")
 
         w.step(
@@ -267,8 +403,48 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             MergeAndMarkBams_4_1_3(bams=w.align_and_sort.out, sampleName=w.sample_name),
         )
 
+        w.step(
+            "coverage",
+            Gatk4DepthOfCoverage_4_1_6(
+                bam=w.merge_and_mark.out,
+                reference=w.reference,
+                intervals=w.gatk_intervals,
+                omitDepthOutputAtEachBase=True,
+                # countType="COUNT_FRAGMENTS_REQUIRE_SAME_BASE",
+                summaryCoverageThreshold=[1, 50, 100, 300, 500],
+                outputPrefix=w.sample_name,
+            ),
+        )
+
+        w.step(
+            "performance_summary",
+            PerformanceSummaryGenome_0_1_0(
+                bam=w.merge_and_mark.out,
+                sample_name=w.sample_name,
+                genome_file=w.genome_file,
+            ),
+        )
+
+        w.step(
+            "bqsr",
+            GATKBaseRecalBQSRWorkflow_4_1_3(
+                bam=w.merge_and_mark,
+                reference=w.reference,
+                snps_dbsnp=w.snps_dbsnp,
+                snps_1000gp=w.snps_1000gp,
+                known_indels=w.known_indels,
+                mills_indels=w.mills_indels,
+            ),
+        )
+
+        # OUTPUTS
         w.output("out", source=w.merge_and_mark.out)
+        w.output("bqsr_bam", source=w.bqsr.out)
         w.output("reports", source=w.fastqc.out)
+        w.output("depth_of_coverage", source=w.coverage.out_sampleSummary)
+        w.output(
+            "summary", source=w.performance_summary.performanceSummaryOut,
+        )
 
         return w(**connections)
 
@@ -277,7 +453,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
 
         meta.keywords = ["wgs", "cancer", "somatic", "variants", "gatk"]
         meta.dateUpdated = date(2019, 10, 16)
-        meta.dateUpdated = date(2020, 3, 16)
+        meta.dateUpdated = date(2020, 6, 18)
 
         meta.contributors = ["Michael Franklin", "Richard Lupat", "Jiaan Yu"]
         meta.short_documentation = "A somatic tumor-normal variant-calling WGS pipeline using only GATK Mutect2"
@@ -338,3 +514,4 @@ if __name__ == "__main__":
     # op = os.path.dirname(os.path.realpath(__file__)) + "/cwl/WGSGermlineGATK.py"
 
     # main.run(*["--validate", op], logger_handler=logging.Handler())
+

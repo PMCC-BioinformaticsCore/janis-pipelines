@@ -23,18 +23,20 @@ and Google Cloud platform.
 
 ## How to use
 
-[`janis-runner`](https://github.com/PMCC-BioinformaticsCore/janis-runner) can be used to generate an inputs template and run, or just to translate the 
-workflow for you to use. `janis-runner` has basic support for CWLTool and Cromwell.
+[`janis-assistant`](https://github.com/PMCC-BioinformaticsCore/janis-assistant) can be used to generate an inputs template and run, or just to translate the 
+workflow for you to use. `janis-assistant` has basic support for CWLTool and Cromwell.
 
 ```bash
 # View the translated workflow
-janis translate germline.py wdl
+# Path to workflow script, or workflow id (if implemented)
+janis translate /path/to/wgsgermlinegatk.py wdl
+janis translate WGSGermlineGATK wdl
 
 # Generate an input template for a workflow
-janis inputs germline.py > germlineInp.yml
+janis inputs WGSGermlineGATK > germlineInp.yml
 
 # Run the workflow with Cromwell
-janis run germline.py --inputs germlineInp.yml --engine cromwell
+janis run -o out_dir --engine cromwell WGSGermlineGATK --inputs germlineInp.yml
 ```
 
 This pipeline has been run on a 30x level (with `--hint-captureType 30X`) with
@@ -91,12 +93,20 @@ The following table lists all of the tools, versions and OCI containers used in 
 | tool                                                            | version     | container |
 | :-------------------------------------------------------------- |:----------: | :--------------------------------------------------- |
 | Bwa mem + Samtools View (BwaMemSamtoolsView)                    | 0.7.17|1.9  | michaelfranklin/bwasamtools:0.7.17-1.9 |
+| SamTools: View (SamToolsView)                                   | 1.9         | biocontainers/samtools:1.9--h8571acd_11 |
+| SamTools: Flagstat (SamToolsFlagstat)                           | 1.9         | biocontainers/samtools:1.9--h8571acd_11 |
+| BEDTools: genomeCoverageBed (bedtoolsgenomeCoverageBed)         | 2.29.2      | biocontainers/bedtools:2.29.2--hc088bd4_0 |
+| BEDTools: coverageBed (bedtoolsCoverageBed)                     | 2.29.2      | biocontainers/bedtools:2.29.2--hc088bd4_0 |
 | BCFTools: View (bcftoolsview)                                   | v1.5        | biocontainers/bcftools:v1.5_cv2 |
 | BCFTools: Annotate (bcftoolsAnnotate)                           | v1.5        | biocontainers/bcftools:v1.5_cv2 |
 | BCFTools: Sort (bcftoolssort)                                   | v1.9        | michaelfranklin/bcftools:1.9 |
 | Cutadapt (cutadapt)                                             | 1.18        | quay.io/biocontainers/cutadapt:1.18--py37h14c3975_1 |
 | Combine Variants (combinevariants)                              | 0.0.4       | michaelfranklin/pmacutil:0.0.4 |
+| Add Sym to DepthOfCoverage (addSymToDepthOfCoverage)            | 0.0.7       | michaelfranklin/pmacutil:0.0.7 |
+| Performance Summary (performanceSummary)                        | 0.0.7       | michaelfranklin/pmacutil:0.0.7 |
 | FastQC (fastqc)                                                 | v0.11.5     | biocontainers/fastqc:v0.11.5_cv3 |
+| GATK3: DepthOfCoverage (Gatk3DepthOfCoverage)                   | 3.8         | broadinstitute/gatk3:3.8-1 |
+| GATK4: CollectInsertSizeMetrics (Gatk4CollectInsertSizeMetrics) | 4.0.12.0    | broadinstitute/gatk:4.0.12.0 |
 | GATK4: SortSAM (gatk4sortsam)                                   | 4.0.12.0    | broadinstitute/gatk:4.0.12.0 |
 | GATK4: Merge SAM Files (Gatk4MergeSamFiles)                     | 4.0.12.0    | broadinstitute/gatk:4.0.12.0 |
 | GATK4: Mark Duplicates (Gatk4MarkDuplicates)                    | 4.0.12.0    | broadinstitute/gatk:4.0.12.0 |

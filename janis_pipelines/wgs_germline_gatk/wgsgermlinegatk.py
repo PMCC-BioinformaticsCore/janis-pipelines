@@ -11,6 +11,8 @@ from janis_core import (
     InputDocumentation,
     InputQualityType,
 )
+from janis_unix.tools import UncompressArchive
+from janis_unix.data_types import TextFile
 
 from janis_bioinformatics.data_types import (
     FastaWithDict,
@@ -23,10 +25,23 @@ from janis_bioinformatics.data_types import (
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
 from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
-from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
-from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_0, Gatk4SortSam_4_1_3
+from janis_bioinformatics.tools.common import (
+    BwaAligner,
+    MergeAndMarkBams_4_1_3,
+    GATKBaseRecalBQSRWorkflow_4_1_3,
+)
+from janis_bioinformatics.tools.htslib import BGZipLatest
+from janis_bioinformatics.tools.gatk4 import (
+    Gatk4GatherVcfs_4_1_3,
+    Gatk4DepthOfCoverage_4_1_6,
+)
 from janis_bioinformatics.tools.variantcallers import GatkGermlineVariantCaller_4_1_3
-from janis_bioinformatics.tools.pmac import ParseFastqcAdaptors
+from janis_bioinformatics.tools.papenfuss.gridss.gridss import Gridss_2_6_2
+from janis_bioinformatics.tools.pmac import (
+    ParseFastqcAdaptors,
+    PerformanceSummaryGenome_0_1_0,
+    AddBamStatsGermline_0_1_0,
+)
 
 
 class WGSGermlineGATK(BioinformaticsWorkflow):
@@ -38,7 +53,7 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
 
     @staticmethod
     def version():
-        return "1.2.0"
+        return "1.3.0"
 
     def constructor(self):
 
@@ -98,7 +113,22 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 example="BRCA1.bed",
             ),
         )
-
+        self.input(
+            "genome_file",
+            TextFile(),
+            doc=InputDocumentation(
+                "Genome file for bedtools query", quality=InputQualityType.static,
+            ),
+        )
+        self.input(
+            "gridss_blacklist",
+            Bed,
+            doc=InputDocumentation(
+                "BED file containing regions to ignore.",
+                quality=InputQualityType.static,
+                example="https://github.com/PapenfussLab/gridss#blacklist",
+            ),
+        )
         self.input(
             "snps_dbsnp",
             VcfTabix,
@@ -175,28 +205,114 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             ),
         )
 
+        # STATISTICS of BAM
+        self.step(
+            "coverage",
+            Gatk4DepthOfCoverage_4_1_6(
+                bam=self.merge_and_mark,
+                reference=self.reference,
+                outputPrefix=self.sample_name,
+                intervals=self.gatk_intervals,
+                # current version gatk 4.1.6.0 only support --count-type as COUNT_READS
+                # countType="COUNT_FRAGMENTS_REQUIRE_SAME_BASE",
+                omitDepthOutputAtEachBase=True,
+                summaryCoverageThreshold=[1, 50, 100, 300, 500],
+            ),
+        )
+
+        self.step(
+            "performance_summary",
+            PerformanceSummaryGenome_0_1_0(
+                bam=self.merge_and_mark,
+                genome_file=self.genome_file,
+                sample_name=self.sample_name,
+            ),
+        )
+
+        # GRIDSS
+        self.step(
+            "vc_gridss",
+            Gridss_2_6_2(
+                bams=[self.merge_and_mark.out],
+                reference=self.reference,
+                blacklist=self.gridss_blacklist,
+            ),
+        )
+
         # VARIANT CALLERS
 
         # GATK
         self.step(
-            "vc_gatk",
-            GatkGermlineVariantCaller_4_1_3(
+            "bqsr",
+            GATKBaseRecalBQSRWorkflow_4_1_3(
                 bam=self.merge_and_mark,
-                intervals=self.gatk_intervals,
                 reference=self.reference,
                 snps_dbsnp=self.snps_dbsnp,
                 snps_1000gp=self.snps_1000gp,
                 known_indels=self.known_indels,
                 mills_indels=self.mills_indels,
             ),
+        )
+        self.step(
+            "vc_gatk",
+            GatkGermlineVariantCaller_4_1_3(
+                bam=self.bqsr.out,
+                intervals=self.gatk_intervals,
+                reference=self.reference,
+                snps_dbsnp=self.snps_dbsnp,
+            ),
             scatter="intervals",
         )
 
-        self.step("vc_gatk_merge", Gatk4GatherVcfs_4_0(vcfs=self.vc_gatk.out))
-        # sort
+        self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out))
+        self.step("vc_gatk_compressvcf", BGZipLatest(file=self.vc_gatk_merge.out))
+        self.step(
+            "vc_gatk_sort_combined", BcfToolsSort_1_9(vcf=self.vc_gatk_compressvcf.out)
+        )
+        self.step(
+            "vc_gatk_uncompressvcf",
+            UncompressArchive(file=self.vc_gatk_sort_combined.out),
+        )
 
-        self.step("sort_combined", BcfToolsSort_1_9(vcf=self.vc_gatk_merge.out))
+        self.step(
+            "addbamstats",
+            AddBamStatsGermline_0_1_0(
+                bam=self.merge_and_mark, vcf=self.vc_gatk_uncompressvcf.out
+            ),
+        )
 
+        # RESULTS
+        self.output(
+            "reports",
+            source=self.fastqc.out,
+            output_folder=["reports", self.sample_name],
+            doc="A zip file of the FastQC quality report.",
+        )
+        self.output(
+            "sample_coverage",
+            source=self.coverage.out_sampleSummary,
+            output_folder=["performance_summary", self.sample_name],
+            doc="A text file of depth of coverage summary of bam",
+        )
+        self.output(
+            "summary",
+            source=self.performance_summary.performanceSummaryOut,
+            output_folder=["performance_summary", self.sample_name],
+            doc="A text file of performance summary of bam",
+        )
+        # GRIDSS
+        self.output(
+            "gridss_assembly",
+            source=self.vc_gridss.assembly,
+            output_folder="gridss",
+            doc="Assembly returned by GRIDSS",
+        )
+        self.output(
+            "variants_gridss",
+            source=self.vc_gridss.out,
+            output_folder="gridss",
+            doc="Variants from the GRIDSS variant caller",
+        )
         self.output(
             "bam",
             source=self.merge_and_mark.out,
@@ -205,14 +321,8 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             doc="Aligned and indexed bam.",
         )
         self.output(
-            "reports",
-            source=self.fastqc.out,
-            output_folder=["reports", self.sample_name],
-            doc="A zip file of the FastQC quality report.",
-        )
-        self.output(
             "variants",
-            source=self.sort_combined.out,
+            source=self.vc_gatk_sort_combined.out,
             output_folder="variants",
             output_name=self.sample_name,
             doc="Merged variants from the GATK caller",
@@ -223,6 +333,12 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             output_folder=["variants", "byInterval"],
             doc="Unmerged variants from the GATK caller (by interval)",
         )
+        self.output(
+            "variants_final",
+            source=self.addbamstats.out,
+            output_folder="variants",
+            doc="Final vcf",
+        )
 
     def bind_metadata(self):
         meta: WorkflowMetadata = self.metadata
@@ -230,7 +346,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         meta.keywords = ["wgs", "cancer", "germline", "variants", "gatk"]
         meta.contributors = ["Michael Franklin", "Richard Lupat", "Jiaan Yu"]
         meta.dateCreated = date(2018, 12, 24)
-        meta.dateUpdated = date(2020, 3, 16)
+        meta.dateUpdated = date(2020, 6, 22)
         meta.short_documentation = "A variant-calling WGS pipeline using only the GATK Haplotype variant caller."
         meta.documentation = """\
 This is a genomics pipeline to align sequencing data (Fastq pairs) into BAMs and call variants using GATK. The final variants are outputted in the VCF format.
