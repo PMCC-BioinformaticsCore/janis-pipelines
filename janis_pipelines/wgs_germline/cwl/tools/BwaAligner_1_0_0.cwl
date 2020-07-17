@@ -1,6 +1,9 @@
 #!/usr/bin/env cwl-runner
 class: Workflow
 cwlVersion: v1.0
+label: Align and sort reads
+doc: |-
+  Align sorted bam with this subworkflow consisting of BWA Mem + SamTools + Gatk4SortSam
 
 requirements:
 - class: InlineJavascriptRequirement
@@ -87,6 +90,7 @@ outputs:
 
 steps:
 - id: cutadapt
+  label: Cutadapt
   in:
   - id: fastq
     source: fastq
@@ -102,10 +106,11 @@ steps:
     source: cutadapt_removeMiddle3Adapter
   - id: removeMiddle5Adapter
     source: cutadapt_removeMiddle5Adapter
-  run: cutadapt_2_6.cwl
+  run: cutadapt_2_1.cwl
   out:
   - id: out
 - id: bwamem
+  label: Bwa mem + Samtools View
   in:
   - id: reference
     source: reference
@@ -119,6 +124,7 @@ steps:
   out:
   - id: out
 - id: sortsam
+  label: 'GATK4: SortSAM'
   in:
   - id: bam
     source: bwamem/out
@@ -135,3 +141,4 @@ steps:
   run: Gatk4SortSam_4_1_3_0.cwl
   out:
   - id: out
+id: BwaAligner

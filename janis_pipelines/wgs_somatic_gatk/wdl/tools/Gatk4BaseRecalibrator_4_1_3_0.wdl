@@ -4,6 +4,10 @@ task Gatk4BaseRecalibrator {
   input {
     Int? runtime_cpu
     Int? runtime_memory
+    Int? runtime_seconds
+    Int? runtime_disks
+    Array[String]? javaOptions
+    Int? compression_level
     String? tmpDir
     File bam
     File bam_bai
@@ -19,21 +23,26 @@ task Gatk4BaseRecalibrator {
     File reference_dict
     String? outputFilename
     File? intervals
+    Array[String]? intervalStrings
   }
   command <<<
-    ln -f ~{bam_bai} `echo '~{bam}' | sed 's/\.[^.]*$//'`.bai
+    cp -f ~{bam_bai} $(echo '~{bam}' | sed 's/\.[^.]*$//').bai
     gatk BaseRecalibrator \
-      ~{if defined(select_first([tmpDir, "/tmp/"])) then ("--tmp-dir " +  '"' + select_first([tmpDir, "/tmp/"]) + '"') else ""} \
-      ~{if defined(intervals) then ("--intervals " +  '"' + intervals + '"') else ""} \
-      -R ~{reference} \
-      -I ~{bam} \
-      ~{if defined(select_first([outputFilename, "~{basename(bam, ".bam")}.table"])) then ("-O " +  '"' + select_first([outputFilename, "~{basename(bam, ".bam")}.table"]) + '"') else ""} \
-      ~{sep=" " prefix("--known-sites ", knownSites)}
+      --java-options '-Xmx~{((select_first([runtime_memory, 16, 4]) * 3) / 4)}G ~{if (defined(compression_level)) then ("-Dsamjdk.compress_level=" + compression_level) else ""} ~{sep(" ", select_first([javaOptions, []]))}' \
+      ~{if defined(select_first([tmpDir, "/tmp/"])) then ("--tmp-dir '" + select_first([tmpDir, "/tmp/"]) + "'") else ""} \
+      ~{if defined(intervals) then ("--intervals '" + intervals + "'") else ""} \
+      ~{if (defined(intervalStrings) && length(select_first([intervalStrings])) > 0) then "--intervals '" + sep("' --intervals  '", select_first([intervalStrings])) + "'" else ""} \
+      -R '~{reference}' \
+      -I '~{bam}' \
+      -O '~{select_first([outputFilename, "~{basename(bam, ".bam")}.table"])}' \
+      ~{"--known-sites '" + sep("' --known-sites  '", knownSites) + "'"}
   >>>
   runtime {
-    cpu: select_first([runtime_cpu, 1])
+    cpu: select_first([runtime_cpu, 1, 1])
+    disks: "local-disk ~{select_first([runtime_disks, 20])} SSD"
     docker: "broadinstitute/gatk:4.1.3.0"
-    memory: "~{select_first([runtime_memory, 4])}G"
+    duration: select_first([runtime_seconds, 86400])
+    memory: "~{select_first([runtime_memory, 16, 4])}G"
     preemptible: 2
   }
   output {

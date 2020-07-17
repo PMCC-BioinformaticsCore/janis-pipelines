@@ -7,16 +7,16 @@ workflow mergeAndMarkBams {
   input {
     Array[File] bams
     Array[File] bams_bai
-    Boolean? createIndex
-    Int? maxRecordsInRam
+    Boolean? createIndex = true
+    Int? maxRecordsInRam = 5000000
     String? sampleName
-    Boolean? mergeSamFiles_useThreading
-    String? mergeSamFiles_validationStringency
+    Boolean? mergeSamFiles_useThreading = true
+    String? mergeSamFiles_validationStringency = "SILENT"
   }
   call G.Gatk4MergeSamFiles as mergeSamFiles {
     input:
-      bams_bai=bams_bai,
       bams=bams,
+      bams_bai=bams_bai,
       sampleName=sampleName,
       useThreading=select_first([mergeSamFiles_useThreading, true]),
       createIndex=select_first([createIndex, true]),
@@ -25,8 +25,7 @@ workflow mergeAndMarkBams {
   }
   call G2.Gatk4MarkDuplicates as markDuplicates {
     input:
-      bam_bai=mergeSamFiles.out_bai,
-      bam=mergeSamFiles.out,
+      bam=[mergeSamFiles.out],
       createIndex=select_first([createIndex, true]),
       maxRecordsInRam=select_first([maxRecordsInRam, 5000000])
   }

@@ -4,6 +4,10 @@ task Gatk4GatherVcfs {
   input {
     Int? runtime_cpu
     Int? runtime_memory
+    Int? runtime_seconds
+    Int? runtime_disks
+    Array[String]? javaOptions
+    Int? compression_level
     Array[File] vcfs
     String? outputFilename
     Array[File]? argumentsFile
@@ -22,26 +26,29 @@ task Gatk4GatherVcfs {
   }
   command <<<
     gatk GatherVcfs \
-      ~{sep=" " prefix("--INPUT ", vcfs)} \
-      ~{if defined(select_first([outputFilename, "generated.gathered.vcf"])) then ("--OUTPUT " +  '"' + select_first([outputFilename, "generated.gathered.vcf"]) + '"') else ""} \
-      ~{true="--arguments_file " false="" defined(argumentsFile)}~{sep=" " argumentsFile} \
-      ~{if defined(compressionLevel) then ("--COMPRESSION_LEVEL " +  '"' + compressionLevel + '"') else ""} \
-      ~{true="--CREATE_INDEX" false="" createIndex} \
-      ~{true="--CREATE_MD5_FILE" false="" createMd5File} \
-      ~{if defined(ga4ghClientSecrets) then ("--GA4GH_CLIENT_SECRETS " +  '"' + ga4ghClientSecrets + '"') else ""} \
-      ~{if defined(maxRecordsInRam) then ("--MAX_RECORDS_IN_RAM " +  '"' + maxRecordsInRam + '"') else ""} \
-      ~{true="--QUIET" false="" quiet} \
-      ~{if defined(referenceSequence) then ("--REFERENCE_SEQUENCE " +  '"' + referenceSequence + '"') else ""} \
-      ~{if defined(select_first([tmpDir, "/tmp"])) then ("--TMP_DIR " +  '"' + select_first([tmpDir, "/tmp"]) + '"') else ""} \
-      ~{true="--USE_JDK_DEFLATER" false="" useJdkDeflater} \
-      ~{true="--USE_JDK_INFLATER" false="" useJdkInflater} \
-      ~{if defined(validationStringency) then ("--VALIDATION_STRINGENCY " +  '"' + validationStringency + '"') else ""} \
-      ~{true="--VERBOSITY" false="" verbosity}
+      --java-options '-Xmx~{((select_first([runtime_memory, 8, 4]) * 3) / 4)}G ~{if (defined(compression_level)) then ("-Dsamjdk.compress_level=" + compression_level) else ""} ~{sep(" ", select_first([javaOptions, []]))}' \
+      ~{"--INPUT '" + sep("' --INPUT  '", vcfs) + "'"} \
+      --OUTPUT '~{select_first([outputFilename, "generated.gathered.vcf"])}' \
+      ~{if (defined(argumentsFile) && length(select_first([argumentsFile])) > 0) then "--arguments_file '" + sep("' '", select_first([argumentsFile])) + "'" else ""} \
+      ~{if defined(compressionLevel) then ("--COMPRESSION_LEVEL " + compressionLevel) else ''} \
+      ~{if defined(createIndex) then "--CREATE_INDEX" else ""} \
+      ~{if defined(createMd5File) then "--CREATE_MD5_FILE" else ""} \
+      ~{if defined(ga4ghClientSecrets) then ("--GA4GH_CLIENT_SECRETS '" + ga4ghClientSecrets + "'") else ""} \
+      ~{if defined(maxRecordsInRam) then ("--MAX_RECORDS_IN_RAM " + maxRecordsInRam) else ''} \
+      ~{if defined(quiet) then "--QUIET" else ""} \
+      ~{if defined(referenceSequence) then ("--REFERENCE_SEQUENCE '" + referenceSequence + "'") else ""} \
+      ~{if defined(select_first([tmpDir, "/tmp"])) then ("--TMP_DIR '" + select_first([tmpDir, "/tmp"]) + "'") else ""} \
+      ~{if defined(useJdkDeflater) then "--USE_JDK_DEFLATER" else ""} \
+      ~{if defined(useJdkInflater) then "--USE_JDK_INFLATER" else ""} \
+      ~{if defined(validationStringency) then ("--VALIDATION_STRINGENCY '" + validationStringency + "'") else ""} \
+      ~{if defined(verbosity) then "--VERBOSITY" else ""}
   >>>
   runtime {
-    cpu: select_first([runtime_cpu, 1])
+    cpu: select_first([runtime_cpu, 1, 1])
+    disks: "local-disk ~{select_first([runtime_disks, 20])} SSD"
     docker: "broadinstitute/gatk:4.1.3.0"
-    memory: "~{select_first([runtime_memory, 4])}G"
+    duration: select_first([runtime_seconds, 86400])
+    memory: "~{select_first([runtime_memory, 8, 4])}G"
     preemptible: 2
   }
   output {

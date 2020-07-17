@@ -1,9 +1,8 @@
 version development
 
 import "Gatk4SplitReads_4_1_3_0.wdl" as G
-import "Gatk4BaseRecalibrator_4_1_3_0.wdl" as G2
-import "Gatk4ApplyBQSR_4_1_3_0.wdl" as G3
-import "Gatk4HaplotypeCaller_4_1_3_0.wdl" as G4
+import "Gatk4HaplotypeCaller_4_1_3_0.wdl" as G2
+import "UncompressArchive_v1_0_0.wdl" as U
 import "SplitMultiAllele_v0_5772.wdl" as S
 
 workflow GATK4_GermlineVariantCaller {
@@ -21,25 +20,20 @@ workflow GATK4_GermlineVariantCaller {
     File reference_dict
     File snps_dbsnp
     File snps_dbsnp_tbi
-    File snps_1000gp
-    File snps_1000gp_tbi
-    File known_indels
-    File known_indels_tbi
-    File mills_indels
-    File mills_indels_tbi
+    String? haplotype_caller_pairHmmImplementation = "LOGLESS_CACHING"
   }
   call G.Gatk4SplitReads as split_bam {
     input:
-      bam_bai=bam_bai,
       bam=bam,
+      bam_bai=bam_bai,
       intervals=intervals
   }
-  call G2.Gatk4BaseRecalibrator as base_recalibrator {
+  call G2.Gatk4HaplotypeCaller as haplotype_caller {
     input:
-      bam_bai=split_bam.out_bai,
-      bam=split_bam.out,
-      knownSites=[snps_dbsnp, snps_1000gp, known_indels, mills_indels],
-      knownSites_tbi=[snps_dbsnp_tbi, snps_1000gp_tbi, known_indels_tbi, mills_indels_tbi],
+      pairHmmImplementation=select_first([haplotype_caller_pairHmmImplementation, "LOGLESS_CACHING"]),
+      inputRead=split_bam.out,
+      inputRead_bai=split_bam.out_bai,
+      reference=reference,
       reference_fai=reference_fai,
       reference_amb=reference_amb,
       reference_ann=reference_ann,
@@ -47,53 +41,31 @@ workflow GATK4_GermlineVariantCaller {
       reference_pac=reference_pac,
       reference_sa=reference_sa,
       reference_dict=reference_dict,
-      reference=reference,
-      intervals=intervals
-  }
-  call G3.Gatk4ApplyBQSR as apply_bqsr {
-    input:
-      bam_bai=split_bam.out_bai,
-      bam=split_bam.out,
-      reference_fai=reference_fai,
-      reference_amb=reference_amb,
-      reference_ann=reference_ann,
-      reference_bwt=reference_bwt,
-      reference_pac=reference_pac,
-      reference_sa=reference_sa,
-      reference_dict=reference_dict,
-      reference=reference,
-      recalFile=base_recalibrator.out,
-      intervals=intervals
-  }
-  call G4.Gatk4HaplotypeCaller as haplotype_caller {
-    input:
-      inputRead_bai=apply_bqsr.out_bai,
-      inputRead=apply_bqsr.out,
-      reference_fai=reference_fai,
-      reference_amb=reference_amb,
-      reference_ann=reference_ann,
-      reference_bwt=reference_bwt,
-      reference_pac=reference_pac,
-      reference_sa=reference_sa,
-      reference_dict=reference_dict,
-      reference=reference,
-      dbsnp_tbi=snps_dbsnp_tbi,
       dbsnp=snps_dbsnp,
+      dbsnp_tbi=snps_dbsnp_tbi,
       intervals=intervals
   }
-  call S.SplitMultiAllele as split_multi_allele {
+  call U.UncompressArchive as uncompressvcf {
     input:
-      vcf=haplotype_caller.out,
+      file=haplotype_caller.out
+  }
+  call S.SplitMultiAllele as splitnormalisevcf {
+    input:
+      vcf=uncompressvcf.out,
+      reference=reference,
       reference_fai=reference_fai,
       reference_amb=reference_amb,
       reference_ann=reference_ann,
       reference_bwt=reference_bwt,
       reference_pac=reference_pac,
       reference_sa=reference_sa,
-      reference_dict=reference_dict,
-      reference=reference
+      reference_dict=reference_dict
   }
   output {
-    File out = split_multi_allele.out
+    File variants = haplotype_caller.out
+    File variants_tbi = haplotype_caller.out_tbi
+    File out_bam = haplotype_caller.bam
+    File out_bam_bai = haplotype_caller.bam_bai
+    File out = splitnormalisevcf.out
   }
 }

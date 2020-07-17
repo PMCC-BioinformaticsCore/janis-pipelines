@@ -59,13 +59,11 @@ inputs:
   doc: |-
     Used to construct the readGroupHeaderLine with format: '@RG\tID:{name}\tSM:{name}\tLB:{name}\tPL:ILLUMINA'
   type: string
-  inputBinding: {}
 - id: platformTechnology
   label: platformTechnology
   doc: '(ReadGroup: PL) Used to construct the readGroupHeaderLine, defaults: ILLUMINA'
   type: string
   default: ILLUMINA
-  inputBinding: {}
 - id: minimumSeedLength
   label: minimumSeedLength
   doc: |-
@@ -75,6 +73,28 @@ inputs:
   - 'null'
   inputBinding:
     prefix: -k
+    position: 2
+    shellQuote: false
+- id: batchSize
+  label: batchSize
+  doc: |-
+    Process INT input bases in each batch regardless of the number of threads in use [10000000*nThreads]. By default, the batch size is proportional to the number of threads in use. Because the inferred insert size distribution slightly depends on the batch size, using different number of threads may produce different output. Specifying this option helps reproducibility.
+  type:
+  - int
+  - 'null'
+  inputBinding:
+    prefix: -K
+    position: 2
+    shellQuote: false
+- id: useSoftClippingForSupplementaryAlignments
+  label: useSoftClippingForSupplementaryAlignments
+  doc: |-
+    Use soft clipping CIGAR operation for supplementary alignments. By default, BWA-MEM uses soft clipping for the primary alignment and hard clipping for supplementary alignments.
+  type:
+  - boolean
+  - 'null'
+  inputBinding:
+    prefix: -Y
     position: 2
     shellQuote: false
 - id: bandwidth
@@ -439,6 +459,9 @@ outputs:
   type: File
   outputBinding:
     glob: $(inputs.sampleName).bam
+    loadContents: false
+stdout: _stdout
+stderr: _stderr
 arguments:
 - position: 0
   valueFrom: bwa
@@ -461,7 +484,8 @@ arguments:
   shellQuote: false
 - prefix: --threads
   position: 8
-  valueFrom: $(inputs.runtime_cpu)
+  valueFrom: |-
+    $([inputs.runtime_cpu, 16, 1].filter(function (inner) { return inner != null })[0])
   shellQuote: false
 - position: 8
   valueFrom: -h
@@ -475,6 +499,7 @@ arguments:
     $("@RG\\tID:{name}\\tSM:{name}\\tLB:{name}\\tPL:{pl}".replace(/\{name\}/g, inputs.sampleName).replace(/\{pl\}/g, inputs.platformTechnology))
 - prefix: -t
   position: 2
-  valueFrom: $(inputs.runtime_cpu)
+  valueFrom: |-
+    $([inputs.runtime_cpu, 16, 1].filter(function (inner) { return inner != null })[0])
   shellQuote: false
 id: BwaMemSamtoolsView

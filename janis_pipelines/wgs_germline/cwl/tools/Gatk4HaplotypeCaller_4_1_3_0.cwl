@@ -33,6 +33,28 @@ requirements:
   dockerPull: broadinstitute/gatk:4.1.3.0
 
 inputs:
+- id: javaOptions
+  label: javaOptions
+  type:
+  - type: array
+    items: string
+  - 'null'
+- id: compression_level
+  label: compression_level
+  doc: |-
+    Compression level for all compressed files created (e.g. BAM and VCF). Default value: 2.
+  type:
+  - int
+  - 'null'
+- id: pairHmmImplementation
+  label: pairHmmImplementation
+  doc: |-
+    The PairHMM implementation to use for genotype likelihood calculations. The various implementations balance a tradeoff of accuracy and runtime. The --pair-hmm-implementation argument is an enumerated type (Implementation), which can have one of the following values: EXACT;ORIGINAL;LOGLESS_CACHING;AVX_LOGLESS_CACHING;AVX_LOGLESS_CACHING_OMP;EXPERIMENTAL_FPGA_LOGLESS_CACHING;FASTEST_AVAILABLE. Implementation:  FASTEST_AVAILABLE
+  type:
+  - string
+  - 'null'
+  inputBinding:
+    prefix: --pair-hmm-implementation
 - id: activityProfileOut
   label: activityProfileOut
   doc: 'Output the raw activity profile results in IGV format (default: null)'
@@ -322,6 +344,26 @@ inputs:
   - 'null'
   inputBinding:
     prefix: --use-new-qual-calculator
+- id: gvcfGqBands
+  label: gvcfGqBands
+  doc: |-
+    (--gvcf-gq-bands) Exclusive upper bounds for reference confidence GQ bands (must be in [1, 100] and specified in increasing order)
+  type:
+  - type: array
+    inputBinding:
+      prefix: -GQB
+    items: int
+  - 'null'
+  inputBinding: {}
+- id: emitRefConfidence
+  label: emitRefConfidence
+  doc: |-
+    (-ERC) Mode for emitting reference confidence scores (For Mutect2, this is a BETA feature)
+  type:
+  - string
+  - 'null'
+  inputBinding:
+    prefix: --emit-ref-confidence
 - id: inputRead
   label: inputRead
   doc: BAM/SAM/CRAM file containing reads
@@ -379,7 +421,9 @@ inputs:
 - id: dbsnp
   label: dbsnp
   doc: '(Also: -D) A dbSNP VCF file.'
-  type: File
+  type:
+  - File
+  - 'null'
   secondaryFiles:
   - .tbi
   inputBinding:
@@ -393,6 +437,17 @@ inputs:
   - 'null'
   inputBinding:
     prefix: --intervals
+- id: outputBamName
+  label: outputBamName
+  doc: File to which assembled haplotypes should be written
+  type:
+  - string
+  - 'null'
+  default: generated.bam
+  inputBinding:
+    prefix: -bamout
+    position: 8
+    valueFrom: $(inputs.inputRead.basename.replace(/.bam$/, "")).bam
 
 outputs:
 - id: out
@@ -400,11 +455,48 @@ outputs:
   doc: |-
     A raw, unfiltered, highly sensitive callset in VCF format. File to which variants should be written
   type: File
+  secondaryFiles:
+  - .tbi
   outputBinding:
     glob: $(inputs.inputRead.basename.replace(/.bam$/, "")).vcf.gz
+    loadContents: false
+- id: bam
+  label: bam
+  doc: File to which assembled haplotypes should be written
+  type: File
+  secondaryFiles:
+  - |-
+    ${
+
+            function resolveSecondary(base, secPattern) {
+              if (secPattern[0] == "^") {
+                var spl = base.split(".");
+                var endIndex = spl.length > 1 ? spl.length - 1 : 1;
+                return resolveSecondary(spl.slice(undefined, endIndex).join("."), secPattern.slice(1));
+              }
+              return base + secPattern
+            }
+            return [
+                    {
+                        path: resolveSecondary(self.path, "^.bai"),
+                        basename: resolveSecondary(self.basename, ".bai"),
+                        class: "File",
+                    }
+            ];
+
+    }
+  outputBinding:
+    glob: $(inputs.inputRead.basename.replace(/.bam$/, "")).bam
+    loadContents: false
+stdout: _stdout
+stderr: _stderr
 
 baseCommand:
 - gatk
 - HaplotypeCaller
-arguments: []
+arguments:
+- prefix: --java-options
+  position: -1
+  valueFrom: |-
+    $("-Xmx{memory}G {compression} {otherargs}".replace(/\{memory\}/g, (([inputs.runtime_memory, 8, 4].filter(function (inner) { return inner != null })[0] * 3) / 4)).replace(/\{compression\}/g, (inputs.compression_level != null) ? ("-Dsamjdk.compress_level=" + inputs.compression_level) : "").replace(/\{otherargs\}/g, [inputs.javaOptions, []].filter(function (inner) { return inner != null })[0].join(" ")))
 id: Gatk4HaplotypeCaller

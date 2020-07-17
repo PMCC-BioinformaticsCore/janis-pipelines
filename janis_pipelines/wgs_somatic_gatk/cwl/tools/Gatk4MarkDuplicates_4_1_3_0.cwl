@@ -57,29 +57,9 @@ inputs:
 - id: bam
   label: bam
   doc: One or more input SAM or BAM files to analyze. Must be coordinate sorted.
-  type: File
-  secondaryFiles:
-  - |-
-    ${
-
-            function resolveSecondary(base, secPattern) {
-              if (secPattern[0] == "^") {
-                var spl = base.split(".");
-                var endIndex = spl.length > 1 ? spl.length - 1 : 1;
-                return resolveSecondary(spl.slice(undefined, endIndex).join("."), secPattern.slice(1));
-              }
-              return base + secPattern
-            }
-
-            return [
-                    {
-                        location: resolveSecondary(self.location, "^.bai"),
-                        basename: resolveSecondary(self.basename, ".bai"),
-                        class: "File",
-                    }
-            ];
-
-    }
+  type:
+    type: array
+    items: File
   inputBinding:
     prefix: -I
     position: 10
@@ -93,7 +73,6 @@ inputs:
   inputBinding:
     prefix: -O
     position: 10
-    valueFrom: $(inputs.bam.basename.replace(/.bam$/, "")).markduped.bam
 - id: metricsFilename
   label: metricsFilename
   doc: The output file to write marked records to.
@@ -104,6 +83,19 @@ inputs:
   inputBinding:
     prefix: -M
     position: 10
+- id: javaOptions
+  label: javaOptions
+  type:
+  - type: array
+    items: string
+  - 'null'
+- id: compression_level
+  label: compression_level
+  doc: |-
+    Compression level for all compressed files created (e.g. BAM and VCF). Default value: 2.
+  type:
+  - int
+  - 'null'
 - id: argumentsFile
   label: argumentsFile
   doc: read one or more arguments files and add them to the command line
@@ -140,21 +132,11 @@ inputs:
   - 'null'
   inputBinding:
     prefix: -CO
-- id: compressionLevel
-  label: compressionLevel
-  doc: Compression level for all compressed files created (e.g. BAM and GELI).
-  type:
-  - int
-  - 'null'
-  inputBinding:
-    prefix: --COMPRESSION_LEVEL
-    position: 11
 - id: createIndex
   label: createIndex
   doc: Whether to create a BAM index when writing a coordinate-sorted BAM file.
-  type:
-  - boolean
-  - 'null'
+  type: boolean
+  default: true
   inputBinding:
     prefix: --CREATE_INDEX
     position: 11
@@ -232,6 +214,15 @@ inputs:
   inputBinding:
     prefix: --verbosity
     position: 11
+- id: opticalDuplicatePixelDistance
+  label: opticalDuplicatePixelDistance
+  doc: |-
+    The maximum offset between two duplicate clusters in order to consider them optical duplicates. The default is appropriate for unpatterned versions of the Illumina platform. For the patterned flowcell models, 2500 is more appropriate. For other platforms and models, users should experiment to find what works best.
+  type:
+  - int
+  - 'null'
+  inputBinding:
+    prefix: --OPTICAL_DUPLICATE_PIXEL_DISTANCE
 
 outputs:
 - id: out
@@ -259,15 +250,23 @@ outputs:
 
     }
   outputBinding:
-    glob: $(inputs.bam.basename.replace(/.bam$/, "")).markduped.bam
+    glob: generated.markduped.bam
+    loadContents: false
 - id: metrics
   label: metrics
   type: File
   outputBinding:
     glob: generated.metrics.txt
+    loadContents: false
+stdout: _stdout
+stderr: _stderr
 
 baseCommand:
 - gatk
 - MarkDuplicates
-arguments: []
+arguments:
+- prefix: --java-options
+  position: -1
+  valueFrom: |-
+    $("-Xmx{memory}G {compression} {otherargs}".replace(/\{memory\}/g, (([inputs.runtime_memory, 8, 4].filter(function (inner) { return inner != null })[0] * 3) / 4)).replace(/\{compression\}/g, (inputs.compression_level != null) ? ("-Dsamjdk.compress_level=" + inputs.compression_level) : "").replace(/\{otherargs\}/g, [inputs.javaOptions, []].filter(function (inner) { return inner != null })[0].join(" ")))
 id: Gatk4MarkDuplicates

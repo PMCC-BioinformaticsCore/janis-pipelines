@@ -8,7 +8,7 @@ requirements:
 - class: ShellCommandRequirement
 - class: InlineJavascriptRequirement
 - class: DockerRequirement
-  dockerPull: michaelfranklin/bcftools:1.9
+  dockerPull: biocontainers/bcftools:v1.9-1-deb_cv1
 
 inputs:
 - id: vcf
@@ -49,6 +49,9 @@ outputs:
   type: File
   outputBinding:
     glob: generated.sorted.vcf.gz
+    loadContents: false
+stdout: _stdout
+stderr: _stderr
 
 baseCommand:
 - bcftools

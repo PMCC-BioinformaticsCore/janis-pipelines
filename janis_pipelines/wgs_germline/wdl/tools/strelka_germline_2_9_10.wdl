@@ -4,6 +4,8 @@ task strelka_germline {
   input {
     Int? runtime_cpu
     Int? runtime_memory
+    Int? runtime_seconds
+    Int? runtime_disks
     File bam
     File bam_bai
     File reference
@@ -37,40 +39,42 @@ task strelka_germline {
   }
   command <<<
      \
-      ~{if defined(callContinuousVf) then ("--callContinuousVf " +  '"' + callContinuousVf + '"') else ""} \
+      ~{if defined(callContinuousVf) then ("--callContinuousVf '" + callContinuousVf + "'") else ""} \
       configureStrelkaGermlineWorkflow.py \
       --bam ~{bam} \
       --referenceFasta ~{reference} \
-      ~{if defined(select_first([relativeStrelkaDirectory, "strelka_dir"])) then ("--runDir " +  '"' + select_first([relativeStrelkaDirectory, "strelka_dir"]) + '"') else ""} \
-      ~{if defined(ploidy) then ("--ploidy " +  '"' + ploidy + '"') else ""} \
-      ~{if defined(noCompress) then ("--noCompress " +  '"' + noCompress + '"') else ""} \
-      ~{true="--rna" false="" rna} \
-      ~{if defined(indelCandidates) then ("--indelCandidates " +  '"' + indelCandidates + '"') else ""} \
-      ~{if defined(forcedGT) then ("--forcedGT " +  '"' + forcedGT + '"') else ""} \
-      ~{true="--exome" false="" exome} \
-      ~{true="--exome" false="" targeted} \
-      ~{if defined(callRegions) then ('"' + "--callRegions=" + callRegions + '"') else ""} \
+      ~{if defined(select_first([relativeStrelkaDirectory, "strelka_dir"])) then ("--runDir " + select_first([relativeStrelkaDirectory, "strelka_dir"])) else ''} \
+      ~{if defined(ploidy) then ("--ploidy " + ploidy) else ''} \
+      ~{if defined(noCompress) then ("--noCompress " + noCompress) else ''} \
+      ~{if defined(rna) then "--rna" else ""} \
+      ~{if defined(indelCandidates) then ("--indelCandidates " + indelCandidates) else ''} \
+      ~{if defined(forcedGT) then ("--forcedGT " + forcedGT) else ''} \
+      ~{if defined(exome) then "--exome" else ""} \
+      ~{if defined(targeted) then "--exome" else ""} \
+      ~{if defined(callRegions) then ("--callRegions='" + callRegions + "'") else ""} \
       ;~{select_first([relativeStrelkaDirectory, "strelka_dir"])}/runWorkflow.py \
-      ~{if defined(select_first([mode, "local"])) then ("--mode " +  '"' + select_first([mode, "local"]) + '"') else ""} \
-      ~{if defined(queue) then ("--queue " +  '"' + queue + '"') else ""} \
-      ~{if defined(memGb) then ("--memGb " +  '"' + memGb + '"') else ""} \
-      ~{true="--quiet" false="" quiet} \
-      ~{if defined(mailTo) then ("--mailTo " +  '"' + mailTo + '"') else ""} \
-      --jobs ~{select_first([runtime_cpu, 1])}
+      ~{if defined(select_first([mode, "local"])) then ("--mode " + select_first([mode, "local"])) else ''} \
+      ~{if defined(queue) then ("--queue " + queue) else ''} \
+      ~{if defined(memGb) then ("--memGb " + memGb) else ''} \
+      ~{if defined(quiet) then "--quiet" else ""} \
+      ~{if defined(mailTo) then ("--mailTo " + mailTo) else ''} \
+      --jobs ~{select_first([runtime_cpu, 4, 1])}
   >>>
   runtime {
-    cpu: select_first([runtime_cpu, 1])
+    cpu: select_first([runtime_cpu, 4, 1])
+    disks: "local-disk ~{select_first([runtime_disks, 20])} SSD"
     docker: "michaelfranklin/strelka:2.9.10"
-    memory: "~{select_first([runtime_memory, 4])}G"
+    duration: select_first([runtime_seconds, 86400])
+    memory: "~{select_first([runtime_memory, 4, 4])}G"
     preemptible: 2
   }
   output {
-    File configPickle = "~{select_first([relativeStrelkaDirectory, "strelka_dir"])}/runWorkflow.py.config.pickle"
-    File script = "~{select_first([relativeStrelkaDirectory, "strelka_dir"])}/runWorkflow.py"
-    File stats = "~{select_first([relativeStrelkaDirectory, "strelka_dir"])}/results/stats/runStats.tsv"
-    File variants = "~{select_first([relativeStrelkaDirectory, "strelka_dir"])}/results/variants/variants.vcf.gz"
-    File variants_tbi = "~{select_first([relativeStrelkaDirectory, "strelka_dir"])}/results/variants/variants.vcf.gz.tbi"
-    File genome = "~{select_first([relativeStrelkaDirectory, "strelka_dir"])}/results/variants/genome.vcf.gz"
-    File genome_tbi = "~{select_first([relativeStrelkaDirectory, "strelka_dir"])}/results/variants/genome.vcf.gz.tbi"
+    File configPickle = (select_first([relativeStrelkaDirectory, "strelka_dir"]) + "/runWorkflow.py.config.pickle")
+    File script = (select_first([relativeStrelkaDirectory, "strelka_dir"]) + "/runWorkflow.py")
+    File stats = (select_first([relativeStrelkaDirectory, "strelka_dir"]) + "/results/stats/runStats.tsv")
+    File variants = (select_first([relativeStrelkaDirectory, "strelka_dir"]) + "/results/variants/variants.vcf.gz")
+    File variants_tbi = (select_first([relativeStrelkaDirectory, "strelka_dir"]) + "/results/variants/variants.vcf.gz") + ".tbi"
+    File genome = (select_first([relativeStrelkaDirectory, "strelka_dir"]) + "/results/variants/genome.vcf.gz")
+    File genome_tbi = (select_first([relativeStrelkaDirectory, "strelka_dir"]) + "/results/variants/genome.vcf.gz") + ".tbi"
   }
 }

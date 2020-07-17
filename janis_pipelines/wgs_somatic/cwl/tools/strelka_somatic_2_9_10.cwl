@@ -291,19 +291,25 @@ outputs:
   label: configPickle
   type: File
   outputBinding:
-    glob: $("{rundir}/runWorkflow.py.config.pickle".replace(/\{rundir\}/g, inputs.rundir))
+    glob: $((inputs.rundir + "/runWorkflow.py.config.pickle"))
+    outputEval: $((inputs.rundir + "/runWorkflow.py.config.pickle"))
+    loadContents: false
 - id: script
   label: script
   type: File
   outputBinding:
-    glob: $("{rundir}/runWorkflow.py".replace(/\{rundir\}/g, inputs.rundir))
+    glob: $((inputs.rundir + "/runWorkflow.py"))
+    outputEval: $((inputs.rundir + "/runWorkflow.py"))
+    loadContents: false
 - id: stats
   label: stats
   doc: |-
     A tab-delimited report of various internal statistics from the variant calling process: Runtime information accumulated for each genome segment, excluding auxiliary steps such as BAM indexing and vcf merging. Indel candidacy statistics
   type: File
   outputBinding:
-    glob: $("{rundir}/results/stats/runStats.tsv".replace(/\{rundir\}/g, inputs.rundir))
+    glob: $((inputs.rundir + "/results/stats/runStats.tsv"))
+    outputEval: $((inputs.rundir + "/results/stats/runStats.tsv"))
+    loadContents: false
 - id: indels
   label: indels
   doc: ''
@@ -311,8 +317,9 @@ outputs:
   secondaryFiles:
   - .tbi
   outputBinding:
-    glob: |-
-      $("{rundir}/results/variants/somatic.indels.vcf.gz".replace(/\{rundir\}/g, inputs.rundir))
+    glob: $((inputs.rundir + "/results/variants/somatic.indels.vcf.gz"))
+    outputEval: $((inputs.rundir + "/results/variants/somatic.indels.vcf.gz"))
+    loadContents: false
 - id: snvs
   label: snvs
   doc: ''
@@ -320,8 +327,11 @@ outputs:
   secondaryFiles:
   - .tbi
   outputBinding:
-    glob: |-
-      $("{rundir}/results/variants/somatic.snvs.vcf.gz".replace(/\{rundir\}/g, inputs.rundir))
+    glob: $((inputs.rundir + "/results/variants/somatic.snvs.vcf.gz"))
+    outputEval: $((inputs.rundir + "/results/variants/somatic.snvs.vcf.gz"))
+    loadContents: false
+stdout: _stdout
+stderr: _stderr
 arguments:
 - position: 0
   valueFrom: configureStrelkaSomaticWorkflow.py
@@ -330,6 +340,7 @@ arguments:
   shellQuote: false
 - prefix: --jobs
   position: 3
-  valueFrom: $(inputs.runtime_cpu)
+  valueFrom: |-
+    $([inputs.runtime_cpu, 4, 1].filter(function (inner) { return inner != null })[0])
   shellQuote: false
 id: strelka_somatic

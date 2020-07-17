@@ -4,13 +4,15 @@ task ParseFastqcAdaptors {
   input {
     Int? runtime_cpu
     Int? runtime_memory
+    Int? runtime_seconds
+    Int? runtime_disks
     Array[File] fastqc_datafiles
     File? cutadapt_adaptors_lookup
   }
   command <<<
     
 cat <<EOT >> ParseFastqcAdaptors-script.py
-
+    
 import argparse, json, sys
 from typing import Optional, List, Dict, Any
 cli = argparse.ArgumentParser("Argument parser for Janis PythonTool")
@@ -27,6 +29,7 @@ Double = float
 Boolean = str
 Directory = str
 Stdout = str
+Stderr = str
 class PythonTool:
     File = str
     Directory = str
@@ -143,18 +146,22 @@ try:
     args = cli.parse_args()
     result = code_block(fastqc_datafiles=args.fastqc_datafiles, cutadapt_adaptors_lookup=args.cutadapt_adaptors_lookup)
     print(json.dumps(result))
-except e:
+except Exception as e:
     print(str(e), file=sys.stderr)
     raise
 
 EOT
     python ParseFastqcAdaptors-script.py \
-      --fastqc_datafiles ~{sep=" " fastqc_datafiles} \
-      ~{if defined(cutadapt_adaptors_lookup) then ("--cutadapt_adaptors_lookup " +  '"' + cutadapt_adaptors_lookup + '"') else ""}
+      ~{"--fastqc_datafiles '" + sep("' '", fastqc_datafiles) + "'"} \
+      ~{if defined(cutadapt_adaptors_lookup) then ("--cutadapt_adaptors_lookup '" + cutadapt_adaptors_lookup + "'") else ""}
   >>>
   runtime {
+    cpu: select_first([runtime_cpu, 1])
+    disks: "local-disk ~{select_first([runtime_disks, 20])} SSD"
     docker: "python:3.8.1"
+    duration: select_first([runtime_seconds, 86400])
     memory: "~{select_first([runtime_memory, 4])}G"
+    preemptible: 2
   }
   output {
     Array[String] adaptor_sequences = read_json(stdout())["adaptor_sequences"]

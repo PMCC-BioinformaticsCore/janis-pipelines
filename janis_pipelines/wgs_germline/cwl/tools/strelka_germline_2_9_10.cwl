@@ -236,22 +236,25 @@ outputs:
   label: configPickle
   type: File
   outputBinding:
-    glob: |-
-      $("{relativeStrelkaDirectory}/runWorkflow.py.config.pickle".replace(/\{relativeStrelkaDirectory\}/g, inputs.relativeStrelkaDirectory))
+    glob: $((inputs.relativeStrelkaDirectory + "/runWorkflow.py.config.pickle"))
+    outputEval: $((inputs.relativeStrelkaDirectory + "/runWorkflow.py.config.pickle"))
+    loadContents: false
 - id: script
   label: script
   type: File
   outputBinding:
-    glob: |-
-      $("{relativeStrelkaDirectory}/runWorkflow.py".replace(/\{relativeStrelkaDirectory\}/g, inputs.relativeStrelkaDirectory))
+    glob: $((inputs.relativeStrelkaDirectory + "/runWorkflow.py"))
+    outputEval: $((inputs.relativeStrelkaDirectory + "/runWorkflow.py"))
+    loadContents: false
 - id: stats
   label: stats
   doc: |-
     A tab-delimited report of various internal statistics from the variant calling process: Runtime information accumulated for each genome segment, excluding auxiliary steps such as BAM indexing and vcf merging. Indel candidacy statistics
   type: File
   outputBinding:
-    glob: |-
-      $("{relativeStrelkaDirectory}/results/stats/runStats.tsv".replace(/\{relativeStrelkaDirectory\}/g, inputs.relativeStrelkaDirectory))
+    glob: $((inputs.relativeStrelkaDirectory + "/results/stats/runStats.tsv"))
+    outputEval: $((inputs.relativeStrelkaDirectory + "/results/stats/runStats.tsv"))
+    loadContents: false
 - id: variants
   label: variants
   doc: Primary variant inferences are provided as a series of VCF 4.1 files
@@ -259,16 +262,20 @@ outputs:
   secondaryFiles:
   - .tbi
   outputBinding:
-    glob: |-
-      $("{relativeStrelkaDirectory}/results/variants/variants.vcf.gz".replace(/\{relativeStrelkaDirectory\}/g, inputs.relativeStrelkaDirectory))
+    glob: $((inputs.relativeStrelkaDirectory + "/results/variants/variants.vcf.gz"))
+    outputEval: $((inputs.relativeStrelkaDirectory + "/results/variants/variants.vcf.gz"))
+    loadContents: false
 - id: genome
   label: genome
   type: File
   secondaryFiles:
   - .tbi
   outputBinding:
-    glob: |-
-      $("{relativeStrelkaDirectory}/results/variants/genome.vcf.gz".replace(/\{relativeStrelkaDirectory\}/g, inputs.relativeStrelkaDirectory))
+    glob: $((inputs.relativeStrelkaDirectory + "/results/variants/genome.vcf.gz"))
+    outputEval: $((inputs.relativeStrelkaDirectory + "/results/variants/genome.vcf.gz"))
+    loadContents: false
+stdout: _stdout
+stderr: _stderr
 arguments:
 - position: 0
   valueFrom: configureStrelkaGermlineWorkflow.py
@@ -279,6 +286,7 @@ arguments:
   shellQuote: false
 - prefix: --jobs
   position: 3
-  valueFrom: $(inputs.runtime_cpu)
+  valueFrom: |-
+    $([inputs.runtime_cpu, 4, 1].filter(function (inner) { return inner != null })[0])
   shellQuote: false
 id: strelka_germline

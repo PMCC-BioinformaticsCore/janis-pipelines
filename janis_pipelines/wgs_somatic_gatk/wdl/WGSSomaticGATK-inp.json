@@ -1,5 +1,9 @@
 {
     "WGSSomaticGATK.gatk_intervals": null,
+    "WGSSomaticGATK.genome_file": null,
+    "WGSSomaticGATK.gnomad": null,
+    "WGSSomaticGATK.gnomad_tbi": null,
+    "WGSSomaticGATK.gridss_blacklist": null,
     "WGSSomaticGATK.known_indels": null,
     "WGSSomaticGATK.known_indels_tbi": null,
     "WGSSomaticGATK.mills_indels": null,

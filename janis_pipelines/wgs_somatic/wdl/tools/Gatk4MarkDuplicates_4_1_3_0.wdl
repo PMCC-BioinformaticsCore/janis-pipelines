@@ -4,15 +4,17 @@ task Gatk4MarkDuplicates {
   input {
     Int? runtime_cpu
     Int? runtime_memory
-    File bam
-    File bam_bai
+    Int? runtime_seconds
+    Int? runtime_disks
+    Array[File] bam
     String? outputFilename
     String? metricsFilename
+    Array[String]? javaOptions
+    Int? compression_level
     Array[File]? argumentsFile
     String? assumeSortOrder
     String? barcodeTag
     Array[String]? comment
-    Int? compressionLevel
     Boolean? createIndex
     Boolean? createMd5File
     Int? maxRecordsInRam
@@ -22,38 +24,41 @@ task Gatk4MarkDuplicates {
     Boolean? useJdkInflater
     String? validationStringency
     String? verbosity
+    Int? opticalDuplicatePixelDistance
   }
   command <<<
-    ln -f ~{bam_bai} `echo '~{bam}' | sed 's/\.[^.]*$//'`.bai
     gatk MarkDuplicates \
-      ~{if defined(assumeSortOrder) then ("-ASO " +  '"' + assumeSortOrder + '"') else ""} \
-      ~{if defined(barcodeTag) then ("--BARCODE_TAG " +  '"' + barcodeTag + '"') else ""} \
-      ~{true="-CO " false="" defined(comment)}~{sep=" " comment} \
-      -I ~{bam} \
-      ~{if defined(select_first([outputFilename, "~{basename(bam, ".bam")}.markduped.bam"])) then ("-O " +  '"' + select_first([outputFilename, "~{basename(bam, ".bam")}.markduped.bam"]) + '"') else ""} \
-      ~{if defined(select_first([metricsFilename, "generated.metrics.txt"])) then ("-M " +  '"' + select_first([metricsFilename, "generated.metrics.txt"]) + '"') else ""} \
-      ~{true="--arguments_file " false="" defined(argumentsFile)}~{sep=" " argumentsFile} \
-      ~{if defined(compressionLevel) then ("--COMPRESSION_LEVEL " +  '"' + compressionLevel + '"') else ""} \
-      ~{true="--CREATE_INDEX" false="" createIndex} \
-      ~{true="--CREATE_MD5_FILE" false="" createMd5File} \
-      ~{if defined(maxRecordsInRam) then ("--MAX_RECORDS_IN_RAM " +  '"' + maxRecordsInRam + '"') else ""} \
-      ~{true="--QUIET" false="" quiet} \
-      ~{if defined(select_first([tmpDir, "tmp/"])) then ("--TMP_DIR " +  '"' + select_first([tmpDir, "tmp/"]) + '"') else ""} \
-      ~{true="--use_jdk_deflater" false="" useJdkDeflater} \
-      ~{true="--use_jdk_inflater" false="" useJdkInflater} \
-      ~{if defined(validationStringency) then ("--VALIDATION_STRINGENCY " +  '"' + validationStringency + '"') else ""} \
-      ~{if defined(verbosity) then ("--verbosity " +  '"' + verbosity + '"') else ""}
-    ln -f `echo '~{select_first([outputFilename, "~{basename(bam, ".bam")}.markduped.bam"])}' | sed 's/\.[^.]*$//'`.bai `echo '~{select_first([outputFilename, "~{basename(bam, ".bam")}.markduped.bam"])}' `.bai
+      --java-options '-Xmx~{((select_first([runtime_memory, 8, 4]) * 3) / 4)}G ~{if (defined(compression_level)) then ("-Dsamjdk.compress_level=" + compression_level) else ""} ~{sep(" ", select_first([javaOptions, []]))}' \
+      ~{if defined(assumeSortOrder) then ("-ASO '" + assumeSortOrder + "'") else ""} \
+      ~{if defined(barcodeTag) then ("--BARCODE_TAG '" + barcodeTag + "'") else ""} \
+      ~{if (defined(comment) && length(select_first([comment])) > 0) then "-CO '" + sep("' '", select_first([comment])) + "'" else ""} \
+      ~{if defined(opticalDuplicatePixelDistance) then ("--OPTICAL_DUPLICATE_PIXEL_DISTANCE " + opticalDuplicatePixelDistance) else ''} \
+      ~{"-I '" + sep("' '", bam) + "'"} \
+      -O '~{select_first([outputFilename, "generated.markduped.bam"])}' \
+      -M '~{select_first([metricsFilename, "generated.metrics.txt"])}' \
+      ~{if (defined(argumentsFile) && length(select_first([argumentsFile])) > 0) then "--arguments_file '" + sep("' '", select_first([argumentsFile])) + "'" else ""} \
+      ~{if defined(select_first([createIndex, true])) then "--CREATE_INDEX" else ""} \
+      ~{if defined(createMd5File) then "--CREATE_MD5_FILE" else ""} \
+      ~{if defined(maxRecordsInRam) then ("--MAX_RECORDS_IN_RAM " + maxRecordsInRam) else ''} \
+      ~{if defined(quiet) then "--QUIET" else ""} \
+      ~{if defined(select_first([tmpDir, "tmp/"])) then ("--TMP_DIR '" + select_first([tmpDir, "tmp/"]) + "'") else ""} \
+      ~{if defined(useJdkDeflater) then "--use_jdk_deflater" else ""} \
+      ~{if defined(useJdkInflater) then "--use_jdk_inflater" else ""} \
+      ~{if defined(validationStringency) then ("--VALIDATION_STRINGENCY '" + validationStringency + "'") else ""} \
+      ~{if defined(verbosity) then ("--verbosity '" + verbosity + "'") else ""}
+    if [ -f $(echo '~{select_first([outputFilename, "generated.markduped.bam"])}' | sed 's/\.[^.]*$//').bai ]; then ln -f $(echo '~{select_first([outputFilename, "generated.markduped.bam"])}' | sed 's/\.[^.]*$//').bai $(echo '~{select_first([outputFilename, "generated.markduped.bam"])}' ).bai; fi
   >>>
   runtime {
-    cpu: select_first([runtime_cpu, 1])
+    cpu: select_first([runtime_cpu, 4, 1])
+    disks: "local-disk ~{select_first([runtime_disks, 20])} SSD"
     docker: "broadinstitute/gatk:4.1.3.0"
-    memory: "~{select_first([runtime_memory, 4])}G"
+    duration: select_first([runtime_seconds, 86400])
+    memory: "~{select_first([runtime_memory, 8, 4])}G"
     preemptible: 2
   }
   output {
-    File out = select_first([outputFilename, "~{basename(bam, ".bam")}.markduped.bam"])
-    File out_bai = (select_first([outputFilename, "~{basename(bam, ".bam")}.markduped.bam"])) + ".bai"
+    File out = select_first([outputFilename, "generated.markduped.bam"])
+    File out_bai = select_first([outputFilename, "generated.markduped.bam"]) + ".bai"
     File metrics = select_first([metricsFilename, "generated.metrics.txt"])
   }
 }

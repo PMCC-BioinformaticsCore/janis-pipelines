@@ -16,14 +16,12 @@ inputs:
   type: File
   secondaryFiles:
   - .bai
-  inputBinding: {}
 - id: normalBam
   label: normalBam
   doc: The indexed BAM file
   type: File
   secondaryFiles:
   - .bai
-  inputBinding: {}
 - id: intervals
   label: intervals
   type: File
@@ -45,19 +43,16 @@ inputs:
   label: tumorName
   doc: The sample name to be used directly.  Will overwrite -n option
   type: string
-  inputBinding: {}
 - id: normalName
   label: normalName
   doc: The normal sample name to use with the -b option
   type: string
-  inputBinding: {}
 - id: alleleFreqThreshold
   label: alleleFreqThreshold
   doc: 'The threshold for allele frequency, default: 0.05 or 5%'
   type:
   - float
   - 'null'
-  inputBinding: {}
 - id: outputFilename
   label: outputFilename
   type:
@@ -66,7 +61,7 @@ inputs:
   default: generated.vardict.vcf
   inputBinding:
     prefix: '>'
-    position: 10
+    position: 6
     shellQuote: false
 - id: indels3prime
   label: indels3prime
@@ -390,7 +385,8 @@ inputs:
   inputBinding:
     prefix: -th
     position: 1
-    valueFrom: $(inputs.runtime_cpu)
+    valueFrom: |-
+      $([inputs.runtime_cpu, 4, 1].filter(function (inner) { return inner != null })[0])
     shellQuote: false
 - id: freq
   label: freq
@@ -484,6 +480,9 @@ outputs:
   type: File
   outputBinding:
     glob: generated.vardict.vcf
+    loadContents: false
+stdout: _stdout
+stderr: _stderr
 
 baseCommand: VarDict
 arguments:
@@ -495,8 +494,7 @@ arguments:
   shellQuote: false
 - prefix: -b
   position: 1
-  valueFrom: |-
-    $("{tumorBam}|{normalBam}".replace(/\{tumorBam\}/g, inputs.tumorBam).replace(/\{normalBam\}/g, inputs.normalBam))
+  valueFrom: $(((inputs.tumorBam + "|") + inputs.normalBam))
   shellQuote: true
 - prefix: -N
   position: 1
@@ -504,8 +502,7 @@ arguments:
   shellQuote: true
 - prefix: -N
   position: 5
-  valueFrom: |-
-    $("{tumorName}|{normalName}".replace(/\{tumorName\}/g, inputs.tumorName).replace(/\{normalName\}/g, inputs.normalName))
+  valueFrom: $(((inputs.tumorName + "|") + inputs.normalName))
   shellQuote: true
 - prefix: -f
   position: 5
@@ -514,8 +511,5 @@ arguments:
 - prefix: -f
   position: 1
   valueFrom: $(inputs.alleleFreqThreshold)
-  shellQuote: false
-- position: 6
-  valueFrom: ' | bcftools view -O z'
   shellQuote: false
 id: vardict_somatic

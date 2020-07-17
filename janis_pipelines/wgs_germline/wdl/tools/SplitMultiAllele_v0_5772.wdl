@@ -4,6 +4,8 @@ task SplitMultiAllele {
   input {
     Int? runtime_cpu
     Int? runtime_memory
+    Int? runtime_seconds
+    Int? runtime_disks
     File vcf
     File reference
     File reference_fai
@@ -17,26 +19,21 @@ task SplitMultiAllele {
   }
   command <<<
      \
-      zcat \
-      | \
-      sed 's/ID=AD,Number=./ID=AD,Number=R/' < \
+      vt decompose -s \
       ~{vcf} \
-      | \
-      vt decompose -s - -o - \
-      | \
-      vt normalize -n -q - -o - \
+      | vt normalize -n -q - \
       -r ~{reference} \
-      | \
-      ~{if defined(select_first([outputFilename, "~{basename(vcf, ".vcf.gz")}.norm.vcf"])) then ("> " +  '"' + select_first([outputFilename, "~{basename(vcf, ".vcf.gz")}.norm.vcf"]) + '"') else ""} \
-      sed 's/ID=AD,Number=./ID=AD,Number=1/'
+      -o ~{select_first([outputFilename, "generated.norm.vcf"])}
   >>>
   runtime {
-    cpu: select_first([runtime_cpu, 1])
+    cpu: select_first([runtime_cpu, 1, 1])
+    disks: "local-disk ~{select_first([runtime_disks, 20])} SSD"
     docker: "heuermh/vt"
-    memory: "~{select_first([runtime_memory, 4])}G"
+    duration: select_first([runtime_seconds, 86400])
+    memory: "~{select_first([runtime_memory, 8, 4])}G"
     preemptible: 2
   }
   output {
-    File out = select_first([outputFilename, "~{basename(vcf, ".vcf.gz")}.norm.vcf"])
+    File out = select_first([outputFilename, "generated.norm.vcf"])
   }
 }

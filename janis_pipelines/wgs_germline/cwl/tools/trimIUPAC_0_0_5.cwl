@@ -31,6 +31,9 @@ outputs:
   type: File
   outputBinding:
     glob: generated.trimmed.vcf
+    loadContents: false
+stdout: _stdout
+stderr: _stderr
 
 baseCommand: trimIUPAC.py
 arguments: []

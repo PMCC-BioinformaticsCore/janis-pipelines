@@ -3,20 +3,20 @@ class: CommandLineTool
 cwlVersion: v1.0
 label: Manta
 doc: |-
-  Manta calls structural variants (SVs) and indels from mapped paired-end sequencing reads. 
-  It is optimized for analysis of germline variation in small sets of individuals and somatic 
-  variation in tumor/normal sample pairs. Manta discovers, assembles and scores large-scale SVs, 
-  medium-sized indels and large insertions within a single efficient workflow. The method is 
-  designed for rapid analysis on standard compute hardware: NA12878 at 50x genomic coverage is 
-  analyzed in less than 20 minutes on a 20 core server, and most WGS tumor/normal analyses 
-  can be completed within 2 hours. Manta combines paired and split-read evidence during SV 
-  discovery and scoring to improve accuracy, but does not require split-reads or successful 
-  breakpoint assemblies to report a variant in cases where there is strong evidence otherwise. 
+  Manta calls structural variants (SVs) and indels from mapped paired-end sequencing reads.
+  It is optimized for analysis of germline variation in small sets of individuals and somatic
+  variation in tumor/normal sample pairs. Manta discovers, assembles and scores large-scale SVs,
+  medium-sized indels and large insertions within a single efficient workflow. The method is
+  designed for rapid analysis on standard compute hardware: NA12878 at 50x genomic coverage is
+  analyzed in less than 20 minutes on a 20 core server, and most WGS tumor/normal analyses
+  can be completed within 2 hours. Manta combines paired and split-read evidence during SV
+  discovery and scoring to improve accuracy, but does not require split-reads or successful
+  breakpoint assemblies to report a variant in cases where there is strong evidence otherwise.
 
-  It provides scoring models for germline variants in small sets of diploid samples and somatic 
-  variants in matched tumor/normal sample pairs. There is experimental support for analysis of 
-  unmatched tumor samples as well. Manta accepts input read mappings from BAM or CRAM files and 
-  reports all SV and indel inferences in VCF 4.1 format. See the user guide for a full description 
+  It provides scoring models for germline variants in small sets of diploid samples and somatic
+  variants in matched tumor/normal sample pairs. There is experimental support for analysis of
+  unmatched tumor samples as well. Manta accepts input read mappings from BAM or CRAM files and
+  reports all SV and indel inferences in VCF 4.1 format. See the user guide for a full description
   of capabilities and limitations.
 
 requirements:
@@ -103,7 +103,7 @@ inputs:
   label: rna
   doc: Set options for RNA-Seq input. Must specify exactly one bam input file
   type:
-  - File
+  - boolean
   - 'null'
   inputBinding:
     prefix: --rna
@@ -113,7 +113,7 @@ inputs:
   label: unstrandedRNA
   doc: 'Set if RNA-Seq input is unstranded: Allows splice-junctions on either strand'
   type:
-  - File
+  - boolean
   - 'null'
   inputBinding:
     prefix: --unstrandedRNA
@@ -123,7 +123,7 @@ inputs:
   label: outputContig
   doc: Output assembled contig sequences in VCF file
   type:
-  - File
+  - boolean
   - 'null'
   inputBinding:
     prefix: --outputContig
@@ -200,54 +200,66 @@ outputs:
   label: python
   type: File
   outputBinding:
-    glob: $("{runDir}/runWorkflow.py".replace(/\{runDir\}/g, inputs.runDir))
+    glob: $((inputs.runDir + "/runWorkflow.py"))
+    outputEval: $((inputs.runDir + "/runWorkflow.py"))
+    loadContents: false
 - id: pickle
   label: pickle
   type: File
   outputBinding:
-    glob: $("{runDir}/runWorkflow.py.config.pickle".replace(/\{runDir\}/g, inputs.runDir))
+    glob: $((inputs.runDir + "/runWorkflow.py.config.pickle"))
+    outputEval: $((inputs.runDir + "/runWorkflow.py.config.pickle"))
+    loadContents: false
 - id: candidateSV
   label: candidateSV
   type: File
   secondaryFiles:
   - .tbi
   outputBinding:
-    glob: |-
-      $("{runDir}/results/variants/candidateSV.vcf.gz".replace(/\{runDir\}/g, inputs.runDir))
+    glob: $((inputs.runDir + "/results/variants/candidateSV.vcf.gz"))
+    outputEval: $((inputs.runDir + "/results/variants/candidateSV.vcf.gz"))
+    loadContents: false
 - id: candidateSmallIndels
   label: candidateSmallIndels
   type: File
   secondaryFiles:
   - .tbi
   outputBinding:
-    glob: |-
-      $("{runDir}/results/variants/candidateSmallIndels.vcf.gz".replace(/\{runDir\}/g, inputs.runDir))
+    glob: $((inputs.runDir + "/results/variants/candidateSmallIndels.vcf.gz"))
+    outputEval: $((inputs.runDir + "/results/variants/candidateSmallIndels.vcf.gz"))
+    loadContents: false
 - id: diploidSV
   label: diploidSV
   type: File
   secondaryFiles:
   - .tbi
   outputBinding:
-    glob: |-
-      $("{runDir}/results/variants/diploidSV.vcf.gz".replace(/\{runDir\}/g, inputs.runDir))
+    glob: $((inputs.runDir + "/results/variants/diploidSV.vcf.gz"))
+    outputEval: $((inputs.runDir + "/results/variants/diploidSV.vcf.gz"))
+    loadContents: false
 - id: alignmentStatsSummary
   label: alignmentStatsSummary
   type: File
   outputBinding:
-    glob: |-
-      $("{runDir}/results/stats/alignmentStatsSummary.txt".replace(/\{runDir\}/g, inputs.runDir))
+    glob: $((inputs.runDir + "/results/stats/alignmentStatsSummary.txt"))
+    outputEval: $((inputs.runDir + "/results/stats/alignmentStatsSummary.txt"))
+    loadContents: false
 - id: svCandidateGenerationStats
   label: svCandidateGenerationStats
   type: File
   outputBinding:
-    glob: |-
-      $("{runDir}/results/stats/svCandidateGenerationStats.tsv".replace(/\{runDir\}/g, inputs.runDir))
+    glob: $((inputs.runDir + "/results/stats/svCandidateGenerationStats.tsv"))
+    outputEval: $((inputs.runDir + "/results/stats/svCandidateGenerationStats.tsv"))
+    loadContents: false
 - id: svLocusGraphStats
   label: svLocusGraphStats
   type: File
   outputBinding:
-    glob: |-
-      $("{runDir}/results/stats/svLocusGraphStats.tsv".replace(/\{runDir\}/g, inputs.runDir))
+    glob: $((inputs.runDir + "/results/stats/svLocusGraphStats.tsv"))
+    outputEval: $((inputs.runDir + "/results/stats/svLocusGraphStats.tsv"))
+    loadContents: false
+stdout: _stdout
+stderr: _stderr
 arguments:
 - position: 0
   valueFrom: configManta.py
@@ -257,6 +269,7 @@ arguments:
   shellQuote: false
 - prefix: -j
   position: 3
-  valueFrom: $(inputs.runtime_cpu)
+  valueFrom: |-
+    $([inputs.runtime_cpu, 4, 1].filter(function (inner) { return inner != null })[0])
   shellQuote: false
 id: manta

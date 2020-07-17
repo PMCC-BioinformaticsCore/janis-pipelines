@@ -29,6 +29,19 @@ requirements:
   dockerPull: broadinstitute/gatk:4.1.3.0
 
 inputs:
+- id: javaOptions
+  label: javaOptions
+  type:
+  - type: array
+    items: string
+  - 'null'
+- id: compression_level
+  label: compression_level
+  doc: |-
+    Compression level for all compressed files created (e.g. BAM and VCF). Default value: 2.
+  type:
+  - int
+  - 'null'
 - id: bam
   label: bam
   doc: The SAM/BAM/CRAM file containing reads.
@@ -98,6 +111,16 @@ inputs:
   - 'null'
   inputBinding:
     prefix: --intervals
+- id: intervalStrings
+  label: intervalStrings
+  doc: -L (BASE) One or more genomic intervals over which to operate
+  type:
+  - type: array
+    inputBinding:
+      prefix: --intervals
+    items: string
+  - 'null'
+  inputBinding: {}
 - id: tmpDir
   label: tmpDir
   doc: Temp directory to use.
@@ -134,9 +157,16 @@ outputs:
     }
   outputBinding:
     glob: $(inputs.bam.basename.replace(/.bam$/, "")).recalibrated.bam
+    loadContents: false
+stdout: _stdout
+stderr: _stderr
 
 baseCommand:
 - gatk
 - ApplyBQSR
-arguments: []
+arguments:
+- prefix: --java-options
+  position: -1
+  valueFrom: |-
+    $("-Xmx{memory}G {compression} {otherargs}".replace(/\{memory\}/g, (([inputs.runtime_memory, 8, 4].filter(function (inner) { return inner != null })[0] * 3) / 4)).replace(/\{compression\}/g, (inputs.compression_level != null) ? ("-Dsamjdk.compress_level=" + inputs.compression_level) : "").replace(/\{otherargs\}/g, [inputs.javaOptions, []].filter(function (inner) { return inner != null })[0].join(" ")))
 id: Gatk4ApplyBQSR

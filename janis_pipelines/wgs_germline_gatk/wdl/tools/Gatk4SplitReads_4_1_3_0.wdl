@@ -4,10 +4,14 @@ task Gatk4SplitReads {
   input {
     Int? runtime_cpu
     Int? runtime_memory
+    Int? runtime_seconds
+    Int? runtime_disks
     String? outputFilename
     File bam
     File bam_bai
     File? intervals
+    Array[String]? javaOptions
+    Int? compression_level
     Boolean? addOutputSamProgramRecord
     Boolean? addOutputVcfCommandLine
     File? arguments_file
@@ -76,80 +80,83 @@ task Gatk4SplitReads {
     Float? softClippedRatioThreshold
   }
   command <<<
-    ln -f ~{bam_bai} `echo '~{bam}' | sed 's/\.[^.]*$//'`.bai
+    cp -f ~{bam_bai} $(echo '~{bam}' | sed 's/\.[^.]*$//').bai
     gatk SplitReads \
-      --output ~{select_first([outputFilename, "."])} \
-      ~{if defined(intervals) then ("--intervals " +  '"' + intervals + '"') else ""} \
-      ~{true="-add-output-sam-program-record" false="" addOutputSamProgramRecord} \
-      ~{true="-add-output-vcf-command-line" false="" addOutputVcfCommandLine} \
-      ~{if defined(arguments_file) then ("--arguments_file:File " +  '"' + arguments_file + '"') else ""} \
-      ~{if defined(cloudIndexPrefetchBuffer) then ("--cloud-index-prefetch-buffer " +  '"' + cloudIndexPrefetchBuffer + '"') else ""} \
-      ~{if defined(cloudPrefetchBuffer) then ("--cloud-prefetch-buffer " +  '"' + cloudPrefetchBuffer + '"') else ""} \
-      ~{if defined(createOutputBamIndex) then ("--create-output-bam-index " +  '"' + createOutputBamIndex + '"') else ""} \
-      ~{if defined(createOutputBamMd5) then ("--create-output-bam-md5 " +  '"' + createOutputBamMd5 + '"') else ""} \
-      ~{if defined(createOutputVariantIndex) then ("--create-output-variant-index " +  '"' + createOutputVariantIndex + '"') else ""} \
-      ~{if defined(createOutputVariantMd5) then ("--create-output-variant-md5 " +  '"' + createOutputVariantMd5 + '"') else ""} \
-      ~{if defined(disableBamIndexCaching) then ("--disable-bam-index-caching " +  '"' + disableBamIndexCaching + '"') else ""} \
-      ~{if defined(disableReadFilter) then ("--disable-read-filter " +  '"' + disableReadFilter + '"') else ""} \
-      ~{true="-disable-sequence-dictionary-validation" false="" disableSequenceDictionaryValidation} \
-      ~{if defined(excludeIntervals) then ("--exclude-intervals " +  '"' + excludeIntervals + '"') else ""} \
-      ~{if defined(gatkConfigFile) then ("--gatk-config-file " +  '"' + gatkConfigFile + '"') else ""} \
-      ~{if defined(gcsRetries) then ("-gcs-retries " +  '"' + gcsRetries + '"') else ""} \
-      ~{if defined(gcsProjectForRequesterPays) then ("--gcs-project-for-requester-pays " +  '"' + gcsProjectForRequesterPays + '"') else ""} \
-      ~{if defined(intervalExclusionPadding) then ("--interval-exclusion-padding " +  '"' + intervalExclusionPadding + '"') else ""} \
-      ~{if defined(imr) then ("-imr:IntervalMergingRule " +  '"' + imr + '"') else ""} \
-      ~{if defined(ip) then ("-ip " +  '"' + ip + '"') else ""} \
-      ~{if defined(isr) then ("-isr:IntervalSetRule " +  '"' + isr + '"') else ""} \
-      ~{true="--lenient" false="" le} \
-      ~{true="--QUIET" false="" quiet} \
-      ~{if defined(readFilter) then ("--read-filter " +  '"' + readFilter + '"') else ""} \
-      ~{if defined(readIndex) then ("-read-index " +  '"' + readIndex + '"') else ""} \
-      ~{if defined(readValidationStringency) then ("--read-validation-stringency " +  '"' + readValidationStringency + '"') else ""} \
-      ~{if defined(reference) then ("--reference " +  '"' + reference + '"') else ""} \
-      ~{if defined(secondsBetweenProgressUpdates) then ("-seconds-between-progress-updates " +  '"' + secondsBetweenProgressUpdates + '"') else ""} \
-      ~{if defined(sequenceDictionary) then ("-sequence-dictionary " +  '"' + sequenceDictionary + '"') else ""} \
-      ~{true="--sites-only-vcf-output:Boolean" false="" sitesOnlyVcfOutput} \
-      ~{if defined(splitLibraryName) then ("--split-library-name " +  '"' + splitLibraryName + '"') else ""} \
-      ~{if defined(rg) then ("--split-read-group " +  '"' + rg + '"') else ""} \
-      ~{if defined(splitSample) then ("--split-sample " +  '"' + splitSample + '"') else ""} \
-      ~{if defined(tmpDir) then ("--tmp-dir:GATKPathSpecifier " +  '"' + tmpDir + '"') else ""} \
-      ~{true="-jdk-deflater" false="" jdkDeflater} \
-      ~{true="-jdk-inflater" false="" jdkInflater} \
-      ~{if defined(verbosity) then ("-verbosity:LogLevel " +  '"' + verbosity + '"') else ""} \
-      ~{true="-disable-tool-default-read-filters" false="" disableToolDefaultReadFilters} \
-      ~{if defined(ambigFilterBases) then ("--ambig-filter-bases " +  '"' + ambigFilterBases + '"') else ""} \
-      ~{if defined(ambigFilterFrac) then ("--ambig-filter-frac " +  '"' + ambigFilterFrac + '"') else ""} \
-      ~{if defined(maxFragmentLength) then ("--max-fragment-length " +  '"' + maxFragmentLength + '"') else ""} \
-      ~{if defined(minFragmentLength) then ("--min-fragment-length " +  '"' + minFragmentLength + '"') else ""} \
-      ~{if defined(keepIntervals) then ("--keep-intervals " +  '"' + keepIntervals + '"') else ""} \
-      ~{if defined(library) then ("-library " +  '"' + library + '"') else ""} \
-      ~{if defined(maximumMappingQuality) then ("--maximum-mapping-quality " +  '"' + maximumMappingQuality + '"') else ""} \
-      ~{if defined(minimumMappingQuality) then ("--minimum-mapping-quality " +  '"' + minimumMappingQuality + '"') else ""} \
-      ~{true="--dont-require-soft-clips-both-ends" false="" dontRequireSoftClipsBothEnds} \
-      ~{if defined(filterTooShort) then ("--filter-too-short " +  '"' + filterTooShort + '"') else ""} \
-      ~{if defined(platformFilterName) then ("--platform-filter-name:String " +  '"' + platformFilterName + '"') else ""} \
-      ~{if defined(blackListedLanes) then ("--black-listed-lanes:String " +  '"' + blackListedLanes + '"') else ""} \
-      ~{if defined(readGroupBlackList) then ("--read-group-black-list:StringThe " +  '"' + readGroupBlackList + '"') else ""} \
-      ~{if defined(keepReadGroup) then ("--keep-read-group:String " +  '"' + keepReadGroup + '"') else ""} \
-      ~{if defined(maxReadLength) then ("--max-read-length " +  '"' + maxReadLength + '"') else ""} \
-      ~{if defined(minReadLength) then ("--min-read-length " +  '"' + minReadLength + '"') else ""} \
-      ~{if defined(readName) then ("--read-name:String " +  '"' + readName + '"') else ""} \
-      ~{true="--keep-reverse-strand-only" false="" keepReverseStrandOnly} \
-      ~{if defined(sample) then ("-sample:String " +  '"' + sample + '"') else ""} \
-      ~{true="--invert-soft-clip-ratio-filter" false="" invertSoftClipRatioFilter} \
-      ~{if defined(softClippedLeadingTrailingRatio) then ("--soft-clipped-leading-trailing-ratio " +  '"' + softClippedLeadingTrailingRatio + '"') else ""} \
-      ~{if defined(softClippedRatioThreshold) then ("--soft-clipped-ratio-threshold " +  '"' + softClippedRatioThreshold + '"') else ""} \
-      --input ~{bam}
-    ln -f `echo '~{basename(bam)}' | sed 's/\.[^.]*$//'`.bai `echo '~{basename(bam)}' `.bai
+      --java-options '-Xmx~{((select_first([runtime_memory, 4, 4]) * 3) / 4)}G ~{if (defined(compression_level)) then ("-Dsamjdk.compress_level=" + compression_level) else ""} ~{sep(" ", select_first([javaOptions, []]))}' \
+      --output '~{select_first([outputFilename, "."])}' \
+      ~{if defined(intervals) then ("--intervals '" + intervals + "'") else ""} \
+      ~{if defined(addOutputSamProgramRecord) then "-add-output-sam-program-record" else ""} \
+      ~{if defined(addOutputVcfCommandLine) then "-add-output-vcf-command-line" else ""} \
+      ~{if defined(arguments_file) then ("--arguments_file:File '" + arguments_file + "'") else ""} \
+      ~{if defined(cloudIndexPrefetchBuffer) then ("--cloud-index-prefetch-buffer '" + cloudIndexPrefetchBuffer + "'") else ""} \
+      ~{if defined(cloudPrefetchBuffer) then ("--cloud-prefetch-buffer '" + cloudPrefetchBuffer + "'") else ""} \
+      ~{if defined(createOutputBamIndex) then ("--create-output-bam-index '" + createOutputBamIndex + "'") else ""} \
+      ~{if defined(createOutputBamMd5) then ("--create-output-bam-md5 '" + createOutputBamMd5 + "'") else ""} \
+      ~{if defined(createOutputVariantIndex) then ("--create-output-variant-index '" + createOutputVariantIndex + "'") else ""} \
+      ~{if defined(createOutputVariantMd5) then ("--create-output-variant-md5 '" + createOutputVariantMd5 + "'") else ""} \
+      ~{if defined(disableBamIndexCaching) then ("--disable-bam-index-caching '" + disableBamIndexCaching + "'") else ""} \
+      ~{if defined(disableReadFilter) then ("--disable-read-filter '" + disableReadFilter + "'") else ""} \
+      ~{if defined(disableSequenceDictionaryValidation) then "-disable-sequence-dictionary-validation" else ""} \
+      ~{if defined(excludeIntervals) then ("--exclude-intervals '" + excludeIntervals + "'") else ""} \
+      ~{if defined(gatkConfigFile) then ("--gatk-config-file '" + gatkConfigFile + "'") else ""} \
+      ~{if defined(gcsRetries) then ("-gcs-retries " + gcsRetries) else ''} \
+      ~{if defined(gcsProjectForRequesterPays) then ("--gcs-project-for-requester-pays '" + gcsProjectForRequesterPays + "'") else ""} \
+      ~{if defined(intervalExclusionPadding) then ("--interval-exclusion-padding " + intervalExclusionPadding) else ''} \
+      ~{if defined(imr) then ("-imr:IntervalMergingRule '" + imr + "'") else ""} \
+      ~{if defined(ip) then ("-ip " + ip) else ''} \
+      ~{if defined(isr) then ("-isr:IntervalSetRule '" + isr + "'") else ""} \
+      ~{if defined(le) then "--lenient" else ""} \
+      ~{if defined(quiet) then "--QUIET" else ""} \
+      ~{if defined(readFilter) then ("--read-filter '" + readFilter + "'") else ""} \
+      ~{if defined(readIndex) then ("-read-index '" + readIndex + "'") else ""} \
+      ~{if defined(readValidationStringency) then ("--read-validation-stringency '" + readValidationStringency + "'") else ""} \
+      ~{if defined(reference) then ("--reference '" + reference + "'") else ""} \
+      ~{if defined(secondsBetweenProgressUpdates) then ("-seconds-between-progress-updates " + secondsBetweenProgressUpdates) else ''} \
+      ~{if defined(sequenceDictionary) then ("-sequence-dictionary '" + sequenceDictionary + "'") else ""} \
+      ~{if defined(sitesOnlyVcfOutput) then "--sites-only-vcf-output:Boolean" else ""} \
+      ~{if defined(splitLibraryName) then ("--split-library-name '" + splitLibraryName + "'") else ""} \
+      ~{if defined(rg) then ("--split-read-group '" + rg + "'") else ""} \
+      ~{if defined(splitSample) then ("--split-sample '" + splitSample + "'") else ""} \
+      ~{if defined(tmpDir) then ("--tmp-dir:GATKPathSpecifier '" + tmpDir + "'") else ""} \
+      ~{if defined(jdkDeflater) then "-jdk-deflater" else ""} \
+      ~{if defined(jdkInflater) then "-jdk-inflater" else ""} \
+      ~{if defined(verbosity) then ("-verbosity:LogLevel '" + verbosity + "'") else ""} \
+      ~{if defined(disableToolDefaultReadFilters) then "-disable-tool-default-read-filters" else ""} \
+      ~{if defined(ambigFilterBases) then ("--ambig-filter-bases " + ambigFilterBases) else ''} \
+      ~{if defined(ambigFilterFrac) then ("--ambig-filter-frac " + ambigFilterFrac) else ''} \
+      ~{if defined(maxFragmentLength) then ("--max-fragment-length " + maxFragmentLength) else ''} \
+      ~{if defined(minFragmentLength) then ("--min-fragment-length " + minFragmentLength) else ''} \
+      ~{if defined(keepIntervals) then ("--keep-intervals '" + keepIntervals + "'") else ""} \
+      ~{if defined(library) then ("-library '" + library + "'") else ""} \
+      ~{if defined(maximumMappingQuality) then ("--maximum-mapping-quality " + maximumMappingQuality) else ''} \
+      ~{if defined(minimumMappingQuality) then ("--minimum-mapping-quality " + minimumMappingQuality) else ''} \
+      ~{if defined(dontRequireSoftClipsBothEnds) then "--dont-require-soft-clips-both-ends" else ""} \
+      ~{if defined(filterTooShort) then ("--filter-too-short " + filterTooShort) else ''} \
+      ~{if defined(platformFilterName) then ("--platform-filter-name:String '" + platformFilterName + "'") else ""} \
+      ~{if defined(blackListedLanes) then ("--black-listed-lanes:String '" + blackListedLanes + "'") else ""} \
+      ~{if defined(readGroupBlackList) then ("--read-group-black-list:StringThe '" + readGroupBlackList + "'") else ""} \
+      ~{if defined(keepReadGroup) then ("--keep-read-group:String '" + keepReadGroup + "'") else ""} \
+      ~{if defined(maxReadLength) then ("--max-read-length " + maxReadLength) else ''} \
+      ~{if defined(minReadLength) then ("--min-read-length " + minReadLength) else ''} \
+      ~{if defined(readName) then ("--read-name:String '" + readName + "'") else ""} \
+      ~{if defined(keepReverseStrandOnly) then "--keep-reverse-strand-only" else ""} \
+      ~{if defined(sample) then ("-sample:String '" + sample + "'") else ""} \
+      ~{if defined(invertSoftClipRatioFilter) then "--invert-soft-clip-ratio-filter" else ""} \
+      ~{if defined(softClippedLeadingTrailingRatio) then ("--soft-clipped-leading-trailing-ratio " + softClippedLeadingTrailingRatio) else ''} \
+      ~{if defined(softClippedRatioThreshold) then ("--soft-clipped-ratio-threshold " + softClippedRatioThreshold) else ''} \
+      --input '~{bam}'
+    if [ -f $(echo '~{bam}' | sed 's/\.[^.]*$//').bai ]; then ln -f $(echo '~{bam}' | sed 's/\.[^.]*$//').bai $(echo '~{bam}' ).bai; fi
   >>>
   runtime {
     cpu: select_first([runtime_cpu, 1])
+    disks: "local-disk ~{select_first([runtime_disks, 20])} SSD"
     docker: "broadinstitute/gatk:4.1.3.0"
-    memory: "~{select_first([runtime_memory, 4])}G"
+    duration: select_first([runtime_seconds, 86400])
+    memory: "~{select_first([runtime_memory, 4, 4])}G"
     preemptible: 2
   }
   output {
-    File out = basename(bam)
-    File out_bai = (basename(bam)) + ".bai"
+    File out = bam
+    File out_bai = bam + ".bai"
   }
 }

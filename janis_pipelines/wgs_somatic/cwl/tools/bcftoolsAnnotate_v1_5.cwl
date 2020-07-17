@@ -11,18 +11,18 @@ requirements:
   dockerPull: biocontainers/bcftools:v1.5_cv2
 
 inputs:
-- id: file
-  label: file
+- id: vcf
+  label: vcf
   type: File
   inputBinding:
-    position: 100
+    position: 10
 - id: outputFilename
   label: outputFilename
   doc: '[-o] see Common Options'
   type:
   - string
   - 'null'
-  default: generated.vcf.gz
+  default: generated.vcf
   inputBinding:
     prefix: --output
 - id: annotations
@@ -181,7 +181,10 @@ outputs:
   label: out
   type: File
   outputBinding:
-    glob: generated.vcf.gz
+    glob: generated.vcf
+    loadContents: false
+stdout: _stdout
+stderr: _stderr
 
 baseCommand:
 - bcftools

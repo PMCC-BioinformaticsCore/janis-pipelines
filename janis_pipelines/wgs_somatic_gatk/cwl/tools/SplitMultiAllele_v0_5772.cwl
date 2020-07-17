@@ -14,7 +14,7 @@ inputs:
   label: vcf
   type: File
   inputBinding:
-    position: 3
+    position: 1
     shellQuote: false
 - id: reference
   label: reference
@@ -29,7 +29,7 @@ inputs:
   - ^.dict
   inputBinding:
     prefix: -r
-    position: 8
+    position: 4
     shellQuote: false
 - id: outputFilename
   label: outputFilename
@@ -38,9 +38,8 @@ inputs:
   - 'null'
   default: generated.norm.vcf
   inputBinding:
-    prefix: '>'
-    position: 10
-    valueFrom: $(inputs.vcf.basename.replace(/.vcf.gz$/, "")).norm.vcf
+    prefix: -o
+    position: 6
     shellQuote: false
 
 outputs:
@@ -48,33 +47,15 @@ outputs:
   label: out
   type: File
   outputBinding:
-    glob: $(inputs.vcf.basename.replace(/.vcf.gz$/, "")).norm.vcf
+    glob: generated.norm.vcf
+    loadContents: false
+stdout: _stdout
+stderr: _stderr
 arguments:
 - position: 0
-  valueFrom: zcat
-  shellQuote: false
-- position: 1
-  valueFrom: '|'
+  valueFrom: 'vt decompose -s '
   shellQuote: false
 - position: 2
-  valueFrom: sed 's/ID=AD,Number=./ID=AD,Number=R/' <
-  shellQuote: false
-- position: 4
-  valueFrom: '|'
-  shellQuote: false
-- position: 5
-  valueFrom: vt decompose -s - -o -
-  shellQuote: false
-- position: 6
-  valueFrom: '|'
-  shellQuote: false
-- position: 7
-  valueFrom: vt normalize -n -q - -o -
-  shellQuote: false
-- position: 9
-  valueFrom: '|'
-  shellQuote: false
-- position: 10
-  valueFrom: sed 's/ID=AD,Number=./ID=AD,Number=1/'
+  valueFrom: '| vt normalize -n -q - '
   shellQuote: false
 id: SplitMultiAllele

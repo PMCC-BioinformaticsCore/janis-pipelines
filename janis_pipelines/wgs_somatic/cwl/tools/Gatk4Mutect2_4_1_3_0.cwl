@@ -14,6 +14,19 @@ requirements:
   dockerPull: broadinstitute/gatk:4.1.3.0
 
 inputs:
+- id: javaOptions
+  label: javaOptions
+  type:
+  - type: array
+    items: string
+  - 'null'
+- id: compression_level
+  label: compression_level
+  doc: |-
+    Compression level for all compressed files created (e.g. BAM and VCF). Default value: 2.
+  type:
+  - int
+  - 'null'
 - id: tumorBams
   label: tumorBams
   doc: |-
@@ -29,15 +42,18 @@ inputs:
   doc: |-
     (--input) Extra BAM/SAM/CRAM file containing reads This argument must be specified at least once. Required. 
   type:
-    type: array
+  - type: array
     inputBinding:
       prefix: -I
     items: File
+  - 'null'
   inputBinding: {}
 - id: normalSample
   label: normalSample
   doc: (--normal-sample, if) May be URL-encoded as output by GetSampleName with
-  type: string
+  type:
+  - string
+  - 'null'
   inputBinding:
     prefix: --normal-sample
 - id: outputFilename
@@ -63,6 +79,15 @@ inputs:
   - ^.dict
   inputBinding:
     prefix: --reference
+- id: outputBamName
+  label: outputBamName
+  doc: File to which assembled haplotypes should be written
+  type:
+  - string
+  - 'null'
+  default: generated.bam
+  inputBinding:
+    prefix: -bamout
 - id: activityProfileOut
   label: activityProfileOut
   doc: 'Default value: null.'
@@ -498,7 +523,8 @@ inputs:
   - 'null'
   inputBinding:
     prefix: --native-pair-hmm-threads
-    valueFrom: $(inputs.runtime_cpu)
+    valueFrom: |-
+      $([inputs.runtime_cpu, 4, 1].filter(function (inner) { return inner != null })[0])
 - id: nativePairHmmUseDoublePrecision
   label: nativePairHmmUseDoublePrecision
   doc: |2-
@@ -721,15 +747,6 @@ inputs:
   - 'null'
   inputBinding:
     prefix: --assembly-region-padding
-- id: bamout
-  label: bamout
-  doc: |-
-    (--bam-output) File to which assembled haplotypes should be written Default value: null.
-  type:
-  - string
-  - 'null'
-  inputBinding:
-    prefix: -bamout
 - id: bamWriterType
   label: bamWriterType
   doc: |-
@@ -1191,22 +1208,59 @@ outputs:
   - .tbi
   outputBinding:
     glob: generated.vcf.gz
+    loadContents: false
 - id: stats
   label: stats
   doc: To determine type
   type: File
   outputBinding:
-    glob: |-
-      $("{outputFilename}.stats".replace(/\{outputFilename\}/g, inputs.outputFilename))
+    glob: $((inputs.outputFilename + ".stats"))
+    outputEval: $((inputs.outputFilename + ".stats"))
+    loadContents: false
 - id: f1f2r_out
   label: f1f2r_out
   doc: To determine type
   type: File
   outputBinding:
     glob: generated.tar.gz
+    loadContents: false
+- id: bam
+  label: bam
+  doc: File to which assembled haplotypes should be written
+  type: File
+  secondaryFiles:
+  - |-
+    ${
+
+            function resolveSecondary(base, secPattern) {
+              if (secPattern[0] == "^") {
+                var spl = base.split(".");
+                var endIndex = spl.length > 1 ? spl.length - 1 : 1;
+                return resolveSecondary(spl.slice(undefined, endIndex).join("."), secPattern.slice(1));
+              }
+              return base + secPattern
+            }
+            return [
+                    {
+                        path: resolveSecondary(self.path, "^.bai"),
+                        basename: resolveSecondary(self.basename, ".bai"),
+                        class: "File",
+                    }
+            ];
+
+    }
+  outputBinding:
+    glob: generated.bam
+    loadContents: false
+stdout: _stdout
+stderr: _stderr
 
 baseCommand:
 - gatk
 - Mutect2
-arguments: []
+arguments:
+- prefix: --java-options
+  position: -1
+  valueFrom: |-
+    $("-Xmx{memory}G {compression} {otherargs}".replace(/\{memory\}/g, (([inputs.runtime_memory, 16, 4].filter(function (inner) { return inner != null })[0] * 3) / 4)).replace(/\{compression\}/g, (inputs.compression_level != null) ? ("-Dsamjdk.compress_level=" + inputs.compression_level) : "").replace(/\{otherargs\}/g, [inputs.javaOptions, []].filter(function (inner) { return inner != null })[0].join(" ")))
 id: Gatk4Mutect2

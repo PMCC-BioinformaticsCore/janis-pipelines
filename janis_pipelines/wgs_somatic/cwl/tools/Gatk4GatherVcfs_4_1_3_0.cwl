@@ -15,6 +15,19 @@ requirements:
   dockerPull: broadinstitute/gatk:4.1.3.0
 
 inputs:
+- id: javaOptions
+  label: javaOptions
+  type:
+  - type: array
+    items: string
+  - 'null'
+- id: compression_level
+  label: compression_level
+  doc: |-
+    Compression level for all compressed files created (e.g. BAM and VCF). Default value: 2.
+  type:
+  - int
+  - 'null'
 - id: vcfs
   label: vcfs
   doc: '[default: []] (-I) Input VCF file(s).'
@@ -154,9 +167,16 @@ outputs:
   type: File
   outputBinding:
     glob: generated.gathered.vcf
+    loadContents: false
+stdout: _stdout
+stderr: _stderr
 
 baseCommand:
 - gatk
 - GatherVcfs
-arguments: []
+arguments:
+- prefix: --java-options
+  position: -1
+  valueFrom: |-
+    $("-Xmx{memory}G {compression} {otherargs}".replace(/\{memory\}/g, (([inputs.runtime_memory, 8, 4].filter(function (inner) { return inner != null })[0] * 3) / 4)).replace(/\{compression\}/g, (inputs.compression_level != null) ? ("-Dsamjdk.compress_level=" + inputs.compression_level) : "").replace(/\{otherargs\}/g, [inputs.javaOptions, []].filter(function (inner) { return inner != null })[0].join(" ")))
 id: Gatk4GatherVcfs

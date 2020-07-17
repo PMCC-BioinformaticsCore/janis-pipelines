@@ -5,6 +5,12 @@ combine_variants_columns:
 - GT
 combine_variants_type: somatic
 gatk_intervals: null
+genome_file:
+  class: File
+  path: null
+gnomad:
+  class: File
+  path: null
 gridss_blacklist:
   class: File
   path: null
@@ -30,7 +36,4 @@ strelka_intervals:
   path: null
 tumor_inputs: null
 tumor_name: null
-vardict_header_lines:
-  class: File
-  path: null
 vardict_intervals: null

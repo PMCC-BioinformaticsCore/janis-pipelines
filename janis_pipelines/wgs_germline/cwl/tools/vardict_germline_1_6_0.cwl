@@ -21,10 +21,10 @@ inputs:
   type:
   - string
   - 'null'
-  default: generated.vardict.vcf.gz
+  default: generated.vardict.vcf
   inputBinding:
     prefix: '>'
-    position: 10
+    position: 6
     shellQuote: false
 - id: bam
   label: bam
@@ -387,7 +387,8 @@ inputs:
   inputBinding:
     prefix: -th
     position: 1
-    valueFrom: $(inputs.runtime_cpu)
+    valueFrom: |-
+      $([inputs.runtime_cpu, 4, 1].filter(function (inner) { return inner != null })[0])
     shellQuote: false
 - id: freq
   label: freq
@@ -494,7 +495,10 @@ outputs:
   label: out
   type: File
   outputBinding:
-    glob: generated.vardict.vcf.gz
+    glob: generated.vardict.vcf
+    loadContents: false
+stdout: _stdout
+stderr: _stderr
 
 baseCommand: VarDict
 arguments:
@@ -503,8 +507,5 @@ arguments:
   shellQuote: false
 - position: 4
   valueFrom: var2vcf_valid.pl
-  shellQuote: false
-- position: 6
-  valueFrom: ' | bcftools view -O z'
   shellQuote: false
 id: vardict_germline

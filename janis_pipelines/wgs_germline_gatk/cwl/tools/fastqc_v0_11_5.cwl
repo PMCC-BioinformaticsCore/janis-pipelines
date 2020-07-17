@@ -108,7 +108,8 @@ inputs:
   - 'null'
   inputBinding:
     prefix: --threads
-    valueFrom: $(inputs.runtime_cpu)
+    valueFrom: |-
+      $([inputs.runtime_cpu, 1, 1].filter(function (inner) { return inner != null })[0])
 - id: contaminants
   label: contaminants
   doc: |-
@@ -171,6 +172,7 @@ outputs:
     items: File
   outputBinding:
     glob: '*.zip'
+    loadContents: false
 - id: datafile
   label: datafile
   type:
@@ -178,6 +180,9 @@ outputs:
     items: File
   outputBinding:
     glob: '*/fastqc_data.txt'
+    loadContents: false
+stdout: _stdout
+stderr: _stderr
 
 baseCommand: fastqc
 arguments: []

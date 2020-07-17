@@ -2,8 +2,11 @@ version development
 
 import "vardict_somatic_1_6_0.wdl" as V
 import "bcftoolsAnnotate_v1_5.wdl" as B
+import "bgzip_1_2_1.wdl" as B2
+import "tabix_1_2_1.wdl" as T
 import "SplitMultiAllele_v0_5772.wdl" as S
-import "trimIUPAC_0_0_5.wdl" as T
+import "trimIUPAC_0_0_5.wdl" as T2
+import "FilterVardictSomaticVcf_v1_9.wdl" as F
 
 workflow vardictSomaticVariantCaller {
   input {
@@ -14,7 +17,7 @@ workflow vardictSomaticVariantCaller {
     String normal_name
     String tumor_name
     File intervals
-    Float? allele_freq_threshold
+    Float? allele_freq_threshold = 0.05
     File header_lines
     File reference
     File reference_fai
@@ -24,21 +27,22 @@ workflow vardictSomaticVariantCaller {
     File reference_pac
     File reference_sa
     File reference_dict
-    Boolean? vardict_chromNamesAreNumbers
-    Boolean? vardict_vcfFormat
-    Int? vardict_chromColumn
-    Int? vardict_regStartCol
-    Int? vardict_geneEndCol
+    Boolean? vardict_chromNamesAreNumbers = true
+    Boolean? vardict_vcfFormat = true
+    Int? vardict_chromColumn = 1
+    Int? vardict_regStartCol = 2
+    Int? vardict_geneEndCol = 3
+    Boolean? compressvcf_stdout = true
   }
   call V.vardict_somatic as vardict {
     input:
-      tumorBam_bai=tumor_bam_bai,
       tumorBam=tumor_bam,
-      normalBam_bai=normal_bam_bai,
+      tumorBam_bai=tumor_bam_bai,
       normalBam=normal_bam,
+      normalBam_bai=normal_bam_bai,
       intervals=intervals,
-      reference_fai=reference_fai,
       reference=reference,
+      reference_fai=reference_fai,
       tumorName=tumor_name,
       normalName=normal_name,
       alleleFreqThreshold=select_first([allele_freq_threshold, 0.05]),
@@ -50,27 +54,41 @@ workflow vardictSomaticVariantCaller {
   }
   call B.bcftoolsAnnotate as annotate {
     input:
-      file=vardict.out,
+      vcf=vardict.out,
       headerLines=header_lines
   }
-  call S.SplitMultiAllele as split_multi_allele {
+  call B2.bgzip as compressvcf {
+    input:
+      file=annotate.out,
+      stdout=select_first([compressvcf_stdout, true])
+  }
+  call T.tabix as tabixvcf {
+    input:
+      inp=compressvcf.out
+  }
+  call S.SplitMultiAllele as splitnormalisevcf {
     input:
       vcf=annotate.out,
+      reference=reference,
       reference_fai=reference_fai,
       reference_amb=reference_amb,
       reference_ann=reference_ann,
       reference_bwt=reference_bwt,
       reference_pac=reference_pac,
       reference_sa=reference_sa,
-      reference_dict=reference_dict,
-      reference=reference
+      reference_dict=reference_dict
   }
-  call T.trimIUPAC as trim {
+  call T2.trimIUPAC as trim {
     input:
-      vcf=split_multi_allele.out
+      vcf=splitnormalisevcf.out
+  }
+  call F.FilterVardictSomaticVcf as filterpass {
+    input:
+      vcf=trim.out
   }
   output {
-    File vardict_variants = vardict.out
-    File out = trim.out
+    File variants = tabixvcf.out
+    File variants_tbi = tabixvcf.out_tbi
+    File out = filterpass.out
   }
 }

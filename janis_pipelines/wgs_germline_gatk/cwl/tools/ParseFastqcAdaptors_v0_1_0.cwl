@@ -26,6 +26,7 @@ requirements:
       Boolean = str
       Directory = str
       Stdout = str
+      Stderr = str
       class PythonTool:
           File = str
           Directory = str
@@ -142,7 +143,7 @@ requirements:
           args = cli.parse_args()
           result = code_block(fastqc_datafiles=args.fastqc_datafiles, cutadapt_adaptors_lookup=args.cutadapt_adaptors_lookup)
           print(json.dumps(result))
-      except e:
+      except Exception as e:
           print(str(e), file=sys.stderr)
           raise
 - class: InlineJavascriptRequirement
@@ -175,17 +176,8 @@ outputs:
   type:
     type: array
     items: string
-  outputBinding:
-    glob: python-capture.stdout
-    outputEval: |-
-      ${
-      var d = JSON.parse(self[0].contents)
-      if (!d) return null;
-      var c = d["adaptor_sequences"]
-      return c
-      }
-    loadContents: true
-stdout: python-capture.stdout
+stdout: cwl.output.json
+stderr: python-capture.stderr
 
 baseCommand:
 - python

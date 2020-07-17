@@ -7,6 +7,9 @@
     ],
     "WGSSomaticMultiCallers.combine_variants_type": "somatic",
     "WGSSomaticMultiCallers.gatk_intervals": null,
+    "WGSSomaticMultiCallers.genome_file": null,
+    "WGSSomaticMultiCallers.gnomad": null,
+    "WGSSomaticMultiCallers.gnomad_tbi": null,
     "WGSSomaticMultiCallers.gridss_blacklist": null,
     "WGSSomaticMultiCallers.known_indels": null,
     "WGSSomaticMultiCallers.known_indels_tbi": null,
@@ -30,6 +33,5 @@
     "WGSSomaticMultiCallers.strelka_intervals_tbi": null,
     "WGSSomaticMultiCallers.tumor_inputs": null,
     "WGSSomaticMultiCallers.tumor_name": null,
-    "WGSSomaticMultiCallers.vardict_header_lines": null,
     "WGSSomaticMultiCallers.vardict_intervals": null
 }

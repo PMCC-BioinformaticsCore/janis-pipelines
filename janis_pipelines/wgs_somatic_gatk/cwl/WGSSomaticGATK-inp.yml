@@ -1,4 +1,13 @@
 gatk_intervals: null
+genome_file:
+  class: File
+  path: null
+gnomad:
+  class: File
+  path: null
+gridss_blacklist:
+  class: File
+  path: null
 known_indels:
   class: File
   path: null

@@ -1,16 +1,20 @@
 #!/usr/bin/env cwl-runner
 class: Workflow
 cwlVersion: v1.0
+label: Merge and Mark Duplicates
 
 requirements:
 - class: InlineJavascriptRequirement
 - class: StepInputExpressionRequirement
+- class: MultipleInputFeatureRequirement
 
 inputs:
 - id: bams
   type:
     type: array
     items: File
+  secondaryFiles:
+  - .bai
 - id: createIndex
   type: boolean
   default: true
@@ -41,6 +45,7 @@ outputs:
 
 steps:
 - id: mergeSamFiles
+  label: 'GATK4: Merge SAM Files'
   in:
   - id: bams
     source: bams
@@ -58,9 +63,12 @@ steps:
   out:
   - id: out
 - id: markDuplicates
+  label: 'GATK4: Mark Duplicates'
   in:
   - id: bam
-    source: mergeSamFiles/out
+    source:
+    - mergeSamFiles/out
+    linkMerge: merge_nested
   - id: createIndex
     source: createIndex
   - id: maxRecordsInRam
@@ -69,3 +77,4 @@ steps:
   out:
   - id: out
   - id: metrics
+id: mergeAndMarkBams
