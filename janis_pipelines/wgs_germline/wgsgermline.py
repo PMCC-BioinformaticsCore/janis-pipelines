@@ -38,6 +38,7 @@ from janis_bioinformatics.tools.pmac import (
     ParseFastqcAdaptors,
     PerformanceSummaryGenome_0_1_0,
     AddBamStatsGermline_0_1_0,
+    GenerateGenomeFileForBedtoolsCoverage,
 )
 from janis_bioinformatics.tools.papenfuss.gridss.gridss import Gridss_2_6_2
 from janis_bioinformatics.tools.variantcallers import (
@@ -144,14 +145,6 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             ),
         )
         # for fast processing wgs bam
-        # to do: create genome file like vardict header
-        self.input(
-            "genome_file",
-            TextFile(),
-            doc=InputDocumentation(
-                "Genome file for bedtools query", quality=InputQualityType.static,
-            ),
-        )
         self.input(
             "gridss_blacklist",
             Bed,
@@ -251,10 +244,15 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         )
 
         self.step(
+            "calculate_performancesummary_genomefile",
+            GenerateGenomeFileForBedtoolsCoverage(reference=self.reference),
+        )
+
+        self.step(
             "performance_summary",
             PerformanceSummaryGenome_0_1_0(
                 bam=self.merge_and_mark,
-                genome_file=self.genome_file,
+                genome_file=self.calculate_performancesummary_genomefile.out,
                 sample_name=self.sample_name,
             ),
         )

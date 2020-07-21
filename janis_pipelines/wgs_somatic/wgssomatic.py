@@ -38,6 +38,7 @@ from janis_bioinformatics.tools.pmac import (
     AddBamStatsSomatic_0_1_0,
     ParseFastqcAdaptors,
     PerformanceSummaryGenome_0_1_0,
+    GenerateGenomeFileForBedtoolsCoverage,
 )
 from janis_bioinformatics.tools.papenfuss.gridss.gridss import Gridss_2_6_2
 from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
@@ -117,13 +118,6 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
                 "List of intervals over which to split the GATK variant calling",
                 quality=InputQualityType.static,
                 example="BRCA1.bed",
-            ),
-        )
-        self.input(
-            "genome_file",
-            TextFile(),
-            doc=InputDocumentation(
-                "Genome file for bedtools query", quality=InputQualityType.static,
             ),
         )
         self.input(
@@ -246,7 +240,6 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 sample_name=self.tumor_name,
                 reference=self.reference,
                 cutadapt_adapters=self.cutadapt_adapters,
-                genome_file=self.genome_file,
                 gatk_intervals=self.gatk_intervals,
                 snps_dbsnp=self.snps_dbsnp,
                 snps_1000gp=self.snps_1000gp,
@@ -261,7 +254,6 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 sample_name=self.normal_name,
                 reference=self.reference,
                 cutadapt_adapters=self.cutadapt_adapters,
-                genome_file=self.genome_file,
                 gatk_intervals=self.gatk_intervals,
                 snps_dbsnp=self.snps_dbsnp,
                 snps_1000gp=self.snps_1000gp,
@@ -475,7 +467,6 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         w.input("reference", FastaWithDict)
         w.input("cutadapt_adapters", File(optional=True))
         w.input("gatk_intervals", Array(Bed))
-        w.input("genome_file", TextFile)
         w.input("snps_dbsnp", VcfTabix)
         w.input("snps_1000gp", VcfTabix)
         w.input("known_indels", VcfTabix)
@@ -525,11 +516,16 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         )
 
         w.step(
+            "calculate_performancesummary_genomefile",
+            GenerateGenomeFileForBedtoolsCoverage(reference=w.reference),
+        )
+
+        w.step(
             "performance_summary",
             PerformanceSummaryGenome_0_1_0(
                 bam=w.merge_and_mark.out,
                 sample_name=w.sample_name,
-                genome_file=w.genome_file,
+                genome_file=w.calculate_performancesummary_genomefile.out,
             ),
         )
 

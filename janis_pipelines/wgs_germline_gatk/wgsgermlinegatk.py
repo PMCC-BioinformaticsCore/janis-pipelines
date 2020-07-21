@@ -41,6 +41,7 @@ from janis_bioinformatics.tools.pmac import (
     ParseFastqcAdaptors,
     PerformanceSummaryGenome_0_1_0,
     AddBamStatsGermline_0_1_0,
+    GenerateGenomeFileForBedtoolsCoverage,
 )
 
 
@@ -113,13 +114,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 example="BRCA1.bed",
             ),
         )
-        self.input(
-            "genome_file",
-            TextFile(),
-            doc=InputDocumentation(
-                "Genome file for bedtools query", quality=InputQualityType.static,
-            ),
-        )
+
         self.input(
             "gridss_blacklist",
             Bed,
@@ -221,10 +216,14 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         )
 
         self.step(
+            "calculate_performancesummary_genomefile",
+            GenerateGenomeFileForBedtoolsCoverage(reference=self.reference),
+        )
+        self.step(
             "performance_summary",
             PerformanceSummaryGenome_0_1_0(
                 bam=self.merge_and_mark,
-                genome_file=self.genome_file,
+                genome_file=self.calculate_performancesummary_genomefile.out,
                 sample_name=self.sample_name,
             ),
         )
