@@ -37,6 +37,7 @@ from janis_bioinformatics.tools.pmac import (
     ParseFastqcAdaptors,
     PerformanceSummaryGenome_0_1_0,
     AddBamStatsSomatic_0_1_0,
+    GenerateGenomeFileForBedtoolsCoverage,
 )
 
 
@@ -108,13 +109,6 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
                 "List of intervals over which to split the GATK variant calling",
                 quality=InputQualityType.static,
                 example="BRCA1.bed",
-            ),
-        )
-        self.input(
-            "genome_file",
-            TextFile(),
-            doc=InputDocumentation(
-                "Genome file for bedtools query", quality=InputQualityType.static,
             ),
         )
         self.input(
@@ -209,7 +203,6 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 sample_name=self.tumor_name,
                 reference=self.reference,
                 cutadapt_adapters=self.cutadapt_adapters,
-                genome_file=self.genome_file,
                 gatk_intervals=self.gatk_intervals,
                 snps_dbsnp=self.snps_dbsnp,
                 snps_1000gp=self.snps_1000gp,
@@ -224,7 +217,6 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 sample_name=self.normal_name,
                 reference=self.reference,
                 cutadapt_adapters=self.cutadapt_adapters,
-                genome_file=self.genome_file,
                 gatk_intervals=self.gatk_intervals,
                 snps_dbsnp=self.snps_dbsnp,
                 snps_1000gp=self.snps_1000gp,
@@ -366,7 +358,6 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         w.input("sample_name", String)
         w.input("reference", FastaWithDict)
         w.input("cutadapt_adapters", File(optional=True))
-        w.input("genome_file", TextFile)
         w.input("gatk_intervals", Array(Bed))
         w.input("snps_dbsnp", VcfTabix)
         w.input("snps_1000gp", VcfTabix)
@@ -417,11 +408,16 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         )
 
         w.step(
+            "calculate_performancesummary_genomefile",
+            GenerateGenomeFileForBedtoolsCoverage(reference=w.reference),
+        )
+
+        w.step(
             "performance_summary",
             PerformanceSummaryGenome_0_1_0(
                 bam=w.merge_and_mark.out,
                 sample_name=w.sample_name,
-                genome_file=w.genome_file,
+                genome_file=w.calculate_performancesummary_genomefile.out,
             ),
         )
 
@@ -514,4 +510,3 @@ if __name__ == "__main__":
     # op = os.path.dirname(os.path.realpath(__file__)) + "/cwl/WGSGermlineGATK.py"
 
     # main.run(*["--validate", op], logger_handler=logging.Handler())
-
