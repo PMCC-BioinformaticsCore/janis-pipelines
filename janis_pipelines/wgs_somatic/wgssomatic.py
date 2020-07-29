@@ -424,6 +424,12 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         )
         # VCF
         self.output(
+            "variants_combined",
+            source=self.addbamstats.out,
+            output_folder="variants",
+            doc="Combined variants from all 3 callers",
+        )
+        self.output(
             "variants_gatk",
             source=self.vc_gatk_sort_combined.out,
             output_folder="variants",
