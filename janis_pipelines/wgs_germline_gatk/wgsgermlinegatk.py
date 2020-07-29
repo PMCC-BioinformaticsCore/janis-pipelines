@@ -52,12 +52,28 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
     def friendly_name(self):
         return "WGS Germline (GATK only)"
 
-    @staticmethod
-    def version():
-        return "1.3.0"
+    def version(self):
+        return "1.3.1"
 
     def constructor(self):
 
+        self.add_inputs()
+
+        self.add_fastqc()
+
+        self.add_align()
+
+        self.add_bam_process()
+        self.add_bam_qc()
+
+        # Add variant callers
+
+        self.add_gridss()
+
+        self.add_gatk_variantcaller()
+
+    def add_inputs(self):
+        # INPUTS
         self.input(
             "sample_name",
             String,
@@ -67,7 +83,6 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
                 example="NA12878",
             ),
         )
-
         self.input(
             "fastqs",
             Array(FastqGzPair),
@@ -78,33 +93,12 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
                 example="[[BRCA1_R1.fastq.gz, BRCA1_R2.fastq.gz]]",
             ),
         )
-        self.input(
-            "reference",
-            FastaWithDict,
-            doc=InputDocumentation(
-                """\
-The reference genome from which to align the reads. This requires a number indexes (can be generated \
-with the 'IndexFasta' pipeline This pipeline has been tested using the HG38 reference set.
 
-This pipeline expects the assembly references to be as they appear in the GCP example:
+        self.inputs_for_reference()
+        self.inputs_for_intervals()
+        self.inputs_for_configuration()
 
-- (".fai", ".amb", ".ann", ".bwt", ".pac", ".sa", "^.dict").""",
-                quality=InputQualityType.static,
-                example="HG38: https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/\n\n"
-                "File: gs://genomics-public-data/references/hg38/v0/Homo_sapiens_assembly38.fasta",
-            ),
-        )
-        self.input(
-            "cutadapt_adapters",
-            File(optional=True),
-            doc=InputDocumentation(
-                "Specifies a containment list for cutadapt, which contains a list of sequences to determine valid overrepresented sequences from "
-                "the FastQC report to trim with Cuatadapt. The file must contain sets of named adapters in the form: "
-                "``name[tab]sequence``. Lines prefixed with a hash will be ignored.",
-                quality=InputQualityType.static,
-                example="https://github.com/csf-ngs/fastqc/blob/master/Contaminants/contaminant_list.txt",
-            ),
-        )
+    def inputs_for_intervals(self):
         self.input(
             "gatk_intervals",
             Array(Bed),
@@ -115,15 +109,27 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             ),
         )
 
+    def inputs_for_configuration(self):
+        pass
+
+    def inputs_for_reference(self):
         self.input(
-            "gridss_blacklist",
-            Bed,
+            "reference",
+            FastaWithDict,
             doc=InputDocumentation(
-                "BED file containing regions to ignore.",
+                """\
+    The reference genome from which to align the reads. This requires a number indexes (can be generated \
+    with the 'IndexFasta' pipeline This pipeline has been tested using the HG38 reference set.
+    
+    This pipeline expects the assembly references to be as they appear in the GCP example:
+    
+    - (".fai", ".amb", ".ann", ".bwt", ".pac", ".sa", "^.dict").""",
                 quality=InputQualityType.static,
-                example="https://github.com/PapenfussLab/gridss#blacklist",
+                example="HG38: https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/\n\n"
+                "File: gs://genomics-public-data/references/hg38/v0/Homo_sapiens_assembly38.fasta",
             ),
         )
+
         self.input(
             "snps_dbsnp",
             VcfTabix,
@@ -166,10 +172,40 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             ),
         )
 
-        # STEPS
+        self.input(
+            "cutadapt_adapters",
+            File(optional=True),
+            doc=InputDocumentation(
+                "Specifies a containment list for cutadapt, which contains a list of sequences to determine valid "
+                "overrepresented sequences from the FastQC report to trim with Cuatadapt. The file must contain sets "
+                "of named adapters in the form: ``name[tab]sequence``. Lines prefixed with a hash will be ignored.",
+                quality=InputQualityType.static,
+                example="https://github.com/csf-ngs/fastqc/blob/master/Contaminants/contaminant_list.txt",
+            ),
+        )
 
+        # for fast processing wgs bam
+        self.input(
+            "gridss_blacklist",
+            Bed,
+            doc=InputDocumentation(
+                "BED file containing regions to ignore.",
+                quality=InputQualityType.static,
+                example="https://github.com/PapenfussLab/gridss#blacklist",
+            ),
+        )
+
+    def add_fastqc(self):
         self.step("fastqc", FastQC_0_11_5(reads=self.fastqs), scatter="reads")
 
+        self.output(
+            "out_fastqc_reports",
+            source=self.fastqc.out,
+            output_folder="reports",
+            doc="A zip file of the FastQC quality report.",
+        )
+
+    def add_align(self):
         self.step(
             "getfastqc_adapters",
             ParseFastqcAdaptors(
@@ -177,7 +213,6 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 cutadapt_adaptors_lookup=self.cutadapt_adapters,
             ),
             scatter="fastqc_datafiles",
-            # when=NotNullOperator(self.cutadapt_adapters)
         )
 
         self.step(
@@ -186,39 +221,55 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 fastq=self.fastqs,
                 reference=self.reference,
                 sample_name=self.sample_name,
-                sortsam_tmpDir=".",
+                sortsam_tmpDir="./tmp",
                 cutadapt_adapter=self.getfastqc_adapters,
                 cutadapt_removeMiddle3Adapter=self.getfastqc_adapters,
             ),
             scatter=["fastq", "cutadapt_adapter", "cutadapt_removeMiddle3Adapter"],
         )
 
+    def add_bam_process(self):
         self.step(
             "merge_and_mark",
             MergeAndMarkBams_4_1_3(
-                bams=self.align_and_sort, sampleName=self.sample_name
+                bams=self.align_and_sort.out, sampleName=self.sample_name
             ),
         )
 
-        # STATISTICS of BAM
-        self.step(
-            "coverage",
-            Gatk4DepthOfCoverage_4_1_6(
-                bam=self.merge_and_mark,
-                reference=self.reference,
-                outputPrefix=self.sample_name,
-                intervals=self.gatk_intervals,
-                # current version gatk 4.1.6.0 only support --count-type as COUNT_READS
-                # countType="COUNT_FRAGMENTS_REQUIRE_SAME_BASE",
-                omitDepthOutputAtEachBase=True,
-                summaryCoverageThreshold=[1, 50, 100, 300, 500],
-            ),
+        self.output(
+            "out_bam",
+            source=self.merge_and_mark.out,
+            output_folder="bams",
+            doc="Aligned and indexed bam.",
+            output_name=self.sample_name,
         )
+
+        # STATISTICS of BAM
+        #
+
+    def add_bam_qc(self):
+        # Temporarily remove GATK4 DepthOfCoverage for performance reasons, see:
+        #   https://gatk.broadinstitute.org/hc/en-us/community/posts/360071895391-Speeding-up-GATK4-DepthOfCoverage
+
+        # self.step(
+        #     "coverage",
+        #     Gatk4DepthOfCoverage_4_1_6(
+        #         bam=self.merge_and_mark,
+        #         reference=self.reference,
+        #         outputPrefix=self.sample_name,
+        #         intervals=self.gatk_intervals,
+        #         # current version gatk 4.1.6.0 only support --count-type as COUNT_READS
+        #         # countType="COUNT_FRAGMENTS_REQUIRE_SAME_BASE",
+        #         omitDepthOutputAtEachBase=True,
+        #         summaryCoverageThreshold=[1, 50, 100, 300, 500],
+        #     ),
+        # )
 
         self.step(
             "calculate_performancesummary_genomefile",
             GenerateGenomeFileForBedtoolsCoverage(reference=self.reference),
         )
+
         self.step(
             "performance_summary",
             PerformanceSummaryGenome_0_1_0(
@@ -228,6 +279,22 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             ),
         )
 
+        # COVERGAE
+        # self.output(
+        #     "sample_coverage",
+        #     source=self.coverage.out_sampleSummary,
+        #     output_folder=["performance_summary", self.sample_name],
+        #     doc="A text file of depth of coverage summary of bam",
+        # )
+        # BAM PERFORMANCE
+        self.output(
+            "out_performance_summary",
+            source=self.performance_summary.performanceSummaryOut,
+            output_folder=["performance_summary", self.sample_name],
+            doc="A text file of performance summary of bam",
+        )
+
+    def add_gridss(self):
         # GRIDSS
         self.step(
             "vc_gridss",
@@ -238,8 +305,21 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             ),
         )
 
-        # VARIANT CALLERS
+        self.output(
+            "out_gridss_assembly",
+            source=self.vc_gridss.assembly,
+            output_folder="gridss",
+            doc="Assembly returned by GRIDSS",
+        )
+        self.output(
+            "out_variants_gridss",
+            source=self.vc_gridss.out,
+            output_folder="gridss",
+            doc="Variants from the GRIDSS variant caller",
+        )
 
+    def add_gatk_variantcaller(self):
+        # VARIANT CALLERS
         # GATK
         self.step(
             "bqsr",
@@ -251,6 +331,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 known_indels=self.known_indels,
                 mills_indels=self.mills_indels,
             ),
+            doc="Perform base quality score recalibration",
         )
         self.step(
             "vc_gatk",
@@ -262,81 +343,36 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             ),
             scatter="intervals",
         )
-
         self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out))
         self.step("vc_gatk_compressvcf", BGZipLatest(file=self.vc_gatk_merge.out))
         self.step(
             "vc_gatk_sort_combined", BcfToolsSort_1_9(vcf=self.vc_gatk_compressvcf.out)
         )
+
         self.step(
-            "vc_gatk_uncompressvcf",
+            "vc_gatk_uncompress_for_bamstats",
             UncompressArchive(file=self.vc_gatk_sort_combined.out),
         )
 
         self.step(
-            "addbamstats",
+            "vc_gatk_addbamstats",
             AddBamStatsGermline_0_1_0(
-                bam=self.merge_and_mark, vcf=self.vc_gatk_uncompressvcf.out
+                bam=self.merge_and_mark, vcf=self.vc_gatk_uncompress_for_bamstats.out
             ),
         )
 
-        # RESULTS
         self.output(
-            "reports",
-            source=self.fastqc.out,
-            output_folder=["reports", self.sample_name],
-            doc="A zip file of the FastQC quality report.",
-        )
-        self.output(
-            "sample_coverage",
-            source=self.coverage.out_sampleSummary,
-            output_folder=["performance_summary", self.sample_name],
-            doc="A text file of depth of coverage summary of bam",
-        )
-        self.output(
-            "summary",
-            source=self.performance_summary.performanceSummaryOut,
-            output_folder=["performance_summary", self.sample_name],
-            doc="A text file of performance summary of bam",
-        )
-        # GRIDSS
-        self.output(
-            "gridss_assembly",
-            source=self.vc_gridss.assembly,
-            output_folder="gridss",
-            doc="Assembly returned by GRIDSS",
-        )
-        self.output(
-            "variants_gridss",
-            source=self.vc_gridss.out,
-            output_folder="gridss",
-            doc="Variants from the GRIDSS variant caller",
-        )
-        self.output(
-            "bam",
-            source=self.merge_and_mark.out,
-            output_folder=["bams", self.sample_name],
-            output_name=self.sample_name,
-            doc="Aligned and indexed bam.",
-        )
-        self.output(
-            "variants",
+            "out_variants",
             source=self.vc_gatk_sort_combined.out,
             output_folder="variants",
-            output_name=self.sample_name,
+            output_name="gatk",
             doc="Merged variants from the GATK caller",
         )
         self.output(
-            "variants_split",
+            "out_variants_split",
             source=self.vc_gatk.out,
-            output_folder=["variants", "byInterval"],
+            output_folder=["variants", "gatk"],
             doc="Unmerged variants from the GATK caller (by interval)",
-        )
-        self.output(
-            "variants_final",
-            source=self.addbamstats.out,
-            output_folder="variants",
-            doc="Final vcf",
         )
 
     def bind_metadata(self):
@@ -349,6 +385,14 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         meta.short_documentation = "A variant-calling WGS pipeline using only the GATK Haplotype variant caller."
         meta.documentation = """\
 This is a genomics pipeline to align sequencing data (Fastq pairs) into BAMs and call variants using GATK. The final variants are outputted in the VCF format.
+
+This workflow is a reference pipeline using the Janis Python framework (pipelines assistant).
+
+- Takes raw sequence data in the FASTQ format;
+- Align to the reference genome using BWA MEM;
+- Marks duplicates using Picard;
+- Call variants using GRIDSS and GATK4;
+- Outputs the final variants in the VCF format.
 
 **Resources**
 
@@ -384,6 +428,7 @@ if __name__ == "__main__":
         "export_path": os.path.join(
             os.path.dirname(os.path.realpath(__file__)), "{language}"
         ),
+        "with_resource_overrides": True,
     }
     w.translate("cwl", **args)
     w.translate("wdl", **args)
