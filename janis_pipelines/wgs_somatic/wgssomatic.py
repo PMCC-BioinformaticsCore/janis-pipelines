@@ -361,6 +361,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 normal_bam=self.normal.out,
                 tumor_bam=self.tumor.out,
                 vcf=self.combined_uncompress.out,
+                reference=self.reference,
             ),
         )
 

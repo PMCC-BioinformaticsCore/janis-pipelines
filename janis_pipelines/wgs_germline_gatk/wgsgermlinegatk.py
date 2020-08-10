@@ -276,7 +276,9 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         self.step(
             "addbamstats",
             AddBamStatsGermline_0_1_0(
-                bam=self.merge_and_mark, vcf=self.vc_gatk_uncompressvcf.out
+                bam=self.merge_and_mark,
+                vcf=self.vc_gatk_uncompressvcf.out,
+                reference=self.reference,
             ),
         )
 
