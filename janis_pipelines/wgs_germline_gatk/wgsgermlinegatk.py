@@ -201,19 +201,19 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         )
 
         # STATISTICS of BAM
-        self.step(
-            "coverage",
-            Gatk4DepthOfCoverage_4_1_6(
-                bam=self.merge_and_mark,
-                reference=self.reference,
-                outputPrefix=self.sample_name,
-                intervals=self.gatk_intervals,
-                # current version gatk 4.1.6.0 only support --count-type as COUNT_READS
-                # countType="COUNT_FRAGMENTS_REQUIRE_SAME_BASE",
-                omitDepthOutputAtEachBase=True,
-                summaryCoverageThreshold=[1, 50, 100, 300, 500],
-            ),
-        )
+        # self.step(
+        #     "coverage",
+        #     Gatk4DepthOfCoverage_4_1_6(
+        #         bam=self.merge_and_mark,
+        #         reference=self.reference,
+        #         outputPrefix=self.sample_name,
+        #         intervals=self.gatk_intervals,
+        #         # current version gatk 4.1.6.0 only support --count-type as COUNT_READS
+        #         # countType="COUNT_FRAGMENTS_REQUIRE_SAME_BASE",
+        #         omitDepthOutputAtEachBase=True,
+        #         summaryCoverageThreshold=[1, 50, 100, 300, 500],
+        #     ),
+        # )
 
         self.step(
             "calculate_performancesummary_genomefile",
@@ -287,12 +287,12 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             output_folder=["reports", self.sample_name],
             doc="A zip file of the FastQC quality report.",
         )
-        self.output(
-            "sample_coverage",
-            source=self.coverage.out_sampleSummary,
-            output_folder=["performance_summary", self.sample_name],
-            doc="A text file of depth of coverage summary of bam",
-        )
+        # self.output(
+        #     "sample_coverage",
+        #     source=self.coverage.out_sampleSummary,
+        #     output_folder=["performance_summary", self.sample_name],
+        #     doc="A text file of depth of coverage summary of bam",
+        # )
         self.output(
             "summary",
             source=self.performance_summary.performanceSummaryOut,

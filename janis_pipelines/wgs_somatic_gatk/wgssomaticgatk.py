@@ -277,18 +277,18 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         )
         self.output("tumor_report", source=self.tumor.reports, output_folder="reports")
         # COVERAGE
-        self.output(
-            "normal_coverage",
-            source=self.normal.depth_of_coverage,
-            output_folder=["summary", self.normal_name],
-            doc="A text file of depth of coverage summary of NORMAL bam",
-        )
-        self.output(
-            "tumor_coverage",
-            source=self.tumor.depth_of_coverage,
-            output_folder=["summary", self.tumor_name],
-            doc="A text file of depth of coverage summary of TUMOR bam",
-        )
+        # self.output(
+        #     "normal_coverage",
+        #     source=self.normal.depth_of_coverage,
+        #     output_folder=["summary", self.normal_name],
+        #     doc="A text file of depth of coverage summary of NORMAL bam",
+        # )
+        # self.output(
+        #     "tumor_coverage",
+        #     source=self.tumor.depth_of_coverage,
+        #     output_folder=["summary", self.tumor_name],
+        #     doc="A text file of depth of coverage summary of TUMOR bam",
+        # )
         # BAM PERFORMANCE
         self.output(
             "normal_summary",
@@ -437,7 +437,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         w.output("out", source=w.merge_and_mark.out)
         w.output("bqsr_bam", source=w.bqsr.out)
         w.output("reports", source=w.fastqc.out)
-        w.output("depth_of_coverage", source=w.coverage.out_sampleSummary)
+        # w.output("depth_of_coverage", source=w.coverage.out_sampleSummary)
         w.output(
             "summary", source=w.performance_summary.performanceSummaryOut,
         )
