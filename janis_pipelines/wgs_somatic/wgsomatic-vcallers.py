@@ -168,6 +168,7 @@ class WGSSomaticMultiCallers(BioinformaticsWorkflow):
                 normal_bam=self.normal,
                 tumor_bam=self.tumor,
                 vcf=self.combined_uncompress.out,
+                reference=self.reference,
             ),
         )
 

@@ -184,7 +184,11 @@ class WGSGermlineMultiCallersVariantsOnly(BioinformaticsWorkflow):
         self.step("combined_uncompress", UncompressArchive(file=self.combined_sort.out))
         self.step(
             "addbamstats",
-            AddBamStatsGermline_0_1_0(bam=self.bam, vcf=self.combined_uncompress.out),
+            AddBamStatsGermline_0_1_0(
+                bam=self.bam,
+                vcf=self.combined_uncompress.out,
+                reference=self.reference,
+            ),
         )
 
         self.output(
