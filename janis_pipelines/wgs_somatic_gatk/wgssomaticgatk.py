@@ -314,13 +314,13 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
 
         # GRIDSS
         self.output(
-            "gridss_assembly",
+            "out_gridss_assembly",
             source=self.vc_gridss.assembly,
             output_folder="gridss",
             doc="Assembly returned by GRIDSS",
         )
         self.output(
-            "variants_gridss",
+            "out_variants_gridss",
             source=self.vc_gridss.out,
             output_folder="gridss",
             doc="Variants from the GRIDSS variant caller",
@@ -365,19 +365,19 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
 
         # VCF
         self.output(
-            "variants_gatk",
+            "out_variants_gatk",
             source=self.vc_gatk_sort_combined.out,
             output_folder="variants",
             doc="Merged variants from the GATK caller",
         )
         self.output(
-            "variants_split",
+            "out_variants_split",
             source=self.vc_gatk.out,
             output_folder=["variants", "byInterval"],
             doc="Unmerged variants from the GATK caller (by interval)",
         )
         self.output(
-            "variants_final",
+            "out_variants",
             source=self.addbamstats.out,
             output_folder="variants",
             doc="Final vcf",
