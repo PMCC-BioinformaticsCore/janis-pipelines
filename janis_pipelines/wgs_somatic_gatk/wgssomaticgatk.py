@@ -54,91 +54,9 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
     def constructor(self):
 
         self.add_inputs()
-
-    def add_preprocessing_steps(self):
-
-        # STEPS
-        self.step(
-            "tumor",
-            self.process_subpipeline(
-                reads=self.tumor_inputs,
-                sample_name=self.tumor_name,
-                reference=self.reference,
-                cutadapt_adapters=self.cutadapt_adapters,
-                gatk_intervals=self.gatk_intervals,
-                snps_dbsnp=self.snps_dbsnp,
-                snps_1000gp=self.snps_1000gp,
-                known_indels=self.known_indels,
-                mills_indels=self.mills_indels,
-            ),
-        )
-        self.step(
-            "normal",
-            self.process_subpipeline(
-                reads=self.normal_inputs,
-                sample_name=self.normal_name,
-                reference=self.reference,
-                cutadapt_adapters=self.cutadapt_adapters,
-                gatk_intervals=self.gatk_intervals,
-                snps_dbsnp=self.snps_dbsnp,
-                snps_1000gp=self.snps_1000gp,
-                known_indels=self.known_indels,
-                mills_indels=self.mills_indels,
-            ),
-        )
-
-        # FASTQC
-        self.output(
-            "out_normal_fastqc_reports",
-            source=self.normal.out_fastqc_reports,
-            output_folder="reports",
-        )
-        self.output(
-            "out_tumor_fastqc_reports",
-            source=self.tumor.out_fastqc_reports,
-            output_folder="reports",
-        )
-
-        # COVERAGE
-        # self.output(
-        #     "out_normal_coverage",
-        #     source=self.normal.depth_of_coverage,
-        #     output_folder=["summary", self.normal_name],
-        #     doc="A text file of depth of coverage summary of NORMAL bam",
-        # )
-        # self.output(
-        #     "out_tumor_coverage",
-        #     source=self.tumor.depth_of_coverage,
-        #     output_folder=["summary", self.tumor_name],
-        #     doc="A text file of depth of coverage summary of TUMOR bam",
-        # )
-        # BAM PERFORMANCE
-        self.output(
-            "out_normal_performance_summary",
-            source=self.normal.out_performance_summary,
-            output_folder=["summary", self.normal_name],
-            doc="A text file of performance summary of NORMAL bam",
-        )
-        self.output(
-            "tumor_summary",
-            source=self.tumor.out_performance_summary,
-            output_folder=["summary", self.tumor_name],
-            doc="A text file of performance summary of TUMOR bam",
-        )
-
-        self.output(
-            "normal_bam",
-            source=self.normal.out,
-            output_folder="bams",
-            output_name=self.normal_name,
-        )
-
-        self.output(
-            "tumor_bam",
-            source=self.tumor.out,
-            output_folder="bams",
-            output_name=self.tumor_name,
-        )
+        self.add_preprocessing_steps()
+        self.add_gridss()
+        self.add_gatk()
 
     def add_inputs(self):
 
@@ -202,8 +120,9 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
             "gnomad",
             VcfTabix(),
             doc=InputDocumentation(
-                "The genome Aggregation Database (gnomAD)",
+                "The genome Aggregation Database (gnomAD). This VCF must be compressed and tabix indexed. This is specific for your genome (eg: hg38 / br37) and can usually be found with your reference. For example for HG38, the Broad institute provide the following af-only-gnomad compressed and tabix indexed VCF: https://console.cloud.google.com/storage/browser/gatk-best-practices/somatic-hg38;tab=objects?prefix=af-only",
                 quality=InputQualityType.static,
+                example="https://storage.cloud.google.com/gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz",
             ),
         )
         self.input(
@@ -297,13 +216,97 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             ),
         )
 
+    def add_preprocessing_steps(self):
+        # STEPS
+        self.step(
+            "tumor",
+            self.process_subpipeline(
+                reads=self.tumor_inputs,
+                sample_name=self.tumor_name,
+                reference=self.reference,
+                cutadapt_adapters=self.cutadapt_adapters,
+                gatk_intervals=self.gatk_intervals,
+                snps_dbsnp=self.snps_dbsnp,
+                snps_1000gp=self.snps_1000gp,
+                known_indels=self.known_indels,
+                mills_indels=self.mills_indels,
+            ),
+        )
+        self.step(
+            "normal",
+            self.process_subpipeline(
+                reads=self.normal_inputs,
+                sample_name=self.normal_name,
+                reference=self.reference,
+                cutadapt_adapters=self.cutadapt_adapters,
+                gatk_intervals=self.gatk_intervals,
+                snps_dbsnp=self.snps_dbsnp,
+                snps_1000gp=self.snps_1000gp,
+                known_indels=self.known_indels,
+                mills_indels=self.mills_indels,
+            ),
+        )
+
+        # FASTQC
+        self.output(
+            "out_normal_fastqc_reports",
+            source=self.normal.out_fastqc_reports,
+            output_folder="reports",
+        )
+        self.output(
+            "out_tumor_fastqc_reports",
+            source=self.tumor.out_fastqc_reports,
+            output_folder="reports",
+        )
+
+        # COVERAGE
+        # self.output(
+        #     "out_normal_coverage",
+        #     source=self.normal.depth_of_coverage,
+        #     output_folder=["summary", self.normal_name],
+        #     doc="A text file of depth of coverage summary of NORMAL bam",
+        # )
+        # self.output(
+        #     "out_tumor_coverage",
+        #     source=self.tumor.depth_of_coverage,
+        #     output_folder=["summary", self.tumor_name],
+        #     doc="A text file of depth of coverage summary of TUMOR bam",
+        # )
+        # BAM PERFORMANCE
+        self.output(
+            "out_normal_performance_summary",
+            source=self.normal.out_performance_summary,
+            output_folder=["summary", self.normal_name],
+            doc="A text file of performance summary of NORMAL bam",
+        )
+        self.output(
+            "out_tumor_performance_summary",
+            source=self.tumor.out_performance_summary,
+            output_folder=["summary", self.tumor_name],
+            doc="A text file of performance summary of TUMOR bam",
+        )
+
+        self.output(
+            "out_normal_bam",
+            source=self.normal.out_bam,
+            output_folder="bams",
+            output_name=self.normal_name,
+        )
+
+        self.output(
+            "out_tumor_bam",
+            source=self.tumor.out_bam,
+            output_folder="bams",
+            output_name=self.tumor_name,
+        )
+
     def add_gridss(self):
 
         # GRIDSS
         self.step(
             "vc_gridss",
             Gridss_2_6_2(
-                bams=[self.normal.out, self.tumor.out],
+                bams=[self.normal.out_bam, self.tumor.out_bam],
                 reference=self.reference,
                 blacklist=self.gridss_blacklist,
             ),
@@ -328,8 +331,8 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         self.step(
             "vc_gatk",
             GatkSomaticVariantCaller_4_1_3(
-                normal_bam=self.normal.bqsr_bam,
-                tumor_bam=self.tumor.bqsr_bam,
+                normal_bam=self.normal.out_bam_bqsr,
+                tumor_bam=self.tumor.out_bam_bqsr,
                 normal_name=self.normal_name,
                 intervals=self.gatk_intervals,
                 reference=self.reference,
@@ -354,8 +357,8 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             AddBamStatsSomatic_0_1_0(
                 normal_id=self.normal_name,
                 tumor_id=self.tumor_name,
-                normal_bam=self.normal.out,
-                tumor_bam=self.tumor.out,
+                normal_bam=self.normal.out_bam,
+                tumor_bam=self.tumor.out_bam,
                 vcf=self.vc_gatk_uncompressvcf.out,
             ),
         )
@@ -468,9 +471,8 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
         )
 
         # OUTPUTS
-        w.output("out_fastqc_reports", source=w.merge_and_mark.out)
-        w.output("out_bam", source=w.bqsr.out)
-        w.output("out_bam_markduped", source=w.merge_and_mark.out)
+        w.output("out_bam", source=w.merge_and_mark.out)
+        w.output("out_bam_bqsr", source=w.bqsr.out)
         w.output("out_fastqc_reports", source=w.fastqc.out)
         # w.output("depth_of_coverage", source=w.coverage.out_sampleSummary)
         w.output(
@@ -485,7 +487,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
 
         meta.keywords = ["wgs", "cancer", "somatic", "variants", "gatk"]
         meta.dateUpdated = date(2019, 10, 16)
-        meta.dateUpdated = date(2020, 6, 18)
+        meta.dateUpdated = date(2020, 8, 18)
 
         meta.contributors = ["Michael Franklin", "Richard Lupat", "Jiaan Yu"]
         meta.short_documentation = "A somatic tumor-normal variant-calling WGS pipeline using only GATK Mutect2"
@@ -522,6 +524,7 @@ The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be 
             "snps_1000gp": "1000G_phase1.snps.high_confidence.hg38.vcf.gz",
             "known_indels": "Homo_sapiens_assembly38.known_indels.vcf.gz",
             "mills_indels": "Mills_and_1000G_gold_standard.indels.hg38.vcf.gz",
+            "gnomad": "af-only-gnomad.hg38.vcf.gz",
         }
 
 
@@ -530,14 +533,14 @@ if __name__ == "__main__":
 
     w = WGSSomaticGATK()
     args = {
-        "to_console": False,
+        "to_console": True,
         "to_disk": True,
         "validate": True,
         "export_path": os.path.join(
             os.path.dirname(os.path.realpath(__file__)), "{language}"
         ),
     }
-    w.translate("cwl", **args)
+    # w.translate("cwl", **args)
     w.translate("wdl", **args)
 
     # from cwltool import main
