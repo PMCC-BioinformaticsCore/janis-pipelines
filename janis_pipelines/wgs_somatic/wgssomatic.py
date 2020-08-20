@@ -1,58 +1,13 @@
-from datetime import date
-from janis_core import (
-    String,
-    WorkflowBuilder,
-    File,
-    Array,
-    Float,
-    WorkflowMetadata,
-    InputDocumentation,
-    InputQualityType,
-)
-from janis_unix.tools import UncompressArchive
-from janis_unix.data_types import TextFile
+from janis_bioinformatics.data_types import FastqGzPair
+from janis_core import String, Array, InputDocumentation, InputQualityType
 
-from janis_bioinformatics.data_types import (
-    FastaWithDict,
-    FastqGzPair,
-    VcfTabix,
-    Bed,
-    BedTabix,
+from janis_pipelines.wgs_somatic.wgssomatic_variantsonly import (
+    WGSSomaticMultiCallersVariantsOnly,
 )
-from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
-from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
-from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
-from janis_bioinformatics.tools.common import (
-    BwaAligner,
-    MergeAndMarkBams_4_1_3,
-    GATKBaseRecalBQSRWorkflow_4_1_3,
-)
-from janis_bioinformatics.tools.htslib import BGZipLatest
-from janis_bioinformatics.tools.gatk4 import (
-    Gatk4GatherVcfs_4_1_3,
-    Gatk4DepthOfCoverage_4_1_6,
-)
-from janis_bioinformatics.tools.pmac import (
-    CombineVariants_0_0_8,
-    GenerateVardictHeaderLines,
-    AddBamStatsSomatic_0_1_0,
-    ParseFastqcAdaptors,
-    PerformanceSummaryGenome_0_1_0,
-    GenerateGenomeFileForBedtoolsCoverage,
-)
-from janis_bioinformatics.tools.papenfuss.gridss.gridss import Gridss_2_6_2
-from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
-from janis_bioinformatics.tools.variantcallers.illuminasomatic_strelka import (
-    IlluminaSomaticVariantCaller,
-)
-from janis_bioinformatics.tools.variantcallers.vardictsomatic_variants import (
-    VardictSomaticVariantCaller,
-)
-
 from janis_pipelines.wgs_somatic_gatk.wgssomaticgatk import WGSSomaticGATK
 
 
-class WGSSomaticMultiCallers(WGSSomaticGATK):
+class WGSSomaticMultiCallers(WGSSomaticMultiCallersVariantsOnly, WGSSomaticGATK):
     def id(self):
         return "WGSSomaticMultiCallers"
 
@@ -67,246 +22,64 @@ class WGSSomaticMultiCallers(WGSSomaticGATK):
 
         self.add_inputs()
         self.add_preprocessing_steps()
-        self.add_gridss()
-        self.add_gatk_variantcaller()
-        self.add_vardict_variantcaller()
-        self.add_strelka_variantcaller()
-        self.add_combine_variants()
+        self.add_gridss(
+            normal_bam_source=self.normal.out_bam, tumor_bam_source=self.tumor.out_bam
+        )
+        self.add_gatk_variantcaller(
+            normal_bam_source=self.normal.out_bam, tumor_bam_source=self.tumor.out_bam
+        )
+        self.add_vardict_variantcaller(
+            normal_bam_source=self.normal.out_bam, tumor_bam_source=self.tumor.out_bam
+        )
+        self.add_strelka_variantcaller(
+            normal_bam_source=self.normal.out_bam, tumor_bam_source=self.tumor.out_bam
+        )
+        self.add_combine_variants(
+            normal_bam_source=self.normal.out_bam, tumor_bam_source=self.tumor.out_bam
+        )
 
-    def add_inputs_for_intervals(self):
-        super().add_inputs_for_intervals()
-
+    def add_inputs(self):
+        # INPUTS
         self.input(
-            "vardict_intervals",
-            Array(Bed),
+            "normal_inputs",
+            Array(FastqGzPair),
             doc=InputDocumentation(
-                "List of intervals over which to split the VarDict variant calling",
-                quality=InputQualityType.static,
-                example="BRCA1.bed",
+                "An array of NORMAL FastqGz pairs. These are aligned separately and merged to create higher depth coverages from multiple sets of reads",
+                quality=InputQualityType.user,
+                example='["normal_R1.fastq.gz", "normal_R2.fastq.gz"]',
             ),
         )
         self.input(
-            "strelka_intervals",
-            BedTabix,
+            "tumor_inputs",
+            Array(FastqGzPair),
             doc=InputDocumentation(
-                "An interval for which to restrict the analysis to.",
-                quality=InputQualityType.static,
-                example="BRCA1.bed.gz",
+                "An array of TUMOR FastqGz pairs. These are aligned separately and merged to create higher depth coverages from multiple sets of reads",
+                quality=InputQualityType.user,
+                example='["tumor_R1.fastq.gz", "tumor_R2.fastq.gz"]',
             ),
         )
-
-    def add_inputs_for_configuration(self):
-        super().add_inputs_for_configuration()
         self.input(
-            "allele_freq_threshold",
-            Float,
-            default=0.05,
+            "normal_name",
+            String(),
             doc=InputDocumentation(
-                "The threshold for VarDict's allele frequency, default: 0.05 or 5%",
-                quality=InputQualityType.configuration,
-                example=None,
+                "Sample name for the NORMAL sample from which to generate the readGroupHeaderLine for BwaMem",
+                quality=InputQualityType.user,
+                example="NA24385_normal",
+            ),
+        )
+        self.input(
+            "tumor_name",
+            String(),
+            doc=InputDocumentation(
+                "Sample name for the TUMOR sample from which to generate the readGroupHeaderLine for BwaMem",
+                quality=InputQualityType.user,
+                example="NA24385_tumor",
             ),
         )
 
-    def add_gatk_variantcaller(self):
-
-        self.step(
-            "vc_gatk",
-            GatkSomaticVariantCaller_4_1_3(
-                normal_bam=self.normal.out_bams_bqsr,
-                tumor_bam=self.tumor.out_bams_bqsr,
-                normal_name=self.normal_name,
-                intervals=self.gatk_intervals,
-                reference=self.reference,
-                gnomad=self.gnomad,
-                panel_of_normals=self.panel_of_normals,
-            ),
-            scatter=["intervals", "normal_bam", "tumor_bam"],
-        )
-
-        self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out))
-        self.step("vc_gatk_compress_for_sort", BGZipLatest(file=self.vc_gatk_merge.out))
-        self.step(
-            "vc_gatk_sort_combined",
-            BcfToolsSort_1_9(vcf=self.vc_gatk_compress_for_sort.out),
-        )
-        self.step(
-            "vc_gatk_uncompress_for_combine",
-            UncompressArchive(file=self.vc_gatk_sort_combined.out),
-        )
-
-        self.step(
-            "addbamstats",
-            AddBamStatsSomatic_0_1_0(
-                normal_id=self.normal_name,
-                tumor_id=self.tumor_name,
-                normal_bam=self.normal.out_bam,
-                tumor_bam=self.tumor.out_bam,
-                reference=self.reference,
-                vcf=self.vc_gatk_uncompress_for_combine.out,
-            ),
-        )
-
-        # VCF
-        self.output(
-            "out_variants_gatk",
-            source=self.vc_gatk_sort_combined.out,
-            output_folder="variants",
-            doc="Merged variants from the GATK caller",
-        )
-        self.output(
-            "out_variants_split",
-            source=self.vc_gatk.out,
-            output_folder=["variants", "byInterval"],
-            doc="Unmerged variants from the GATK caller (by interval)",
-        )
-
-    def add_strelka_variantcaller(self):
-        self.step(
-            "vc_strelka",
-            IlluminaSomaticVariantCaller(
-                normal_bam=self.normal.out_bam,
-                tumor_bam=self.tumor.out_bam,
-                intervals=self.strelka_intervals,
-                reference=self.reference,
-            ),
-        )
-
-        self.output(
-            "out_variants_strelka",
-            source=self.vc_strelka.out,
-            output_folder="variants",
-            output_name="strelka",
-            doc="Variants from the Strelka variant caller",
-        )
-
-    def add_vardict_variantcaller(self):
-        self.step(
-            "generate_vardict_headerlines",
-            GenerateVardictHeaderLines(reference=self.reference),
-        )
-        self.step(
-            "vc_vardict",
-            VardictSomaticVariantCaller(
-                normal_bam=self.normal.out_bam,
-                tumor_bam=self.tumor.out_bam,
-                normal_name=self.normal_name,
-                tumor_name=self.tumor_name,
-                header_lines=self.generate_vardict_headerlines.out,
-                intervals=self.vardict_intervals,
-                reference=self.reference,
-                allele_freq_threshold=self.allele_freq_threshold,
-            ),
-            scatter="intervals",
-        )
-        self.step("vc_vardict_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_vardict.out))
-        self.step(
-            "vc_vardict_compress_for_sort", BGZipLatest(file=self.vc_vardict_merge.out)
-        )
-        self.step(
-            "vc_vardict_sort_combined",
-            BcfToolsSort_1_9(vcf=self.vc_vardict_compress_for_sort.out),
-        )
-        self.step(
-            "vc_vardict_uncompress_for_combine",
-            UncompressArchive(file=self.vc_vardict_sort_combined.out),
-        )
-
-        self.output(
-            "out_variants_vardict_split",
-            source=self.vc_vardict.out,
-            output_folder=["variants", "vardict"],
-            doc="Unmerged variants from the VarDict caller (by interval)",
-        )
-
-        self.output(
-            "out_variants_vardict",
-            source=self.vc_vardict_sort_combined.out,
-            output_folder="variants",
-            output_name="vardict",
-            doc="Merged variants from the VarDict caller",
-        )
-
-    def add_combine_variants(self):
-        self.step(
-            "combine_variants",
-            CombineVariants_0_0_8(
-                normal=self.normal_name,
-                tumor=self.tumor_name,
-                vcfs=[
-                    self.vc_gatk_uncompress_for_combine.out,
-                    self.vc_strelka.out,
-                    self.vc_vardict_uncompress_for_combine.out,
-                ],
-                type="somatic",
-                columns=["AD", "DP", "GT"],
-            ),
-        )
-
-        self.step("combined_compress", BGZipLatest(file=self.combine_variants.out))
-        self.step("combined_sort", BcfToolsSort_1_9(vcf=self.combined_compress.out))
-        self.step("combined_uncompress", UncompressArchive(file=self.combined_sort.out))
-
-        self.step(
-            "combined_addbamstats",
-            AddBamStatsSomatic_0_1_0(
-                normal_id=self.normal_name,
-                tumor_id=self.tumor_name,
-                normal_bam=self.normal.out_bam,
-                tumor_bam=self.tumor.out_bam,
-                vcf=self.combined_uncompress.out,
-                reference=self.reference,
-            ),
-        )
-
-        self.output(
-            "out_variants",
-            source=self.addbamstats.out,
-            output_folder="variants",
-            doc="Combined variants from GATK, VarDict and Strelka callers",
-        )
-
-    def bind_metadata(self):
-        meta: WorkflowMetadata = super().bind_metadata() or self.metadata
-
-        meta.keywords = [
-            "wgs",
-            "cancer",
-            "somatic",
-            "variants",
-            "gatk",
-            "vardict",
-            "strelka",
-            "gridss",
-        ]
-        meta.contributors = ["Michael Franklin", "Richard Lupat", "Jiaan Yu"]
-        meta.dateCreated = date(2018, 12, 24)
-        meta.dateUpdated = date(2020, 8, 19)
-        meta.short_documentation = "A somatic tumor-normal variant-calling WGS pipeline using GATK, VarDict and Strelka2."
-        meta.documentation = """\
-This is a genomics pipeline to align sequencing data (Fastq pairs) into BAMs:
-
-- Takes raw sequence data in the FASTQ format;
-- align to the reference genome using BWA MEM;
-- Marks duplicates using Picard;
-- Call the appropriate somatic variant callers (GATK / Strelka / VarDict);
-- Outputs the final variants in the VCF format.
-
-**Resources**
-
-This pipeline has been tested using the HG38 reference set, available on Google Cloud Storage through:
-
-- https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/
-
-This pipeline expects the assembly references to be as they appear in that storage \
-    (".fai", ".amb", ".ann", ".bwt", ".pac", ".sa", "^.dict").
-The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be gzipped and tabix indexed.
-"""
-
-        # mfranklin: mostly handled by super call, but can override specific ones here:
-        # meta.sample_input_overrides.update({
-        #
-        # })
+        self.add_inputs_for_reference()
+        self.add_inputs_for_intervals()
+        self.add_inputs_for_configuration()
 
 
 if __name__ == "__main__":
