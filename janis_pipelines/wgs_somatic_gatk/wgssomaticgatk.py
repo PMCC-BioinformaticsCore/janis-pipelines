@@ -56,7 +56,7 @@ class WGSSomaticGATK(BioinformaticsWorkflow):
         self.add_inputs()
         self.add_preprocessing_steps()
         self.add_gridss()
-        self.add_gatk()
+        self.add_gatk_variantcaller()
 
     def add_inputs(self):
 
@@ -326,20 +326,20 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             doc="Variants from the GRIDSS variant caller",
         )
 
-    def add_gatk(self):
+    def add_gatk_variantcaller(self):
 
         self.step(
             "vc_gatk",
             GatkSomaticVariantCaller_4_1_3(
-                normal_bam=self.normal.out_bam_bqsr,
-                tumor_bam=self.tumor.out_bam_bqsr,
+                normal_bam=self.normal.out_bams_bqsr,
+                tumor_bam=self.tumor.out_bams_bqsr,
                 normal_name=self.normal_name,
                 intervals=self.gatk_intervals,
                 reference=self.reference,
                 gnomad=self.gnomad,
                 panel_of_normals=self.panel_of_normals,
             ),
-            scatter="intervals",
+            scatter=["intervals", "normal_bam", "tumor_bam"],
         )
 
         self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out))
@@ -359,6 +359,7 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
                 tumor_id=self.tumor_name,
                 normal_bam=self.normal.out_bam,
                 tumor_bam=self.tumor.out_bam,
+                reference=self.reference,
                 vcf=self.vc_gatk_uncompressvcf.out,
             ),
         )
@@ -463,16 +464,18 @@ This pipeline expects the assembly references to be as they appear in the GCP ex
             GATKBaseRecalBQSRWorkflow_4_1_3(
                 bam=w.merge_and_mark,
                 reference=w.reference,
+                intervals=w.gatk_intervals,
                 snps_dbsnp=w.snps_dbsnp,
                 snps_1000gp=w.snps_1000gp,
                 known_indels=w.known_indels,
                 mills_indels=w.mills_indels,
             ),
+            scatter="intervals",
         )
 
         # OUTPUTS
         w.output("out_bam", source=w.merge_and_mark.out)
-        w.output("out_bam_bqsr", source=w.bqsr.out)
+        w.output("out_bams_bqsr", source=w.bqsr.out)
         w.output("out_fastqc_reports", source=w.fastqc.out)
         # w.output("depth_of_coverage", source=w.coverage.out_sampleSummary)
         w.output(
