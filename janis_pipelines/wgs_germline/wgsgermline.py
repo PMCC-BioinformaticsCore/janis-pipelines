@@ -1,56 +1,19 @@
-from datetime import date
-from janis_unix.tools import UncompressArchive
-from janis_unix.data_types import TextFile
-
+from janis_bioinformatics.data_types import FastqGzPair
 from janis_core import (
     Array,
-    File,
     String,
-    Float,
     WorkflowMetadata,
     InputDocumentation,
     InputQualityType,
 )
 
-from janis_bioinformatics.data_types import (
-    FastaWithDict,
-    VcfTabix,
-    FastqGzPair,
-    Bed,
-    BedTabix,
+from janis_pipelines.wgs_germline.wgsgermline_variantsonly import (
+    WGSGermlineMultiCallersVariantsOnly,
 )
-from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
-from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
-from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
-from janis_bioinformatics.tools.common import (
-    BwaAligner,
-    MergeAndMarkBams_4_1_3,
-    GATKBaseRecalBQSRWorkflow_4_1_3,
-)
-from janis_bioinformatics.tools.htslib import BGZipLatest
-from janis_bioinformatics.tools.gatk4 import (
-    Gatk4GatherVcfs_4_1_3,
-    Gatk4DepthOfCoverage_4_1_6,
-)
-from janis_bioinformatics.tools.pmac import (
-    CombineVariants_0_0_8,
-    GenerateVardictHeaderLines,
-    ParseFastqcAdaptors,
-    PerformanceSummaryGenome_0_1_0,
-    AddBamStatsGermline_0_1_0,
-    GenerateGenomeFileForBedtoolsCoverage,
-)
-from janis_bioinformatics.tools.papenfuss.gridss.gridss import Gridss_2_6_2
-from janis_bioinformatics.tools.variantcallers import (
-    GatkGermlineVariantCaller_4_1_3,
-    IlluminaGermlineVariantCaller,
-    VardictGermlineVariantCaller,
-)
-
 from janis_pipelines.wgs_germline_gatk.wgsgermlinegatk import WGSGermlineGATK
 
 
-class WGSGermlineMultiCallers(WGSGermlineGATK):
+class WGSGermlineMultiCallers(WGSGermlineGATK, WGSGermlineMultiCallersVariantsOnly):
     def id(self):
         return "WGSGermlineMultiCallers"
 
@@ -68,212 +31,47 @@ class WGSGermlineMultiCallers(WGSGermlineGATK):
         self.add_align()
 
         self.add_bam_process()
-        self.add_bam_qc()
+        self.add_bam_qc(bam_source=self.merge_and_mark.out)
 
         # Add variant callers
 
-        self.add_gridss()
+        self.add_gridss(bam_source=self.merge_and_mark.out)
 
-        self.add_gatk_variantcaller()
-        self.add_strelka_variantcaller()
-        self.add_vardict_variantcaller()
+        self.add_gatk_variantcaller(bam_source=self.merge_and_mark.out)
+        self.add_strelka_variantcaller(bam_source=self.merge_and_mark.out)
+        self.add_vardict_variantcaller(bam_source=self.merge_and_mark.out)
 
         # Combine gatk / strelka / vardict variants
-        self.add_combine_variants()
+        self.add_combine_variants(bam_source=self.merge_and_mark.out)
 
-    def inputs_for_intervals(self):
-        super().inputs_for_intervals()
+    def add_inputs(self):
+        # INPUTS
         self.input(
-            "vardict_intervals",
-            Array(Bed),
+            "sample_name",
+            String,
             doc=InputDocumentation(
-                "List of intervals over which to split the VarDict variant calling",
-                quality=InputQualityType.static,
-                example="BRCA1.bed",
+                "Sample name from which to generate the readGroupHeaderLine for BwaMem",
+                quality=InputQualityType.user,
+                example="NA12878",
             ),
         )
         self.input(
-            "strelka_intervals",
-            BedTabix,
+            "fastqs",
+            Array(FastqGzPair),
             doc=InputDocumentation(
-                "An interval for which to restrict the analysis to.",
-                quality=InputQualityType.static,
-                example="BRCA1.bed.gz",
+                "An array of FastqGz pairs. These are aligned separately and merged "
+                "to create higher depth coverages from multiple sets of reads",
+                quality=InputQualityType.user,
+                example="[[BRCA1_R1.fastq.gz, BRCA1_R2.fastq.gz]]",
             ),
         )
 
-    def add_gatk_variantcaller(self):
-
-        # VARIANT CALLERS
-        # GATK
-        self.step(
-            "bqsr",
-            GATKBaseRecalBQSRWorkflow_4_1_3(
-                bam=self.merge_and_mark,
-                reference=self.reference,
-                intervals=self.gatk_intervals,
-                snps_dbsnp=self.snps_dbsnp,
-                snps_1000gp=self.snps_1000gp,
-                known_indels=self.known_indels,
-                mills_indels=self.mills_indels,
-            ),
-            scatter="intervals",
-        )
-        self.step(
-            "vc_gatk",
-            GatkGermlineVariantCaller_4_1_3(
-                bam=self.bqsr.out,
-                intervals=self.gatk_intervals,
-                reference=self.reference,
-                snps_dbsnp=self.snps_dbsnp,
-            ),
-            scatter=["intervals", "bam"],
-        )
-        self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out))
-        self.step("vc_gatk_compress_for_sort", BGZipLatest(file=self.vc_gatk_merge.out))
-        self.step(
-            "vc_gatk_sort_combined",
-            BcfToolsSort_1_9(vcf=self.vc_gatk_compress_for_sort.out),
-        )
-
-        self.step(
-            "vc_gatk_uncompress_for_combine",
-            UncompressArchive(file=self.vc_gatk_sort_combined.out),
-        )
-
-        self.output(
-            "out_variants_gatk",
-            source=self.vc_gatk_sort_combined.out,
-            output_folder="variants",
-            output_name="gatk",
-            doc="Merged variants from the GATK caller",
-        )
-        self.output(
-            "out_variants_gatk_split",
-            source=self.vc_gatk.out,
-            output_folder=["variants", "gatk"],
-            doc="Unmerged variants from the GATK caller (by interval)",
-        )
-
-    def add_strelka_variantcaller(self):
-
-        # Strelka
-        self.step(
-            "vc_strelka",
-            IlluminaGermlineVariantCaller(
-                bam=self.merge_and_mark.out,
-                reference=self.reference,
-                intervals=self.strelka_intervals,
-            ),
-        )
-
-        self.output(
-            "out_variants_strelka",
-            source=self.vc_strelka.out,
-            output_folder="variants",
-            output_name="strelka",
-            doc="Variants from the Strelka variant caller",
-        )
-
-    def add_vardict_variantcaller(self):
-
-        # Vardict
-        self.step(
-            "generate_vardict_headerlines",
-            GenerateVardictHeaderLines(reference=self.reference),
-        )
-        self.step(
-            "vc_vardict",
-            VardictGermlineVariantCaller(
-                bam=self.merge_and_mark.out,
-                reference=self.reference,
-                intervals=self.vardict_intervals,
-                sample_name=self.sample_name,
-                allele_freq_threshold=0.05,
-                header_lines=self.generate_vardict_headerlines.out,
-            ),
-            scatter="intervals",
-        )
-        self.step("vc_vardict_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_vardict.out))
-        self.step(
-            "vc_vardict_compress_for_sort", BGZipLatest(file=self.vc_vardict_merge.out)
-        )
-        self.step(
-            "vc_vardict_sort_combined",
-            BcfToolsSort_1_9(vcf=self.vc_vardict_compress_for_sort.out),
-        )
-
-        self.step(
-            "vc_vardict_uncompress_for_combine",
-            UncompressArchive(file=self.vc_vardict_sort_combined.out),
-        )
-
-        self.output(
-            "out_variants_vardict",
-            source=self.vc_vardict_sort_combined.out,
-            output_folder=["variants"],
-            output_name="vardict",
-            doc="Merged variants from the VarDict caller",
-        )
-        self.output(
-            "out_variants_vardict_split",
-            source=self.vc_vardict.out,
-            output_folder=["variants", "vardict"],
-            doc="Unmerged variants from the VarDict caller (by interval)",
-        )
-
-    def add_combine_variants(self):
-
-        # Note, this is reliant on the specific step names from previous steps
-
-        # Combine
-        self.step(
-            "combine_variants",
-            CombineVariants_0_0_8(
-                vcfs=[
-                    self.vc_gatk_uncompress_for_combine.out,
-                    self.vc_strelka.out,
-                    self.vc_vardict_uncompress_for_combine.out,
-                ],
-                type="germline",
-                columns=["AC", "AN", "AF", "AD", "DP", "GT"],
-            ),
-        )
-        self.step("combined_compress", BGZipLatest(file=self.combine_variants.out))
-        self.step("combined_sort", BcfToolsSort_1_9(vcf=self.combined_compress.out))
-        self.step("combined_uncompress", UncompressArchive(file=self.combined_sort.out))
-
-        self.step(
-            "combined_addbamstats",
-            AddBamStatsGermline_0_1_0(
-                bam=self.merge_and_mark.out,
-                vcf=self.combined_uncompress.out,
-                reference=self.reference,
-            ),
-        )
-
-        self.output(
-            "out_variants",
-            source=self.combined_addbamstats.out,
-            output_folder="variants",
-            doc="Combined variants from all 3 callers",
-        )
+        self.inputs_for_reference()
+        self.inputs_for_intervals()
+        self.inputs_for_configuration()
 
     def bind_metadata(self):
-        meta: WorkflowMetadata = self.metadata
-
-        meta.keywords = [
-            "wgs",
-            "cancer",
-            "germline",
-            "variants",
-            "gatk",
-            "vardict",
-            "strelka",
-        ]
-        meta.contributors = ["Michael Franklin", "Richard Lupat", "Jiaan Yu"]
-        meta.dateCreated = date(2018, 12, 24)
-        meta.dateUpdated = date(2020, 7, 29)
+        meta: WorkflowMetadata = super().bind_metadata() or self.metadata
 
         meta.short_documentation = (
             "A variant-calling WGS pipeline using GATK, VarDict and Strelka2."
@@ -300,17 +98,6 @@ This pipeline expects the assembly references to be as they appear in that stora
     (".fai", ".amb", ".ann", ".bwt", ".pac", ".sa", "^.dict").
 The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be gzipped and tabix indexed.
 """
-        meta.sample_input_overrides = {
-            "fastqs": [
-                ["sample1_R1.fastq.gz", "sample1_R2.fastq.gz"],
-                ["sample1_R1-TOPUP.fastq.gz", "sample1_R2-TOPUP.fastq.gz"],
-            ],
-            "reference": "Homo_sapiens_assembly38.fasta",
-            "snps_dbsnp": "Homo_sapiens_assembly38.dbsnp138.vcf.gz",
-            "snps_1000gp": "1000G_phase1.snps.high_confidence.hg38.vcf.gz",
-            "known_indels": "Homo_sapiens_assembly38.known_indels.vcf.gz",
-            "mills_indels": "Mills_and_1000G_gold_standard.indels.hg38.vcf.gz",
-        }
 
 
 if __name__ == "__main__":
@@ -318,13 +105,13 @@ if __name__ == "__main__":
 
     w = WGSGermlineMultiCallers()
     args = {
-        "to_console": False,
-        "to_disk": True,
+        "to_console": True,
+        "to_disk": False,
         "validate": True,
         "export_path": os.path.join(
             os.path.dirname(os.path.realpath(__file__)), "{language}"
         ),
-        "with_resource_overrides": True,
+        "with_resource_overrides": False,
     }
     w.translate("cwl", **args)
     w.translate("wdl", **args)
