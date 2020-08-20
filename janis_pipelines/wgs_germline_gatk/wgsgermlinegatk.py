@@ -324,13 +324,15 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
         self.step(
             "bqsr",
             GATKBaseRecalBQSRWorkflow_4_1_3(
-                bam=self.merge_and_mark,
+                bam=self.merge_and_mark.out,
                 reference=self.reference,
                 snps_dbsnp=self.snps_dbsnp,
                 snps_1000gp=self.snps_1000gp,
                 known_indels=self.known_indels,
                 mills_indels=self.mills_indels,
+                intervals=self.gatk_intervals,
             ),
+            scatter=["intervals"],
             doc="Perform base quality score recalibration",
         )
         self.step(
@@ -341,7 +343,7 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
                 reference=self.reference,
                 snps_dbsnp=self.snps_dbsnp,
             ),
-            scatter="intervals",
+            scatter=["intervals", "bam"],
         )
         self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out))
         self.step("vc_gatk_compressvcf", BGZipLatest(file=self.vc_gatk_merge.out))
@@ -357,7 +359,9 @@ class WGSGermlineGATK(BioinformaticsWorkflow):
         self.step(
             "vc_gatk_addbamstats",
             AddBamStatsGermline_0_1_0(
-                bam=self.merge_and_mark, vcf=self.vc_gatk_uncompress_for_bamstats.out
+                bam=self.merge_and_mark,
+                vcf=self.vc_gatk_uncompress_for_bamstats.out,
+                reference=self.reference,
             ),
         )
 
