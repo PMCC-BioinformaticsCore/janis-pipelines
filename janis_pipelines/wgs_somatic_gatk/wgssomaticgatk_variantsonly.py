@@ -359,12 +359,13 @@ if __name__ == "__main__":
             os.path.dirname(os.path.realpath(__file__)), "{language}"
         ),
     }
+    w.get_dot_plot(show=True, expand_subworkflows=True)
     # w.translate("cwl", **args)
-    w.translate("wdl", **args)
-
-    # from cwltool import main
-    # import logging
-
-    # op = os.path.dirname(os.path.realpath(__file__)) + "/cwl/WGSGermlineGATK.py"
-
-    # main.run(*["--validate", op], logger_handler=logging.Handler())
+    # w.translate("wdl", **args)
+    #
+    # # from cwltool import main
+    # # import logging
+    #
+    # # op = os.path.dirname(os.path.realpath(__file__)) + "/cwl/WGSGermlineGATK.py"
+    #
+    # # main.run(*["--validate", op], logger_handler=logging.Handler())

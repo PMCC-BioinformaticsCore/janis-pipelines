@@ -10,6 +10,12 @@ from janis_pipelines.wgs_germline_gatk.wgsgermlinegatk_variantsonly import (
 
 
 class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
+    def id(self):
+        return "WGSGermlineGATK"
+
+    def friendly_name(self):
+        return "WGS Germline (GATK)"
+
     def constructor(self):
         self.add_inputs()
 

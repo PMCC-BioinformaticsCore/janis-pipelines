@@ -41,6 +41,12 @@ from janis_pipelines.wgs_somatic_gatk.wgssomaticgatk_variantsonly import (
 
 
 class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
+    def id(self):
+        return "WGSSomaticGATK"
+
+    def friendly_name(self):
+        return "WGS Somatic (GATK only)"
+
     def constructor(self):
         self.add_inputs()
         self.add_preprocessing_steps()
