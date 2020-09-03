@@ -26,7 +26,7 @@ from janis_unix.tools import UncompressArchive
 
 class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
     def id(self):
-        return "WGSGermlineGATK"
+        return "WGSGermlineGATKVariantsOnly"
 
     def friendly_name(self):
         return "WGS Germline (GATK) [VARIANTS only]"
