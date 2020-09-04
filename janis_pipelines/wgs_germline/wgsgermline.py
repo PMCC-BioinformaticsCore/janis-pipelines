@@ -21,7 +21,7 @@ class WGSGermlineMultiCallers(WGSGermlineGATK, WGSGermlineMultiCallersVariantsOn
         return "WGS Germline (Multi callers)"
 
     def version(self):
-        return "1.3.1"
+        return "1.4.0"
 
     def constructor(self):
         self.add_inputs()

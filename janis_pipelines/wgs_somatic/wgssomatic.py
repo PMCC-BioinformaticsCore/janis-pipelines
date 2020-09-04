@@ -15,7 +15,7 @@ class WGSSomaticMultiCallers(WGSSomaticMultiCallersVariantsOnly, WGSSomaticGATK)
         return "WGS Somatic (Multi callers)"
 
     def version(self):
-        return "1.3.0"
+        return "1.4.0"
 
     def constructor(self):
         # don't call super()

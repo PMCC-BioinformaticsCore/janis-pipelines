@@ -279,7 +279,7 @@ class WGSSomaticGATK2(BioinformaticsWorkflow):
         return "WGS Somatic (GATK only)"
 
     def version(self):
-        return "1.3.0"
+        return "1.4.0"
 
     def constructor(self):
 
