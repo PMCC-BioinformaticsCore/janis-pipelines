@@ -1,5 +1,5 @@
 from janis_bioinformatics.data_types import FastqGzPair
-from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
+from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_8
 from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
 from janis_bioinformatics.tools.pmac import ParseFastqcAdaptors
 from janis_core import String, Array, InputDocumentation, InputQualityType
@@ -60,7 +60,7 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
         self.inputs_for_configuration()
 
     def add_fastqc(self):
-        self.step("fastqc", FastQC_0_11_5(reads=self.fastqs), scatter="reads")
+        self.step("fastqc", FastQC_0_11_8(reads=self.fastqs), scatter="reads")
 
         self.output(
             "out_fastqc_reports",

@@ -7,7 +7,7 @@ from janis_bioinformatics.data_types import (
     FastqGzPair,
     File,
 )
-from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_5
+from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_8
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
 from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
 from janis_bioinformatics.tools.common import (
@@ -200,7 +200,7 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
         w.input("mills_indels", VcfTabix)
 
         # STEPS
-        w.step("fastqc", FastQC_0_11_5(reads=w.reads), scatter="reads")
+        w.step("fastqc", FastQC_0_11_8(reads=w.reads), scatter="reads")
 
         w.step(
             "getfastqc_adapters",
