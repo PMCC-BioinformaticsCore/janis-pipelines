@@ -18,6 +18,7 @@ from janis_unix.tools import UncompressArchive
 
 from janis_pipelines.wgs_germline_gatk.wgsgermlinegatk_variantsonly import (
     WGSGermlineGATKVariantsOnly,
+    INPUT_DOCS,
 )
 
 
@@ -49,24 +50,8 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
 
     def inputs_for_intervals(self):
         super().inputs_for_intervals()
-        self.input(
-            "vardict_intervals",
-            Array(Bed),
-            doc=InputDocumentation(
-                "List of intervals over which to split the VarDict variant calling",
-                quality=InputQualityType.static,
-                example="BRCA1.bed",
-            ),
-        )
-        self.input(
-            "strelka_intervals",
-            BedTabix,
-            doc=InputDocumentation(
-                "An interval for which to restrict the analysis to.",
-                quality=InputQualityType.static,
-                example="BRCA1.bed.gz",
-            ),
-        )
+        self.input("vardict_intervals", Array(Bed), doc=INPUT_DOCS["vardict_intervals"])
+        self.input("strelka_intervals", BedTabix, doc=INPUT_DOCS["strelka_intervals"])
 
     def add_gatk_variantcaller(self, bam_source):
 

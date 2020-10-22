@@ -28,6 +28,7 @@ from janis_unix.tools import UncompressArchive
 
 from janis_pipelines.wgs_somatic_gatk.wgssomaticgatk_variantsonly import (
     WGSSomaticGATKVariantsOnly,
+    INPUT_DOCS,
 )
 
 
@@ -64,24 +65,8 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
     def add_inputs_for_intervals(self):
         super().add_inputs_for_intervals()
 
-        self.input(
-            "vardict_intervals",
-            Array(Bed),
-            doc=InputDocumentation(
-                "List of intervals over which to split the VarDict variant calling",
-                quality=InputQualityType.static,
-                example="BRCA1.bed",
-            ),
-        )
-        self.input(
-            "strelka_intervals",
-            BedTabix,
-            doc=InputDocumentation(
-                "An interval for which to restrict the analysis to.",
-                quality=InputQualityType.static,
-                example="BRCA1.bed.gz",
-            ),
-        )
+        self.input("vardict_intervals", Array(Bed), doc=INPUT_DOCS["vardict_intervals"])
+        self.input("strelka_intervals", BedTabix, doc=INPUT_DOCS["strelka_intervals"])
 
     def add_inputs_for_configuration(self):
         super().add_inputs_for_configuration()
@@ -92,7 +77,6 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
             doc=InputDocumentation(
                 "The threshold for VarDict's allele frequency, default: 0.05 or 5%",
                 quality=InputQualityType.configuration,
-                example=None,
             ),
         )
 

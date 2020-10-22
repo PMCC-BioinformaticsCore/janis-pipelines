@@ -9,6 +9,7 @@ from janis_core import (
 
 from janis_pipelines.wgs_germline.wgsgermline_variantsonly import (
     WGSGermlineMultiCallersVariantsOnly,
+    INPUT_DOCS,
 )
 from janis_pipelines.wgs_germline_gatk.wgsgermlinegatk import WGSGermlineGATK
 
@@ -46,25 +47,8 @@ class WGSGermlineMultiCallers(WGSGermlineGATK, WGSGermlineMultiCallersVariantsOn
 
     def add_inputs(self):
         # INPUTS
-        self.input(
-            "sample_name",
-            String,
-            doc=InputDocumentation(
-                "Sample name from which to generate the readGroupHeaderLine for BwaMem",
-                quality=InputQualityType.user,
-                example="NA12878",
-            ),
-        )
-        self.input(
-            "fastqs",
-            Array(FastqGzPair),
-            doc=InputDocumentation(
-                "An array of FastqGz pairs. These are aligned separately and merged "
-                "to create higher depth coverages from multiple sets of reads",
-                quality=InputQualityType.user,
-                example="[[BRCA1_R1.fastq.gz, BRCA1_R2.fastq.gz]]",
-            ),
-        )
+        self.input("sample_name", String, doc=INPUT_DOCS["sample_name"])
+        self.input("fastqs", Array(FastqGzPair), doc=INPUT_DOCS["fastqs"])
 
         self.inputs_for_reference()
         self.inputs_for_intervals()

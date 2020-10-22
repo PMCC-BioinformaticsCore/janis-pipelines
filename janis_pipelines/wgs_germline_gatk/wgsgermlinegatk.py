@@ -2,10 +2,11 @@ from janis_bioinformatics.data_types import FastqGzPair
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_8
 from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
 from janis_bioinformatics.tools.pmac import ParseFastqcAdaptors
-from janis_core import String, Array, InputDocumentation, InputQualityType
+from janis_core import String, Array, InputDocumentation, InputQualityType, File
 
 from janis_pipelines.wgs_germline_gatk.wgsgermlinegatk_variantsonly import (
     WGSGermlineGATKVariantsOnly,
+    INPUT_DOCS,
 )
 
 
@@ -35,29 +36,17 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
 
     def add_inputs(self):
         # INPUTS
-        self.input(
-            "sample_name",
-            String,
-            doc=InputDocumentation(
-                "Sample name from which to generate the readGroupHeaderLine for BwaMem",
-                quality=InputQualityType.user,
-                example="NA12878",
-            ),
-        )
-        self.input(
-            "fastqs",
-            Array(FastqGzPair),
-            doc=InputDocumentation(
-                "An array of FastqGz pairs. These are aligned separately and merged "
-                "to create higher depth coverages from multiple sets of reads",
-                quality=InputQualityType.user,
-                example="[[BRCA1_R1.fastq.gz, BRCA1_R2.fastq.gz]]",
-            ),
-        )
+        self.input("sample_name", String, doc=INPUT_DOCS["sample_name"])
+        self.input("fastqs", Array(FastqGzPair), doc=INPUT_DOCS["fastqs"])
 
         self.inputs_for_reference()
         self.inputs_for_intervals()
         self.inputs_for_configuration()
+
+    def inputs_for_configuration(self):
+        super().inputs_for_configuration()
+
+        self.input("cutadapt_adapters", File, doc=INPUT_DOCS["cutadapt_adapters"])
 
     def add_fastqc(self):
         self.step("fastqc", FastQC_0_11_8(reads=self.fastqs), scatter="reads")
