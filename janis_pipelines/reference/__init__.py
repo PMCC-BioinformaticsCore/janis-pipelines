@@ -54,8 +54,8 @@ REFERENCE_INPUTS = {
         "quality": InputQualityType.static,
         "example": "af-only-gnomad.hg38.vcf.gz",
         "source": {
-            "hg38": "https://storage.cloud.google.com/gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz",
-            "b37": "https://storage.cloud.google.com/gatk-best-practices/somatic-b37/af-only-gnomad.raw.sites.vcf",
+            "hg38": "gs://gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz",
+            "b37": "gs://gatk-best-practices/somatic-b37/af-only-gnomad.raw.sites.vcf",
         },
     },
     "panel_of_normals": {
