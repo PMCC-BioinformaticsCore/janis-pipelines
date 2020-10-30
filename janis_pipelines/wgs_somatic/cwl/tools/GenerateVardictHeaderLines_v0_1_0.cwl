@@ -62,6 +62,19 @@ requirements:
       try:
           args = cli.parse_args()
           result = code_block(reference=args.reference, output_filename=args.output_filename)
+
+          from os import getcwd, path
+          cwd = getcwd()
+          def prepare_file_or_directory_type(file_or_directory, value):
+              if value is None:
+                  return None
+              if isinstance(value, list):
+                  return [prepare_file_or_directory_type(file_or_directory, v) for v in value]
+              return {
+                  "class": file_or_directory,
+                  "path": path.join(cwd, value)
+              }
+          result["out"] = prepare_file_or_directory_type("File", result["out"])
           print(json.dumps(result))
       except Exception as e:
           print(str(e), file=sys.stderr)

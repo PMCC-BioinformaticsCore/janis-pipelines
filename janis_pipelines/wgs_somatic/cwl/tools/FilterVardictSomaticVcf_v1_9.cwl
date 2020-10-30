@@ -39,9 +39,9 @@ stdout: _stdout
 stderr: _stderr
 arguments:
 - position: 0
-  valueFrom: "bcftools filter -e 'STATUS=\"GERMLINE\"' -o - "
+  valueFrom: "bcftools filter -e 'STATUS=\\\"GERMLINE\\\"' -o - "
   shellQuote: false
 - position: 2
-  valueFrom: "| bcftools filter -i 'FILTER==\"PASS\"'"
+  valueFrom: "| bcftools filter -i 'FILTER==\\\"PASS\\\"'"
   shellQuote: false
 id: FilterVardictSomaticVcf

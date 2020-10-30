@@ -4,10 +4,10 @@ combine_variants_columns:
 - DP
 - GT
 combine_variants_type: somatic
-gatk_intervals: null
-genome_file:
+cutadapt_adapters:
   class: File
   path: null
+gatk_intervals: null
 gnomad:
   class: File
   path: null

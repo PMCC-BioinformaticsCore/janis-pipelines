@@ -66,12 +66,6 @@ inputs:
   type: File
   secondaryFiles:
   - .fai
-  - .amb
-  - .ann
-  - .bwt
-  - .pac
-  - .sa
-  - ^.dict
   inputBinding:
     prefix: --referenceFasta
     position: 1
@@ -201,14 +195,14 @@ outputs:
   type: File
   outputBinding:
     glob: $((inputs.runDir + "/runWorkflow.py"))
-    outputEval: $((inputs.runDir + "/runWorkflow.py"))
+    outputEval: $((inputs.runDir.basename + "/runWorkflow.py"))
     loadContents: false
 - id: pickle
   label: pickle
   type: File
   outputBinding:
     glob: $((inputs.runDir + "/runWorkflow.py.config.pickle"))
-    outputEval: $((inputs.runDir + "/runWorkflow.py.config.pickle"))
+    outputEval: $((inputs.runDir.basename + "/runWorkflow.py.config.pickle"))
     loadContents: false
 - id: candidateSV
   label: candidateSV
@@ -217,7 +211,7 @@ outputs:
   - .tbi
   outputBinding:
     glob: $((inputs.runDir + "/results/variants/candidateSV.vcf.gz"))
-    outputEval: $((inputs.runDir + "/results/variants/candidateSV.vcf.gz"))
+    outputEval: $((inputs.runDir.basename + "/results/variants/candidateSV.vcf.gz"))
     loadContents: false
 - id: candidateSmallIndels
   label: candidateSmallIndels
@@ -226,7 +220,7 @@ outputs:
   - .tbi
   outputBinding:
     glob: $((inputs.runDir + "/results/variants/candidateSmallIndels.vcf.gz"))
-    outputEval: $((inputs.runDir + "/results/variants/candidateSmallIndels.vcf.gz"))
+    outputEval: $((inputs.runDir.basename + "/results/variants/candidateSmallIndels.vcf.gz"))
     loadContents: false
 - id: diploidSV
   label: diploidSV
@@ -235,28 +229,39 @@ outputs:
   - .tbi
   outputBinding:
     glob: $((inputs.runDir + "/results/variants/diploidSV.vcf.gz"))
-    outputEval: $((inputs.runDir + "/results/variants/diploidSV.vcf.gz"))
+    outputEval: $((inputs.runDir.basename + "/results/variants/diploidSV.vcf.gz"))
     loadContents: false
 - id: alignmentStatsSummary
   label: alignmentStatsSummary
   type: File
   outputBinding:
     glob: $((inputs.runDir + "/results/stats/alignmentStatsSummary.txt"))
-    outputEval: $((inputs.runDir + "/results/stats/alignmentStatsSummary.txt"))
+    outputEval: $((inputs.runDir.basename + "/results/stats/alignmentStatsSummary.txt"))
     loadContents: false
 - id: svCandidateGenerationStats
   label: svCandidateGenerationStats
   type: File
   outputBinding:
     glob: $((inputs.runDir + "/results/stats/svCandidateGenerationStats.tsv"))
-    outputEval: $((inputs.runDir + "/results/stats/svCandidateGenerationStats.tsv"))
+    outputEval: $((inputs.runDir.basename + "/results/stats/svCandidateGenerationStats.tsv"))
     loadContents: false
 - id: svLocusGraphStats
   label: svLocusGraphStats
   type: File
   outputBinding:
     glob: $((inputs.runDir + "/results/stats/svLocusGraphStats.tsv"))
-    outputEval: $((inputs.runDir + "/results/stats/svLocusGraphStats.tsv"))
+    outputEval: $((inputs.runDir.basename + "/results/stats/svLocusGraphStats.tsv"))
+    loadContents: false
+- id: somaticSVs
+  label: somaticSVs
+  type:
+  - File
+  - 'null'
+  secondaryFiles:
+  - .tbi
+  outputBinding:
+    glob: $((inputs.runDir + "/results/variants/somaticSV.vcf.gz"))
+    outputEval: $((inputs.runDir.basename + "/results/variants/somaticSV.vcf.gz"))
     loadContents: false
 stdout: _stdout
 stderr: _stderr

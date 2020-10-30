@@ -16,7 +16,7 @@ REFERENCE_INPUTS = {
         "source": {
             "hg38": "gs://genomics-public-data/references/hg38/v0/Homo_sapiens_assembly38.fasta"
         },
-        "skip_localising_secondary_files": True,
+        "skip_sourcing_secondary_files": True,
     },
     "snps_dbsnp": {
         "doc": "From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``",

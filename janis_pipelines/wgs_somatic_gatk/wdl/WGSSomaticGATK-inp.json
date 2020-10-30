@@ -1,6 +1,6 @@
 {
+    "WGSSomaticGATK.cutadapt_adapters": null,
     "WGSSomaticGATK.gatk_intervals": null,
-    "WGSSomaticGATK.genome_file": null,
     "WGSSomaticGATK.gnomad": null,
     "WGSSomaticGATK.gnomad_tbi": null,
     "WGSSomaticGATK.gridss_blacklist": null,

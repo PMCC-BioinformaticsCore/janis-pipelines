@@ -2,7 +2,7 @@ version development
 
 import "cutadapt_2_1.wdl" as C
 import "BwaMemSamtoolsView_0_7_17_1_9.wdl" as B
-import "Gatk4SortSam_4_1_3_0.wdl" as G
+import "Gatk4SortSam_4_1_2_0.wdl" as G
 
 workflow BwaAligner {
   input {

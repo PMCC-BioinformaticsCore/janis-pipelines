@@ -16,7 +16,7 @@ cat <<EOT >> ParseFastqcAdaptors-script.py
 import argparse, json, sys
 from typing import Optional, List, Dict, Any
 cli = argparse.ArgumentParser("Argument parser for Janis PythonTool")
-cli.add_argument("--fastqc_datafiles", nargs='+', type=str, required=True)
+cli.add_argument("--fastqc_datafiles", nargs='+', default=[], type=str)
 cli.add_argument("--cutadapt_adaptors_lookup", type=str, help='Specifies a file which contains the list of adapter sequences which will\nbe explicity searched against the library. The file must contain sets of named adapters in\nthe form name[tab]sequence. Lines prefixed with a hash will be ignored.')
 
 Array = List
@@ -145,6 +145,7 @@ def code_block(
 try:
     args = cli.parse_args()
     result = code_block(fastqc_datafiles=args.fastqc_datafiles, cutadapt_adaptors_lookup=args.cutadapt_adaptors_lookup)
+
     print(json.dumps(result))
 except Exception as e:
     print(str(e), file=sys.stderr)
@@ -152,7 +153,7 @@ except Exception as e:
 
 EOT
     python ParseFastqcAdaptors-script.py \
-      ~{"--fastqc_datafiles '" + sep("' '", fastqc_datafiles) + "'"} \
+      ~{if length(fastqc_datafiles) > 0 then "--fastqc_datafiles '" + sep("' '", fastqc_datafiles) + "'" else ""} \
       ~{if defined(cutadapt_adaptors_lookup) then ("--cutadapt_adaptors_lookup '" + cutadapt_adaptors_lookup + "'") else ""}
   >>>
   runtime {

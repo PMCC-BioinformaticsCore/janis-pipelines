@@ -27,6 +27,7 @@ task bcftoolsAnnotate {
     Array[String]? remove
   }
   command <<<
+    set -e
     bcftools annotate \
       --output '~{select_first([outputFilename, "generated.vcf"])}' \
       ~{if defined(annotations) then ("--annotations '" + annotations + "'") else ""} \
@@ -36,7 +37,7 @@ task bcftoolsAnnotate {
       ~{if defined(headerLines) then ("--header-lines '" + headerLines + "'") else ""} \
       ~{if defined(setId) then ("--set-id '" + setId + "'") else ""} \
       ~{if defined(include) then ("--include '" + include + "'") else ""} \
-      ~{if defined(keepSites) then "--keep-sites" else ""} \
+      ~{if (defined(keepSites) && select_first([keepSites])) then "--keep-sites" else ""} \
       ~{if defined(markSites) then ("--mark-sites '" + markSites + "'") else ""} \
       ~{if defined(outputType) then ("--output-type '" + outputType + "'") else ""} \
       ~{if defined(regions) then ("--regions '" + regions + "'") else ""} \
@@ -46,7 +47,7 @@ task bcftoolsAnnotate {
       ~{if defined(samplesFile) then ("--samples-file '" + samplesFile + "'") else ""} \
       ~{if defined(threads) then ("--threads " + threads) else ''} \
       ~{if (defined(remove) && length(select_first([remove])) > 0) then "--remove '" + sep("' '", select_first([remove])) + "'" else ""} \
-      ~{vcf}
+      '~{vcf}'
   >>>
   runtime {
     cpu: select_first([runtime_cpu, 1, 1])

@@ -23,6 +23,7 @@ task gridss {
     String? tmpdir
   }
   command <<<
+    set -e
     /opt/gridss/gridss.sh \
       ~{if defined(select_first([threads, select_first([runtime_cpu, 1])])) then ("--threads " + select_first([threads, select_first([runtime_cpu, 1])])) else ''} \
       ~{if defined(select_first([tmpdir, "./TMP"])) then ("--workingdir '" + select_first([tmpdir, "./TMP"]) + "'") else ""} \
@@ -30,7 +31,7 @@ task gridss {
       --output '~{select_first([outputFilename, "generated.svs.vcf"])}' \
       --assembly '~{select_first([assemblyFilename, "generated.assembled.bam"])}' \
       ~{if defined(blacklist) then ("--blacklist '" + blacklist + "'") else ""} \
-      ~{"'" + sep("' '", bams) + "'"}
+      ~{if length(bams) > 0 then "'" + sep("' '", bams) + "'" else ""}
   >>>
   runtime {
     cpu: select_first([runtime_cpu, 8, 1])

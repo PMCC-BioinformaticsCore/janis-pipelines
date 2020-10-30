@@ -13,14 +13,15 @@ task ConcatStrelkaSomaticVcf {
     String? outputFilename
   }
   command <<<
+    set -e
      \
-      vcf-concat \
-      ~{"'" + sep("' '", headerVcfs) + "'"} \
-      | grep '^##' > header.vcf; \
       vcf-merge \
-      ~{"'" + sep("' '", contentVcfs) + "'"} \
-      | grep -v '^##' > content.vcf; cat header.vcf content.vcf | bgzip -c \
-      > ~{select_first([outputFilename, "generated.strelka.vcf.gz"])}
+      ~{if length(headerVcfs) > 0 then "'" + sep("' '", headerVcfs) + "'" else ""} \
+      | grep '^##' > header.vcf; \
+      vcf-concat \
+      ~{if length(contentVcfs) > 0 then "'" + sep("' '", contentVcfs) + "'" else ""} \
+      | grep -v '^##' > content.vcf; cat header.vcf content.vcf \
+      > ~{select_first([outputFilename, "generated.strelka.vcf"])}
   >>>
   runtime {
     cpu: select_first([runtime_cpu, 1])
@@ -31,6 +32,6 @@ task ConcatStrelkaSomaticVcf {
     preemptible: 2
   }
   output {
-    File out = select_first([outputFilename, "generated.strelka.vcf.gz"])
+    File out = select_first([outputFilename, "generated.strelka.vcf"])
   }
 }

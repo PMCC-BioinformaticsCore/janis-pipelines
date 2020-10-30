@@ -90,6 +90,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
             "known_indels": self.known_indels,
             "mills_indels": self.mills_indels,
         }
+
         self.step(
             "bqsr_normal",
             GATKBaseRecalBQSRWorkflow_4_1_3(bam=normal_bam_source, **recal_ins),

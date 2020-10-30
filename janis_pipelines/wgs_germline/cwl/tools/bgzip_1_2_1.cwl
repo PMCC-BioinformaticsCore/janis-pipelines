@@ -34,9 +34,10 @@ inputs:
   type:
   - string
   - 'null'
-  default: generated.vcf.gz
+  default: generated.gz
   inputBinding:
     position: 102
+    valueFrom: $(inputs.file.basename).gz
     shellQuote: false
 - id: offset
   label: offset
@@ -143,7 +144,7 @@ outputs:
   label: out
   type: File
   outputBinding:
-    glob: generated.vcf.gz
+    glob: $(inputs.file.basename).gz
     loadContents: false
 stdout: _stdout
 stderr: _stderr

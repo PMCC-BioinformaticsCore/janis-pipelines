@@ -1,16 +1,8 @@
 {
-    "WGSGermlineGATK.align_and_sort_sortsam_tmpDir": ".",
-    "WGSGermlineGATK.coverage_omitDepthOutputAtEachBase": true,
-    "WGSGermlineGATK.coverage_summaryCoverageThreshold": [
-        1,
-        50,
-        100,
-        300,
-        500
-    ],
+    "WGSGermlineGATK.align_and_sort_sortsam_tmpDir": "./tmp",
+    "WGSGermlineGATK.cutadapt_adapters": null,
     "WGSGermlineGATK.fastqs": null,
     "WGSGermlineGATK.gatk_intervals": null,
-    "WGSGermlineGATK.genome_file": null,
     "WGSGermlineGATK.gridss_blacklist": null,
     "WGSGermlineGATK.known_indels": null,
     "WGSGermlineGATK.known_indels_tbi": null,

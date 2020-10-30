@@ -10,9 +10,10 @@ task trimIUPAC {
     String? outputFilename
   }
   command <<<
+    set -e
     trimIUPAC.py \
-      ~{vcf} \
-      ~{select_first([outputFilename, "generated.trimmed.vcf"])}
+      '~{vcf}' \
+      '~{select_first([outputFilename, "generated.trimmed.vcf"])}'
   >>>
   runtime {
     cpu: select_first([runtime_cpu, 1, 1])

@@ -6,8 +6,8 @@
         "GT"
     ],
     "WGSSomaticMultiCallers.combine_variants_type": "somatic",
+    "WGSSomaticMultiCallers.cutadapt_adapters": null,
     "WGSSomaticMultiCallers.gatk_intervals": null,
-    "WGSSomaticMultiCallers.genome_file": null,
     "WGSSomaticMultiCallers.gnomad": null,
     "WGSSomaticMultiCallers.gnomad_tbi": null,
     "WGSSomaticMultiCallers.gridss_blacklist": null,

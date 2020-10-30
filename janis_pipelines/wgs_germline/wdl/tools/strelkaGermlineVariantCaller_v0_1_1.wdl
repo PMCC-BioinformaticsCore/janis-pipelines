@@ -31,12 +31,6 @@ workflow strelkaGermlineVariantCaller {
       bam_bai=bam_bai,
       reference=reference,
       reference_fai=reference_fai,
-      reference_amb=reference_amb,
-      reference_ann=reference_ann,
-      reference_bwt=reference_bwt,
-      reference_pac=reference_pac,
-      reference_sa=reference_sa,
-      reference_dict=reference_dict,
       exome=is_exome,
       callRegions=intervals,
       callRegions_tbi=intervals_tbi

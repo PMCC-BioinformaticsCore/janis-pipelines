@@ -13,6 +13,16 @@ inputs:
   type: File
   secondaryFiles:
   - .bai
+- id: reference
+  type: File
+  secondaryFiles:
+  - .fai
+  - .amb
+  - .ann
+  - .bwt
+  - .pac
+  - .sa
+  - ^.dict
 - id: samtools_mpileup_countOrphans
   doc: do not discard anomalous read pairs
   type: boolean
@@ -49,6 +59,8 @@ steps:
     source: vcf
   - id: minBQ
     source: samtools_mpileup_minBQ
+  - id: reference
+    source: reference
   - id: bam
     source: bam
   run: SamToolsMpileup_1_9_0.cwl

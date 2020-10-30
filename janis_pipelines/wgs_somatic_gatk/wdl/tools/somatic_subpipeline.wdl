@@ -1,12 +1,11 @@
 version development
 
-import "fastqc_v0_11_5.wdl" as F
+import "fastqc_v0_11_8.wdl" as F
 import "ParseFastqcAdaptors_v0_1_0.wdl" as P
 import "BwaAligner_1_0_0.wdl" as B
 import "mergeAndMarkBams_4_1_3.wdl" as M
-import "Gatk4DepthOfCoverage_4_1_6_0.wdl" as G
+import "GenerateGenomeFileForBedtoolsCoverage_v0_1_0.wdl" as G
 import "PerformanceSummaryGenome_v0_1_0.wdl" as P2
-import "GATKBaseRecalBQSRWorkflow_4_1_3.wdl" as G2
 
 workflow somatic_subpipeline {
   input {
@@ -21,7 +20,6 @@ workflow somatic_subpipeline {
     File reference_sa
     File reference_dict
     File? cutadapt_adapters
-    File genome_file
     Array[File] gatk_intervals
     File snps_dbsnp
     File snps_dbsnp_tbi
@@ -32,8 +30,6 @@ workflow somatic_subpipeline {
     File mills_indels
     File mills_indels_tbi
     String? align_and_sort_sortsam_tmpDir
-    Boolean? coverage_omitDepthOutputAtEachBase = true
-    Array[Int]? coverage_summaryCoverageThreshold = [1, 50, 100, 300, 500]
   }
   scatter (r in reads) {
      call F.fastqc as fastqc {
@@ -72,58 +68,22 @@ workflow somatic_subpipeline {
       bams_bai=align_and_sort.out_bai,
       sampleName=sample_name
   }
-  call G.Gatk4DepthOfCoverage as coverage {
+  call G.GenerateGenomeFileForBedtoolsCoverage as calculate_performancesummary_genomefile {
     input:
-      bam=merge_and_mark.out,
-      bam_bai=merge_and_mark.out_bai,
       reference=reference,
-      reference_fai=reference_fai,
-      reference_amb=reference_amb,
-      reference_ann=reference_ann,
-      reference_bwt=reference_bwt,
-      reference_pac=reference_pac,
-      reference_sa=reference_sa,
-      reference_dict=reference_dict,
-      outputPrefix=sample_name,
-      intervals=gatk_intervals,
-      summaryCoverageThreshold=select_first([coverage_summaryCoverageThreshold, [1, 50, 100, 300, 500]]),
-      omitDepthOutputAtEachBase=select_first([coverage_omitDepthOutputAtEachBase, true])
+      reference_dict=reference_dict
   }
   call P2.PerformanceSummaryGenome as performance_summary {
     input:
       bam=merge_and_mark.out,
       bam_bai=merge_and_mark.out_bai,
       sample_name=sample_name,
-      genome_file=genome_file
-  }
-  call G2.GATKBaseRecalBQSRWorkflow as bqsr {
-    input:
-      bam=merge_and_mark.out,
-      bam_bai=merge_and_mark.out_bai,
-      reference=reference,
-      reference_fai=reference_fai,
-      reference_amb=reference_amb,
-      reference_ann=reference_ann,
-      reference_bwt=reference_bwt,
-      reference_pac=reference_pac,
-      reference_sa=reference_sa,
-      reference_dict=reference_dict,
-      snps_dbsnp=snps_dbsnp,
-      snps_dbsnp_tbi=snps_dbsnp_tbi,
-      snps_1000gp=snps_1000gp,
-      snps_1000gp_tbi=snps_1000gp_tbi,
-      known_indels=known_indels,
-      known_indels_tbi=known_indels_tbi,
-      mills_indels=mills_indels,
-      mills_indels_tbi=mills_indels_tbi
+      genome_file=calculate_performancesummary_genomefile.out
   }
   output {
-    File out = merge_and_mark.out
-    File out_bai = merge_and_mark.out_bai
-    File bqsr_bam = bqsr.out
-    File bqsr_bam_bai = bqsr.out_bai
-    Array[Array[File]] reports = fastqc.out
-    File depth_of_coverage = coverage.out_sampleSummary
-    File summary = performance_summary.performanceSummaryOut
+    File out_bam = merge_and_mark.out
+    File out_bam_bai = merge_and_mark.out_bai
+    Array[Array[File]] out_fastqc_reports = fastqc.out
+    File out_performance_summary = performance_summary.performanceSummaryOut
   }
 }

@@ -8,6 +8,14 @@ workflow AddBamStatsGermline {
     File bam
     File bam_bai
     File vcf
+    File reference
+    File reference_fai
+    File reference_amb
+    File reference_ann
+    File reference_bwt
+    File reference_pac
+    File reference_sa
+    File reference_dict
     Boolean? samtoolsmpileup_countOrphans = true
     Boolean? samtoolsmpileup_noBAQ = true
     Int? samtoolsmpileup_minBQ = 0
@@ -21,6 +29,7 @@ workflow AddBamStatsGermline {
       maxDepth=select_first([samtoolsmpileup_maxDepth, 10000]),
       positions=vcf,
       minBQ=select_first([samtoolsmpileup_minBQ, 0]),
+      reference=reference,
       bam=bam,
       bam_bai=bam_bai
   }

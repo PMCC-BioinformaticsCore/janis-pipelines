@@ -1,6 +1,5 @@
 {
     "WGSGermlineMultiCallers.align_and_sort_sortsam_tmpDir": "./tmp",
-    "WGSGermlineMultiCallers.allele_freq_threshold": 0.05,
     "WGSGermlineMultiCallers.combine_variants_columns": [
         "AC",
         "AN",
@@ -10,17 +9,9 @@
         "GT"
     ],
     "WGSGermlineMultiCallers.combine_variants_type": "germline",
-    "WGSGermlineMultiCallers.coverage_omitDepthOutputAtEachBase": true,
-    "WGSGermlineMultiCallers.coverage_summaryCoverageThreshold": [
-        1,
-        50,
-        100,
-        300,
-        500
-    ],
+    "WGSGermlineMultiCallers.cutadapt_adapters": null,
     "WGSGermlineMultiCallers.fastqs": null,
     "WGSGermlineMultiCallers.gatk_intervals": null,
-    "WGSGermlineMultiCallers.genome_file": null,
     "WGSGermlineMultiCallers.gridss_blacklist": null,
     "WGSGermlineMultiCallers.known_indels": null,
     "WGSGermlineMultiCallers.known_indels_tbi": null,
@@ -41,5 +32,6 @@
     "WGSGermlineMultiCallers.snps_dbsnp_tbi": null,
     "WGSGermlineMultiCallers.strelka_intervals": null,
     "WGSGermlineMultiCallers.strelka_intervals_tbi": null,
-    "WGSGermlineMultiCallers.vardict_intervals": null
+    "WGSGermlineMultiCallers.vardict_intervals": null,
+    "WGSGermlineMultiCallers.vc_vardict_allele_freq_threshold": 0.05
 }

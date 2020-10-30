@@ -3,7 +3,7 @@ version development
 import "split_bam_subpipeline.wdl" as S
 import "Gatk4Mutect2_4_1_3_0.wdl" as G
 import "Gatk4LearnReadOrientationModel_4_1_4_0.wdl" as G2
-import "Gatk4GetPileupSummaries_4_1_4_0.wdl" as G3
+import "Gatk4GetPileupSummaries_4_1_6_0.wdl" as G3
 import "Gatk4CalculateContamination_4_1_4_0.wdl" as G4
 import "Gatk4FilterMutectCalls_4_1_3_0.wdl" as G5
 import "UncompressArchive_v1_0_0.wdl" as U
@@ -126,8 +126,8 @@ workflow GATK4_SomaticVariantCaller {
   output {
     File variants = filtermutect2calls.out
     File variants_tbi = filtermutect2calls.out_tbi
-    File out_bam = mutect2.bam
-    File out_bam_bai = mutect2.bam_bai
+    File? out_bam = mutect2.bam
+    File? out_bam_bai = mutect2.bam_bai
     File out = filterpass.out
   }
 }

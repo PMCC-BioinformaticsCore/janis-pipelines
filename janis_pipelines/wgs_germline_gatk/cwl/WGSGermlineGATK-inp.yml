@@ -1,16 +1,9 @@
-align_and_sort_sortsam_tmpDir: .
-coverage_omitDepthOutputAtEachBase: true
-coverage_summaryCoverageThreshold:
-- 1
-- 50
-- 100
-- 300
-- 500
-fastqs: null
-gatk_intervals: null
-genome_file:
+align_and_sort_sortsam_tmpDir: ./tmp
+cutadapt_adapters:
   class: File
   path: null
+fastqs: null
+gatk_intervals: null
 gridss_blacklist:
   class: File
   path: null

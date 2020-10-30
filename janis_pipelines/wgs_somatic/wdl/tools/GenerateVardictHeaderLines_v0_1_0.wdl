@@ -66,6 +66,7 @@ def code_block(
 try:
     args = cli.parse_args()
     result = code_block(reference=args.reference, output_filename=args.output_filename)
+
     print(json.dumps(result))
 except Exception as e:
     print(str(e), file=sys.stderr)

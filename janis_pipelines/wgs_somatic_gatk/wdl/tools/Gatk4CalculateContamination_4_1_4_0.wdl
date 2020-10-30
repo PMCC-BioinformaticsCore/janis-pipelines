@@ -16,6 +16,7 @@ task Gatk4CalculateContamination {
     String? contaminationFileOut
   }
   command <<<
+    set -e
     gatk CalculateContamination \
       --java-options '-Xmx~{((select_first([runtime_memory, 8, 4]) * 3) / 4)}G ~{if (defined(compression_level)) then ("-Dsamjdk.compress_level=" + compression_level) else ""} ~{sep(" ", select_first([javaOptions, []]))}' \
       ~{if defined(contaminationTable) then ("--contamination-table '" + contaminationTable + "'") else ""} \

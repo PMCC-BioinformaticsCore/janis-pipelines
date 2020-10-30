@@ -2,6 +2,10 @@
 class: CommandLineTool
 cwlVersion: v1.0
 label: 'GATK4: SplitReads'
+doc: |-
+  USAGE: SplitReads [arguments]
+  Outputs reads from a SAM/BAM/CRAM by read group, sample and library name
+  Version:4.1.3.0
 
 requirements:
 - class: ShellCommandRequirement
@@ -622,6 +626,7 @@ outputs:
     }
   outputBinding:
     glob: $(inputs.bam.basename)
+    outputEval: $(inputs.bam.basename.basename)
     loadContents: false
 stdout: _stdout
 stderr: _stderr

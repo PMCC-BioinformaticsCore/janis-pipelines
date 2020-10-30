@@ -26,16 +26,17 @@ task Gatk4BaseRecalibrator {
     Array[String]? intervalStrings
   }
   command <<<
-    cp -f ~{bam_bai} $(echo '~{bam}' | sed 's/\.[^.]*$//').bai
+    set -e
+    cp -f '~{bam_bai}' $(echo '~{bam}' | sed 's/\.[^.]*$//').bai
     gatk BaseRecalibrator \
       --java-options '-Xmx~{((select_first([runtime_memory, 16, 4]) * 3) / 4)}G ~{if (defined(compression_level)) then ("-Dsamjdk.compress_level=" + compression_level) else ""} ~{sep(" ", select_first([javaOptions, []]))}' \
       ~{if defined(select_first([tmpDir, "/tmp/"])) then ("--tmp-dir '" + select_first([tmpDir, "/tmp/"]) + "'") else ""} \
       ~{if defined(intervals) then ("--intervals '" + intervals + "'") else ""} \
-      ~{if (defined(intervalStrings) && length(select_first([intervalStrings])) > 0) then "--intervals '" + sep("' --intervals  '", select_first([intervalStrings])) + "'" else ""} \
+      ~{if (defined(intervalStrings) && length(select_first([intervalStrings])) > 0) then "--intervals '" + sep("' --intervals '", select_first([intervalStrings])) + "'" else ""} \
       -R '~{reference}' \
       -I '~{bam}' \
       -O '~{select_first([outputFilename, "~{basename(bam, ".bam")}.table"])}' \
-      ~{"--known-sites '" + sep("' --known-sites  '", knownSites) + "'"}
+      ~{if length(knownSites) > 0 then "--known-sites '" + sep("' --known-sites '", knownSites) + "'" else ""}
   >>>
   runtime {
     cpu: select_first([runtime_cpu, 1, 1])

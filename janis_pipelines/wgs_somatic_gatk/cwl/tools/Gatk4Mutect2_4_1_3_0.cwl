@@ -85,7 +85,6 @@ inputs:
   type:
   - string
   - 'null'
-  default: generated.bam
   inputBinding:
     prefix: -bamout
 - id: activityProfileOut
@@ -1215,7 +1214,7 @@ outputs:
   type: File
   outputBinding:
     glob: $((inputs.outputFilename + ".stats"))
-    outputEval: $((inputs.outputFilename + ".stats"))
+    outputEval: $((inputs.outputFilename.basename + ".stats"))
     loadContents: false
 - id: f1f2r_out
   label: f1f2r_out
@@ -1227,7 +1226,9 @@ outputs:
 - id: bam
   label: bam
   doc: File to which assembled haplotypes should be written
-  type: File
+  type:
+  - File
+  - 'null'
   secondaryFiles:
   - |-
     ${
@@ -1250,7 +1251,7 @@ outputs:
 
     }
   outputBinding:
-    glob: generated.bam
+    glob: '$(inputs.outputBamName ? inputs.outputBamName : "generated")'
     loadContents: false
 stdout: _stdout
 stderr: _stderr
