@@ -11,6 +11,7 @@ from janis_bioinformatics.tools.pmac import (
     PerformanceSummaryGenome_0_1_0,
     AddBamStatsGermline_0_1_0,
     GenerateGenomeFileForBedtoolsCoverage,
+    GenerateIntervalsByChromosome,
 )
 from janis_bioinformatics.tools.variantcallers import GatkGermlineVariantCaller_4_1_3
 from janis_core import (
@@ -21,6 +22,7 @@ from janis_core import (
     InputDocumentation,
     InputQualityType,
 )
+from janis_core.operators.standard import FirstOperator
 from janis_unix.tools import UncompressArchive
 
 from janis_pipelines.reference import WGS_INPUTS
@@ -80,7 +82,11 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
         self.inputs_for_configuration()
 
     def inputs_for_intervals(self):
-        self.input("gatk_intervals", Array(Bed), doc=INPUT_DOCS["gatk_intervals"])
+        self.input(
+            "gatk_intervals",
+            Array(Bed, optional=True),
+            doc=INPUT_DOCS["gatk_intervals"],
+        )
 
     def inputs_for_configuration(self):
         pass
@@ -106,7 +112,7 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
         #         bam=bam_source,
         #         reference=self.reference,
         #         outputPrefix=self.sample_name,
-        #         intervals=self.gatk_intervals,
+        #         intervals=intervals,
         #         # current version gatk 4.1.6.0 only support --count-type as COUNT_READS
         #         # countType="COUNT_FRAGMENTS_REQUIRE_SAME_BASE",
         #         omitDepthOutputAtEachBase=True,
@@ -169,6 +175,17 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
 
     def add_gatk_variantcaller(self, bam_source):
         # VARIANT CALLERS
+
+        intervals = FirstOperator(
+            [
+                self.gatk_intervals,
+                self.step(
+                    "generate_gatk_intervals",
+                    GenerateIntervalsByChromosome(reference=self.reference),
+                ).out_regions,
+            ]
+        )
+
         # GATK
         self.step(
             "bqsr",
@@ -179,16 +196,16 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
                 snps_1000gp=self.snps_1000gp,
                 known_indels=self.known_indels,
                 mills_indels=self.mills_indels,
-                intervals=self.gatk_intervals,
+                intervals=intervals,
             ),
-            scatter=["intervals"],
+            scatter="intervals",
             doc="Perform base quality score recalibration",
         )
         self.step(
             "vc_gatk",
             GatkGermlineVariantCaller_4_1_3(
                 bam=self.bqsr.out,
-                intervals=self.gatk_intervals,
+                intervals=intervals,
                 reference=self.reference,
                 snps_dbsnp=self.snps_dbsnp,
             ),
