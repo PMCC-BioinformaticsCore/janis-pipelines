@@ -83,17 +83,20 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         )
 
     def add_gatk_variantcaller(self, normal_bam_source, tumor_bam_source):
+        """
+        Reimplemented because need steps for combine
+        """
 
-        intervals = FirstOperator(
-            [
-                self.gatk_intervals,
-                self.step(
-                    "generate_gatk_intervals",
-                    GenerateIntervalsByChromosome(reference=self.reference),
-                    when=self.gatk_intervals.is_null(),
-                ).out_regions,
-            ]
-        )
+        if "generate_gatk_intervals" in self.step_nodes:
+            generated_intervals = self.generate_gatk_intervals.out_regions
+        else:
+            generated_intervals = self.step(
+                "generate_gatk_intervals",
+                GenerateIntervalsByChromosome(reference=self.reference),
+                when=self.gatk_intervals.is_null(),
+            ).out_regions
+
+        intervals = FirstOperator([self.gatk_intervals, generated_intervals])
 
         recal_ins = {
             "reference": self.reference,
@@ -309,18 +312,13 @@ This pipeline expects the assembly references to be as they appear in that stora
 The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be gzipped and tabix indexed.
 """
 
-        # mfranklin: mostly handled by super call, but can override specific ones here:
-        # meta.sample_input_overrides.update({
-        #
-        # })
-
 
 if __name__ == "__main__":
     import os.path
 
     w = WGSSomaticMultiCallersVariantsOnly()
     args = {
-        "to_console": True,
+        "to_console": False,
         "to_disk": False,
         "validate": True,
         "export_path": os.path.join(

@@ -256,7 +256,7 @@ if __name__ == "__main__":
 
     w = WGSSomaticGATK()
     args = {
-        "to_console": True,
+        "to_console": False,
         "to_disk": True,
         "validate": True,
         "export_path": os.path.join(

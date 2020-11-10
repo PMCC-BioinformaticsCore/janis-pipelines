@@ -264,7 +264,7 @@ if __name__ == "__main__":
 
     w = WGSGermlineMultiCallersVariantsOnly()
     args = {
-        "to_console": True,
+        "to_console": False,
         "to_disk": False,
         "validate": True,
         "export_path": os.path.join(
