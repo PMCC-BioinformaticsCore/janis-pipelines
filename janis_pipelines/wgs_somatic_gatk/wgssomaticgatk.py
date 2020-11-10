@@ -256,7 +256,7 @@ if __name__ == "__main__":
             os.path.dirname(os.path.realpath(__file__)), "{language}"
         ),
     }
-    # w.translate("cwl", **args)
+    w.translate("cwl", **args)
     w.translate("wdl", **args)
 
     # from cwltool import main
