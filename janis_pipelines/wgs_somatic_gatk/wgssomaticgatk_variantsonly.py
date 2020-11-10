@@ -80,9 +80,6 @@ class WGSSomaticGATKVariantsOnly(BioinformaticsWorkflow):
     def constructor(self):
 
         self.add_inputs()
-        self.add_gridss(
-            normal_bam_source=self.normal_bam, tumor_bam_source=self.tumor_bam
-        )
         self.add_gatk_variantcaller(
             normal_bam_source=self.normal_bam, tumor_bam_source=self.tumor_bam
         )
@@ -119,32 +116,6 @@ class WGSSomaticGATKVariantsOnly(BioinformaticsWorkflow):
         self.input("snps_1000gp", VcfTabix, doc=INPUT_DOCS["snps_1000gp"])
         self.input("known_indels", VcfTabix, doc=INPUT_DOCS["known_indels"])
         self.input("mills_indels", VcfTabix, doc=INPUT_DOCS["mills_indels"])
-
-    def add_gridss(self, normal_bam_source, tumor_bam_source):
-
-        # GRIDSS
-        self.step(
-            "vc_gridss",
-            Gridss_2_6_2(
-                bams=[normal_bam_source, tumor_bam_source],
-                reference=self.reference,
-                blacklist=self.gridss_blacklist,
-            ),
-        )
-
-        # GRIDSS
-        self.output(
-            "out_gridss_assembly",
-            source=self.vc_gridss.assembly,
-            output_folder="gridss",
-            doc="Assembly returned by GRIDSS",
-        )
-        self.output(
-            "out_variants_gridss",
-            source=self.vc_gridss.out,
-            output_folder="gridss",
-            doc="Variants from the GRIDSS variant caller",
-        )
 
     def add_gatk_variantcaller(self, normal_bam_source, tumor_bam_source):
         if "generate_gatk_intervals" in self.step_nodes:
