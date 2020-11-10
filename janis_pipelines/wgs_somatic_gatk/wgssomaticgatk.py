@@ -23,6 +23,7 @@ from janis_bioinformatics.tools.pmac import (
     PerformanceSummaryGenome_0_1_0,
     AddBamStatsSomatic_0_1_0,
     GenerateGenomeFileForBedtoolsCoverage,
+    GenerateIntervalsByChromosome,
 )
 from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
 from janis_core import (
@@ -33,6 +34,7 @@ from janis_core import (
     InputDocumentation,
     InputQualityType,
 )
+from janis_core.operators.standard import FirstOperator
 from janis_unix.tools import UncompressArchive
 
 from janis_pipelines.wgs_somatic_gatk.wgssomaticgatk_variantsonly import (
@@ -74,33 +76,38 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
         self.input("cutadapt_adapters", File, doc=INPUT_DOCS["cutadapt_adapters"])
 
     def add_preprocessing_steps(self):
+        intervals = FirstOperator(
+            [
+                self.gatk_intervals,
+                self.step(
+                    "generate_gatk_intervals",
+                    GenerateIntervalsByChromosome(reference=self.reference),
+                    when=self.gatk_intervals.is_null(),
+                ).out_regions,
+            ]
+        )
+
+        sub_inputs = {
+            "reference": self.reference,
+            "cutadapt_adapters": self.cutadapt_adapters,
+            "gatk_intervals": intervals,
+            "snps_dbsnp": self.snps_dbsnp,
+            "snps_1000gp": self.snps_1000gp,
+            "known_indels": self.known_indels,
+            "mills_indels": self.mills_indels,
+        }
+
         # STEPS
         self.step(
             "tumor",
             self.process_subpipeline(
-                reads=self.tumor_inputs,
-                sample_name=self.tumor_name,
-                reference=self.reference,
-                cutadapt_adapters=self.cutadapt_adapters,
-                gatk_intervals=self.gatk_intervals,
-                snps_dbsnp=self.snps_dbsnp,
-                snps_1000gp=self.snps_1000gp,
-                known_indels=self.known_indels,
-                mills_indels=self.mills_indels,
+                reads=self.tumor_inputs, sample_name=self.tumor_name, **sub_inputs
             ),
         )
         self.step(
             "normal",
             self.process_subpipeline(
-                reads=self.normal_inputs,
-                sample_name=self.normal_name,
-                reference=self.reference,
-                cutadapt_adapters=self.cutadapt_adapters,
-                gatk_intervals=self.gatk_intervals,
-                snps_dbsnp=self.snps_dbsnp,
-                snps_1000gp=self.snps_1000gp,
-                known_indels=self.known_indels,
-                mills_indels=self.mills_indels,
+                reads=self.normal_inputs, sample_name=self.normal_name, **sub_inputs
             ),
         )
 
@@ -256,7 +263,7 @@ if __name__ == "__main__":
             os.path.dirname(os.path.realpath(__file__)), "{language}"
         ),
     }
-    w.translate("cwl", **args)
+    # w.translate("cwl", **args)
     w.translate("wdl", **args)
 
     # from cwltool import main

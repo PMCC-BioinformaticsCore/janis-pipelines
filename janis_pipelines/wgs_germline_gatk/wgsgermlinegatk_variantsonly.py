@@ -176,16 +176,16 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
     def add_gatk_variantcaller(self, bam_source):
         # VARIANT CALLERS
 
-        intervals = self.gatk_intervals
-        # intervals = FirstOperator(
-        #     [
-        #         self.gatk_intervals,
-        #         self.step(
-        #             "generate_gatk_intervals",
-        #             GenerateIntervalsByChromosome(reference=self.reference),
-        #         ).out_regions,
-        #     ]
-        # )
+        intervals = FirstOperator(
+            [
+                self.gatk_intervals,
+                self.step(
+                    "generate_gatk_intervals",
+                    GenerateIntervalsByChromosome(reference=self.reference),
+                    when=self.gatk_intervals.is_null(),
+                ).out_regions,
+            ]
+        )
 
         # GATK
         self.step(

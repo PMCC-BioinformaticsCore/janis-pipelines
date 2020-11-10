@@ -9,6 +9,7 @@ from janis_bioinformatics.tools.pmac import (
     CombineVariants_0_0_8,
     GenerateVardictHeaderLines,
     AddBamStatsSomatic_0_1_0,
+    GenerateIntervalsByChromosome,
 )
 from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
 from janis_bioinformatics.tools.variantcallers.illuminasomatic_strelka import (
@@ -24,6 +25,7 @@ from janis_core import (
     InputDocumentation,
     InputQualityType,
 )
+from janis_core.operators.standard import FirstOperator
 from janis_unix.tools import UncompressArchive
 
 from janis_pipelines.wgs_somatic_gatk.wgssomaticgatk_variantsonly import (
@@ -82,9 +84,20 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
 
     def add_gatk_variantcaller(self, normal_bam_source, tumor_bam_source):
 
+        intervals = FirstOperator(
+            [
+                self.gatk_intervals,
+                self.step(
+                    "generate_gatk_intervals",
+                    GenerateIntervalsByChromosome(reference=self.reference),
+                    when=self.gatk_intervals.is_null(),
+                ).out_regions,
+            ]
+        )
+
         recal_ins = {
             "reference": self.reference,
-            "intervals": self.gatk_intervals,
+            "intervals": intervals,
             "snps_dbsnp": self.snps_dbsnp,
             "snps_1000gp": self.snps_1000gp,
             "known_indels": self.known_indels,
@@ -109,7 +122,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
                 normal_bam=self.bqsr_normal.out,
                 tumor_bam=self.bqsr_tumor.out,
                 normal_name=self.normal_name,
-                intervals=self.gatk_intervals,
+                intervals=intervals,
                 reference=self.reference,
                 gnomad=self.gnomad,
                 panel_of_normals=self.panel_of_normals,

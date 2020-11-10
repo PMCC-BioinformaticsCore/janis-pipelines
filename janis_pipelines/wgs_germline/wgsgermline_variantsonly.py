@@ -7,6 +7,7 @@ from janis_bioinformatics.tools.pmac import (
     CombineVariants_0_0_8,
     GenerateVardictHeaderLines,
     AddBamStatsGermline_0_1_0,
+    GenerateIntervalsByChromosome,
 )
 from janis_bioinformatics.tools.variantcallers import (
     GatkGermlineVariantCaller_4_1_3,
@@ -14,6 +15,7 @@ from janis_bioinformatics.tools.variantcallers import (
     VardictGermlineVariantCaller,
 )
 from janis_core import Array, WorkflowMetadata, InputDocumentation, InputQualityType
+from janis_core.operators.standard import FirstOperator
 from janis_unix.tools import UncompressArchive
 
 from janis_pipelines.wgs_germline_gatk.wgsgermlinegatk_variantsonly import (
@@ -55,6 +57,17 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
 
     def add_gatk_variantcaller(self, bam_source):
 
+        intervals = FirstOperator(
+            [
+                self.gatk_intervals,
+                self.step(
+                    "generate_gatk_intervals",
+                    GenerateIntervalsByChromosome(reference=self.reference),
+                    when=self.gatk_intervals.is_null(),
+                ).out_regions,
+            ]
+        )
+
         # VARIANT CALLERS
         # GATK
         self.step(
@@ -62,7 +75,7 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
             GATKBaseRecalBQSRWorkflow_4_1_3(
                 bam=bam_source,
                 reference=self.reference,
-                intervals=self.gatk_intervals,
+                intervals=intervals,
                 snps_dbsnp=self.snps_dbsnp,
                 snps_1000gp=self.snps_1000gp,
                 known_indels=self.known_indels,
@@ -74,7 +87,7 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
             "vc_gatk",
             GatkGermlineVariantCaller_4_1_3(
                 bam=self.bqsr.out,
-                intervals=self.gatk_intervals,
+                intervals=intervals,
                 reference=self.reference,
                 snps_dbsnp=self.snps_dbsnp,
             ),

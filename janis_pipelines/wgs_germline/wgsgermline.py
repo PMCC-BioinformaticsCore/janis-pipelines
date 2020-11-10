@@ -90,7 +90,7 @@ if __name__ == "__main__":
     w = WGSGermlineMultiCallers()
     args = {
         "to_console": True,
-        "to_disk": False,
+        "to_disk": True,
         "validate": True,
         "export_path": os.path.join(
             os.path.dirname(os.path.realpath(__file__)), "{language}"

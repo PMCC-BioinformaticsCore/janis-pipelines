@@ -7,7 +7,10 @@ from janis_bioinformatics.tools.common import GATKBaseRecalBQSRWorkflow_4_1_3
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
 from janis_bioinformatics.tools.htslib import BGZipLatest
 from janis_bioinformatics.tools.papenfuss import Gridss_2_6_2
-from janis_bioinformatics.tools.pmac import AddBamStatsSomatic_0_1_0
+from janis_bioinformatics.tools.pmac import (
+    AddBamStatsSomatic_0_1_0,
+    GenerateIntervalsByChromosome,
+)
 from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
 from janis_core import (
     String,
@@ -16,6 +19,7 @@ from janis_core import (
     InputDocumentation,
     InputQualityType,
 )
+from janis_core.operators.standard import FirstOperator
 from janis_unix.tools import UncompressArchive
 
 from janis_pipelines.reference import WGS_INPUTS
@@ -143,10 +147,20 @@ class WGSSomaticGATKVariantsOnly(BioinformaticsWorkflow):
         )
 
     def add_gatk_variantcaller(self, normal_bam_source, tumor_bam_source):
+        intervals = FirstOperator(
+            [
+                self.gatk_intervals,
+                self.step(
+                    "generate_gatk_intervals",
+                    GenerateIntervalsByChromosome(reference=self.reference),
+                    when=self.gatk_intervals.is_null(),
+                ).out_regions,
+            ]
+        )
 
         recal_ins = {
             "reference": self.reference,
-            "intervals": self.gatk_intervals,
+            "intervals": intervals,
             "snps_dbsnp": self.snps_dbsnp,
             "snps_1000gp": self.snps_1000gp,
             "known_indels": self.known_indels,
@@ -170,7 +184,7 @@ class WGSSomaticGATKVariantsOnly(BioinformaticsWorkflow):
                 normal_bam=self.bqsr_normal.out,
                 tumor_bam=self.bqsr_tumor.out,
                 normal_name=self.normal_name,
-                intervals=self.gatk_intervals,
+                intervals=intervals,
                 reference=self.reference,
                 gnomad=self.gnomad,
                 panel_of_normals=self.panel_of_normals,
