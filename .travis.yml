@@ -1,7 +1,8 @@
 language: python
 python:
 - '3.6'
-install: 
+install:
+- pip install keyring==21.4.0
 script: echo "Skip tests"
 after_success: codecov
 deploy:
