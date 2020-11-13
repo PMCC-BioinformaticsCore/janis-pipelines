@@ -6,7 +6,6 @@ from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWork
 from janis_bioinformatics.tools.common import GATKBaseRecalBQSRWorkflow_4_1_3
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
 from janis_bioinformatics.tools.htslib import BGZipLatest
-from janis_bioinformatics.tools.papenfuss.gridss.gridss import Gridss_2_6_2
 from janis_bioinformatics.tools.pmac import (
     PerformanceSummaryGenome_0_1_0,
     AddBamStatsGermline_0_1_0,
@@ -66,8 +65,6 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
         self.add_bam_qc(bam_source=self.bam)
 
         # Add variant callers
-
-        self.add_gridss(bam_source=self.bam)
 
         self.add_gatk_variantcaller(bam_source=self.bam)
 
@@ -147,30 +144,6 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
             source=self.performance_summary.performanceSummaryOut,
             output_folder=["performance_summary", self.sample_name],
             doc="A text file of performance summary of bam",
-        )
-
-    def add_gridss(self, bam_source):
-        # GRIDSS
-        self.step(
-            "vc_gridss",
-            Gridss_2_6_2(
-                bams=[bam_source],
-                reference=self.reference,
-                blacklist=self.gridss_blacklist,
-            ),
-        )
-
-        self.output(
-            "out_gridss_assembly",
-            source=self.vc_gridss.assembly,
-            output_folder="gridss",
-            doc="Assembly returned by GRIDSS",
-        )
-        self.output(
-            "out_variants_gridss",
-            source=self.vc_gridss.out,
-            output_folder="gridss",
-            doc="Variants from the GRIDSS variant caller",
         )
 
     def add_gatk_variantcaller(self, bam_source):
@@ -292,11 +265,11 @@ if __name__ == "__main__":
     args = {
         "to_console": False,
         "to_disk": False,
-        "validate": True,
+        "validate": False,
         "export_path": os.path.join(
             os.path.dirname(os.path.realpath(__file__)), "{language}"
         ),
         "with_resource_overrides": True,
     }
-    w.translate("cwl", **args)
+    # w.translate("cwl", **args)
     w.translate("wdl", **args)
