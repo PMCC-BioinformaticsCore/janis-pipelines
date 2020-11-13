@@ -3,6 +3,7 @@ from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
 from janis_bioinformatics.tools.common import GATKBaseRecalBQSRWorkflow_4_1_3
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
 from janis_bioinformatics.tools.htslib import BGZipLatest
+from janis_bioinformatics.tools.papenfuss import Gridss_2_6_2
 from janis_bioinformatics.tools.pmac import (
     CombineVariants_0_0_8,
     GenerateVardictHeaderLines,
@@ -66,6 +67,30 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
                 quality=InputQualityType.static,
                 example="BRCA1.bed.gz",
             ),
+        )
+
+    def add_gridss(self, bam_source):
+        # GRIDSS
+        self.step(
+            "vc_gridss",
+            Gridss_2_6_2(
+                bams=[bam_source],
+                reference=self.reference,
+                blacklist=self.gridss_blacklist,
+            ),
+        )
+
+        self.output(
+            "out_gridss_assembly",
+            source=self.vc_gridss.assembly,
+            output_folder="gridss",
+            doc="Assembly returned by GRIDSS",
+        )
+        self.output(
+            "out_variants_gridss",
+            source=self.vc_gridss.out,
+            output_folder="gridss",
+            doc="Variants from the GRIDSS variant caller",
         )
 
     def add_gatk_variantcaller(self, bam_source):

@@ -30,7 +30,6 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
         self.add_bam_qc(bam_source=self.merge_and_mark.out)
 
         # Add variant callers
-        self.add_gridss(bam_source=self.merge_and_mark.out)
         self.add_gatk_variantcaller(bam_source=self.merge_and_mark.out)
 
     def add_inputs(self):
