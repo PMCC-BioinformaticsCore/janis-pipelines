@@ -13,7 +13,7 @@ requirements:
       import argparse, json, sys
       from typing import Optional, List, Dict, Any
       cli = argparse.ArgumentParser("Argument parser for Janis PythonTool")
-      cli.add_argument("--fastqc_datafiles", nargs='+', type=str, required=True)
+      cli.add_argument("--fastqc_datafiles", nargs='+', default=[], type=str)
       cli.add_argument("--cutadapt_adaptors_lookup", type=str, help='Specifies a file which contains the list of adapter sequences which will\nbe explicity searched against the library. The file must contain sets of named adapters in\nthe form name[tab]sequence. Lines prefixed with a hash will be ignored.')
 
       Array = List
@@ -142,6 +142,18 @@ requirements:
       try:
           args = cli.parse_args()
           result = code_block(fastqc_datafiles=args.fastqc_datafiles, cutadapt_adaptors_lookup=args.cutadapt_adaptors_lookup)
+
+          from os import getcwd, path
+          cwd = getcwd()
+          def prepare_file_or_directory_type(file_or_directory, value):
+              if value is None:
+                  return None
+              if isinstance(value, list):
+                  return [prepare_file_or_directory_type(file_or_directory, v) for v in value]
+              return {
+                  "class": file_or_directory,
+                  "path": path.join(cwd, value)
+              }
           print(json.dumps(result))
       except Exception as e:
           print(str(e), file=sys.stderr)

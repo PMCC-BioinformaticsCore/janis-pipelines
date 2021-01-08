@@ -237,14 +237,14 @@ outputs:
   type: File
   outputBinding:
     glob: $((inputs.relativeStrelkaDirectory + "/runWorkflow.py.config.pickle"))
-    outputEval: $((inputs.relativeStrelkaDirectory + "/runWorkflow.py.config.pickle"))
+    outputEval: $((inputs.relativeStrelkaDirectory.basename + "/runWorkflow.py.config.pickle"))
     loadContents: false
 - id: script
   label: script
   type: File
   outputBinding:
     glob: $((inputs.relativeStrelkaDirectory + "/runWorkflow.py"))
-    outputEval: $((inputs.relativeStrelkaDirectory + "/runWorkflow.py"))
+    outputEval: $((inputs.relativeStrelkaDirectory.basename + "/runWorkflow.py"))
     loadContents: false
 - id: stats
   label: stats
@@ -253,7 +253,7 @@ outputs:
   type: File
   outputBinding:
     glob: $((inputs.relativeStrelkaDirectory + "/results/stats/runStats.tsv"))
-    outputEval: $((inputs.relativeStrelkaDirectory + "/results/stats/runStats.tsv"))
+    outputEval: $((inputs.relativeStrelkaDirectory.basename + "/results/stats/runStats.tsv"))
     loadContents: false
 - id: variants
   label: variants
@@ -263,7 +263,8 @@ outputs:
   - .tbi
   outputBinding:
     glob: $((inputs.relativeStrelkaDirectory + "/results/variants/variants.vcf.gz"))
-    outputEval: $((inputs.relativeStrelkaDirectory + "/results/variants/variants.vcf.gz"))
+    outputEval: |-
+      $((inputs.relativeStrelkaDirectory.basename + "/results/variants/variants.vcf.gz"))
     loadContents: false
 - id: genome
   label: genome
@@ -272,7 +273,8 @@ outputs:
   - .tbi
   outputBinding:
     glob: $((inputs.relativeStrelkaDirectory + "/results/variants/genome.vcf.gz"))
-    outputEval: $((inputs.relativeStrelkaDirectory + "/results/variants/genome.vcf.gz"))
+    outputEval: |-
+      $((inputs.relativeStrelkaDirectory.basename + "/results/variants/genome.vcf.gz"))
     loadContents: false
 stdout: _stdout
 stderr: _stderr

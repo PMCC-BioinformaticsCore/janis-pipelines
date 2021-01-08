@@ -59,9 +59,7 @@ outputs:
   outputSource: manta/diploidSV
 - id: variants
   type: File
-  secondaryFiles:
-  - .tbi
-  outputSource: tabixvcf/out
+  outputSource: sortvcf/out
 - id: out
   type: File
   outputSource: filterpass/out
@@ -90,6 +88,7 @@ steps:
   - id: alignmentStatsSummary
   - id: svCandidateGenerationStats
   - id: svLocusGraphStats
+  - id: somaticSVs
 - id: strelka
   label: Strelka (Somatic)
   in:
@@ -128,37 +127,37 @@ steps:
   run: ConcatStrelkaSomaticVcf_0_1_16.cwl
   out:
   - id: out
-- id: tabixvcf
-  label: Tabix
+- id: sortvcf
+  label: 'BCFTools: Sort'
   in:
-  - id: inp
+  - id: vcf
     source: concatvcf/out
-  run: tabix_1_2_1.cwl
-  out:
-  - id: out
-- id: uncompressvcf
-  label: UncompressArchive
-  in:
-  - id: file
-    source: concatvcf/out
-  run: UncompressArchive_v1_0_0.cwl
+  run: bcftoolssort_v1_9.cwl
   out:
   - id: out
 - id: splitnormalisevcf
   label: Split Multiple Alleles
   in:
   - id: vcf
-    source: uncompressvcf/out
+    source: sortvcf/out
   - id: reference
     source: reference
   run: SplitMultiAllele_v0_5772.cwl
+  out:
+  - id: out
+- id: extractaddp
+  label: Extract Strelka Somatic AD DP
+  in:
+  - id: vcf
+    source: splitnormalisevcf/out
+  run: extractStrelkaSomaticADDP_0_1_1.cwl
   out:
   - id: out
 - id: filterpass
   label: VcfTools
   in:
   - id: vcf
-    source: splitnormalisevcf/out
+    source: extractaddp/out
   - id: removeFileteredAll
     source: filterpass_removeFileteredAll
   - id: recode

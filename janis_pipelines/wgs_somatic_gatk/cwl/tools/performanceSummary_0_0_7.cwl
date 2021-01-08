@@ -101,7 +101,7 @@ outputs:
   type: File
   outputBinding:
     glob: $((inputs.outputPrefix + ".csv"))
-    outputEval: $((inputs.outputPrefix + ".csv"))
+    outputEval: $((inputs.outputPrefix.basename + ".csv"))
     loadContents: false
 stdout: _stdout
 stderr: _stderr

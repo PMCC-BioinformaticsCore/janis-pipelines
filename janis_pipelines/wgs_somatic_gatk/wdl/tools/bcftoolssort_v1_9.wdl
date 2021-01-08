@@ -12,6 +12,7 @@ task bcftoolssort {
     String? tempDir
   }
   command <<<
+    set -e
     bcftools sort \
       --output-file '~{select_first([outputFilename, "generated.sorted.vcf.gz"])}' \
       ~{if defined(select_first([outputType, "z"])) then ("--output-type '" + select_first([outputType, "z"]) + "'") else ""} \

@@ -10,9 +10,10 @@ task SamToolsFlagstat {
     Int? threads
   }
   command <<<
+    set -e
     samtools flagstat \
       ~{if defined(threads) then ("-@ " + threads) else ''} \
-      ~{bam}
+      '~{bam}'
   >>>
   runtime {
     cpu: select_first([runtime_cpu, 1])

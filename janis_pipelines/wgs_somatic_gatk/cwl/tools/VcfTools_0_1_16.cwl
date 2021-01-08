@@ -74,7 +74,7 @@ outputs:
   type: File
   outputBinding:
     glob: $((inputs.outputFilename + ".recode.vcf"))
-    outputEval: $((inputs.outputFilename + ".recode.vcf"))
+    outputEval: $((inputs.outputFilename.basename + ".recode.vcf"))
     loadContents: false
 stdout: _stdout
 stderr: _stderr

@@ -23,6 +23,7 @@ from janis_bioinformatics.tools.pmac import (
     PerformanceSummaryGenome_0_1_0,
     AddBamStatsSomatic_0_1_0,
     GenerateGenomeFileForBedtoolsCoverage,
+    GenerateIntervalsByChromosome,
 )
 from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
 from janis_core import (
@@ -33,10 +34,12 @@ from janis_core import (
     InputDocumentation,
     InputQualityType,
 )
+from janis_core.operators.standard import FirstOperator
 from janis_unix.tools import UncompressArchive
 
 from janis_pipelines.wgs_somatic_gatk.wgssomaticgatk_variantsonly import (
     WGSSomaticGATKVariantsOnly,
+    INPUT_DOCS,
 )
 
 
@@ -50,84 +53,59 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
     def constructor(self):
         self.add_inputs()
         self.add_preprocessing_steps()
-        self.add_gridss(
-            normal_bam_source=self.normal.out_bam, tumor_bam_source=self.tumor.out_bam
-        )
+
         self.add_gatk_variantcaller(
             normal_bam_source=self.normal.out_bam, tumor_bam_source=self.tumor.out_bam
         )
 
     def add_inputs(self):
         # INPUTS
-        self.input(
-            "normal_inputs",
-            Array(FastqGzPair),
-            doc=InputDocumentation(
-                "An array of NORMAL FastqGz pairs. These are aligned separately and merged to create higher depth coverages from multiple sets of reads",
-                quality=InputQualityType.user,
-                example='["normal_R1.fastq.gz", "normal_R2.fastq.gz"]',
-            ),
-        )
-        self.input(
-            "tumor_inputs",
-            Array(FastqGzPair),
-            doc=InputDocumentation(
-                "An array of TUMOR FastqGz pairs. These are aligned separately and merged to create higher depth coverages from multiple sets of reads",
-                quality=InputQualityType.user,
-                example='["tumor_R1.fastq.gz", "tumor_R2.fastq.gz"]',
-            ),
-        )
-        self.input(
-            "normal_name",
-            String(),
-            doc=InputDocumentation(
-                "Sample name for the NORMAL sample from which to generate the readGroupHeaderLine for BwaMem",
-                quality=InputQualityType.user,
-                example="NA24385_normal",
-            ),
-        )
-        self.input(
-            "tumor_name",
-            String(),
-            doc=InputDocumentation(
-                "Sample name for the TUMOR sample from which to generate the readGroupHeaderLine for BwaMem",
-                quality=InputQualityType.user,
-                example="NA24385_tumor",
-            ),
-        )
+        self.input("normal_inputs", Array(FastqGzPair), doc=INPUT_DOCS["normal_inputs"])
+        self.input("tumor_inputs", Array(FastqGzPair), doc=INPUT_DOCS["tumor_inputs"])
+        self.input("normal_name", String(), doc=INPUT_DOCS["normal_name"])
+        self.input("tumor_name", String(), doc=INPUT_DOCS["tumor_name"])
 
         self.add_inputs_for_reference()
         self.add_inputs_for_intervals()
         self.add_inputs_for_configuration()
 
+    def add_inputs_for_configuration(self):
+        super().add_inputs_for_configuration()
+        self.input("cutadapt_adapters", File, doc=INPUT_DOCS["cutadapt_adapters"])
+
     def add_preprocessing_steps(self):
+        intervals = FirstOperator(
+            [
+                self.gatk_intervals,
+                self.step(
+                    "generate_gatk_intervals",
+                    GenerateIntervalsByChromosome(reference=self.reference),
+                    when=self.gatk_intervals.is_null(),
+                ).out_regions,
+            ]
+        )
+
+        sub_inputs = {
+            "reference": self.reference,
+            "cutadapt_adapters": self.cutadapt_adapters,
+            "gatk_intervals": intervals,
+            "snps_dbsnp": self.snps_dbsnp,
+            "snps_1000gp": self.snps_1000gp,
+            "known_indels": self.known_indels,
+            "mills_indels": self.mills_indels,
+        }
+
         # STEPS
         self.step(
             "tumor",
             self.process_subpipeline(
-                reads=self.tumor_inputs,
-                sample_name=self.tumor_name,
-                reference=self.reference,
-                cutadapt_adapters=self.cutadapt_adapters,
-                gatk_intervals=self.gatk_intervals,
-                snps_dbsnp=self.snps_dbsnp,
-                snps_1000gp=self.snps_1000gp,
-                known_indels=self.known_indels,
-                mills_indels=self.mills_indels,
+                reads=self.tumor_inputs, sample_name=self.tumor_name, **sub_inputs
             ),
         )
         self.step(
             "normal",
             self.process_subpipeline(
-                reads=self.normal_inputs,
-                sample_name=self.normal_name,
-                reference=self.reference,
-                cutadapt_adapters=self.cutadapt_adapters,
-                gatk_intervals=self.gatk_intervals,
-                snps_dbsnp=self.snps_dbsnp,
-                snps_1000gp=self.snps_1000gp,
-                known_indels=self.known_indels,
-                mills_indels=self.mills_indels,
+                reads=self.normal_inputs, sample_name=self.normal_name, **sub_inputs
             ),
         )
 
@@ -276,14 +254,14 @@ if __name__ == "__main__":
 
     w = WGSSomaticGATK()
     args = {
-        "to_console": True,
+        "to_console": False,
         "to_disk": True,
         "validate": True,
         "export_path": os.path.join(
             os.path.dirname(os.path.realpath(__file__)), "{language}"
         ),
     }
-    w.translate("cwl", **args)
+    # w.translate("cwl", **args)
     w.translate("wdl", **args)
 
     # from cwltool import main

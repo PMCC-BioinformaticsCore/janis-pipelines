@@ -21,6 +21,16 @@ inputs:
   type: File
   secondaryFiles:
   - .bai
+- id: reference
+  type: File
+  secondaryFiles:
+  - .fai
+  - .amb
+  - .ann
+  - .bwt
+  - .pac
+  - .sa
+  - ^.dict
 - id: vcf
   type: File
 - id: addbamstats_type
@@ -40,6 +50,8 @@ steps:
     source: vcf
   - id: bam
     source: tumor_bam
+  - id: reference
+    source: reference
   run: samtools_mpileup_subpipeline.cwl
   out:
   - id: out
@@ -49,6 +61,8 @@ steps:
     source: vcf
   - id: bam
     source: normal_bam
+  - id: reference
+    source: reference
   run: samtools_mpileup_subpipeline.cwl
   out:
   - id: out

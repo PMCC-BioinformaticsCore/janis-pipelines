@@ -5,10 +5,12 @@ from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
 from janis_bioinformatics.tools.common import GATKBaseRecalBQSRWorkflow_4_1_3
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
 from janis_bioinformatics.tools.htslib import BGZipLatest
+from janis_bioinformatics.tools.papenfuss import Gridss_2_6_2
 from janis_bioinformatics.tools.pmac import (
     CombineVariants_0_0_8,
     GenerateVardictHeaderLines,
     AddBamStatsSomatic_0_1_0,
+    GenerateIntervalsByChromosome,
 )
 from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
 from janis_bioinformatics.tools.variantcallers.illuminasomatic_strelka import (
@@ -24,10 +26,12 @@ from janis_core import (
     InputDocumentation,
     InputQualityType,
 )
+from janis_core.operators.standard import FirstOperator
 from janis_unix.tools import UncompressArchive
 
 from janis_pipelines.wgs_somatic_gatk.wgssomaticgatk_variantsonly import (
     WGSSomaticGATKVariantsOnly,
+    INPUT_DOCS,
 )
 
 
@@ -64,24 +68,8 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
     def add_inputs_for_intervals(self):
         super().add_inputs_for_intervals()
 
-        self.input(
-            "vardict_intervals",
-            Array(Bed),
-            doc=InputDocumentation(
-                "List of intervals over which to split the VarDict variant calling",
-                quality=InputQualityType.static,
-                example="BRCA1.bed",
-            ),
-        )
-        self.input(
-            "strelka_intervals",
-            BedTabix,
-            doc=InputDocumentation(
-                "An interval for which to restrict the analysis to.",
-                quality=InputQualityType.static,
-                example="BRCA1.bed.gz",
-            ),
-        )
+        self.input("vardict_intervals", Array(Bed), doc=INPUT_DOCS["vardict_intervals"])
+        self.input("strelka_intervals", BedTabix, doc=INPUT_DOCS["strelka_intervals"])
 
     def add_inputs_for_configuration(self):
         super().add_inputs_for_configuration()
@@ -92,20 +80,60 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
             doc=InputDocumentation(
                 "The threshold for VarDict's allele frequency, default: 0.05 or 5%",
                 quality=InputQualityType.configuration,
-                example=None,
             ),
         )
 
+    def add_gridss(self, normal_bam_source, tumor_bam_source):
+
+        # GRIDSS
+        self.step(
+            "vc_gridss",
+            Gridss_2_6_2(
+                bams=[normal_bam_source, tumor_bam_source],
+                reference=self.reference,
+                blacklist=self.gridss_blacklist,
+            ),
+        )
+
+        # GRIDSS
+        self.output(
+            "out_gridss_assembly",
+            source=self.vc_gridss.assembly,
+            output_folder="gridss",
+            doc="Assembly returned by GRIDSS",
+        )
+        self.output(
+            "out_variants_gridss",
+            source=self.vc_gridss.out,
+            output_folder="gridss",
+            doc="Variants from the GRIDSS variant caller",
+        )
+
     def add_gatk_variantcaller(self, normal_bam_source, tumor_bam_source):
+        """
+        Reimplemented because need steps for combine
+        """
+
+        if "generate_gatk_intervals" in self.step_nodes:
+            generated_intervals = self.generate_gatk_intervals.out_regions
+        else:
+            generated_intervals = self.step(
+                "generate_gatk_intervals",
+                GenerateIntervalsByChromosome(reference=self.reference),
+                when=self.gatk_intervals.is_null(),
+            ).out_regions
+
+        intervals = FirstOperator([self.gatk_intervals, generated_intervals])
 
         recal_ins = {
             "reference": self.reference,
-            "intervals": self.gatk_intervals,
+            "intervals": intervals,
             "snps_dbsnp": self.snps_dbsnp,
             "snps_1000gp": self.snps_1000gp,
             "known_indels": self.known_indels,
             "mills_indels": self.mills_indels,
         }
+
         self.step(
             "bqsr_normal",
             GATKBaseRecalBQSRWorkflow_4_1_3(bam=normal_bam_source, **recal_ins),
@@ -124,7 +152,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
                 normal_bam=self.bqsr_normal.out,
                 tumor_bam=self.bqsr_tumor.out,
                 normal_name=self.normal_name,
-                intervals=self.gatk_intervals,
+                intervals=intervals,
                 reference=self.reference,
                 gnomad=self.gnomad,
                 panel_of_normals=self.panel_of_normals,
@@ -311,18 +339,13 @@ This pipeline expects the assembly references to be as they appear in that stora
 The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be gzipped and tabix indexed.
 """
 
-        # mfranklin: mostly handled by super call, but can override specific ones here:
-        # meta.sample_input_overrides.update({
-        #
-        # })
-
 
 if __name__ == "__main__":
     import os.path
 
     w = WGSSomaticMultiCallersVariantsOnly()
     args = {
-        "to_console": True,
+        "to_console": False,
         "to_disk": False,
         "validate": True,
         "export_path": os.path.join(

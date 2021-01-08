@@ -8,17 +8,20 @@ from janis_bioinformatics.tools.pmac import (
     CombineVariants_0_0_8,
     GenerateVardictHeaderLines,
     AddBamStatsGermline_0_1_0,
+    GenerateIntervalsByChromosome,
 )
 from janis_bioinformatics.tools.variantcallers import (
     GatkGermlineVariantCaller_4_1_3,
     IlluminaGermlineVariantCaller,
     VardictGermlineVariantCaller,
 )
-from janis_core import Array, WorkflowMetadata, InputDocumentation, InputQualityType
+from janis_core import Array, WorkflowMetadata
+from janis_core.operators.standard import FirstOperator
 from janis_unix.tools import UncompressArchive
 
 from janis_pipelines.wgs_germline_gatk.wgsgermlinegatk_variantsonly import (
     WGSGermlineGATKVariantsOnly,
+    INPUT_DOCS,
 )
 
 
@@ -50,24 +53,10 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
 
     def inputs_for_intervals(self):
         super().inputs_for_intervals()
-        self.input(
-            "vardict_intervals",
-            Array(Bed),
-            doc=InputDocumentation(
-                "List of intervals over which to split the VarDict variant calling",
-                quality=InputQualityType.static,
-                example="BRCA1.bed",
-            ),
-        )
-        self.input(
-            "strelka_intervals",
-            BedTabix,
-            doc=InputDocumentation(
-                "An interval for which to restrict the analysis to.",
-                quality=InputQualityType.static,
-                example="BRCA1.bed.gz",
-            ),
-        )
+        self.input("vardict_intervals", Array(Bed), doc=INPUT_DOCS["vardict_intervals"])
+        self.input("strelka_intervals", BedTabix, doc=INPUT_DOCS["strelka_intervals"])
+        # for fast processing wgs bam
+        self.input("gridss_blacklist", Bed, doc=INPUT_DOCS["gridss_blacklist"])
 
     def add_gridss(self, bam_source):
         # GRIDSS
@@ -95,6 +84,17 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
 
     def add_gatk_variantcaller(self, bam_source):
 
+        intervals = FirstOperator(
+            [
+                self.gatk_intervals,
+                self.step(
+                    "generate_gatk_intervals",
+                    GenerateIntervalsByChromosome(reference=self.reference),
+                    when=self.gatk_intervals.is_null(),
+                ).out_regions,
+            ]
+        )
+
         # VARIANT CALLERS
         # GATK
         self.step(
@@ -102,7 +102,7 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
             GATKBaseRecalBQSRWorkflow_4_1_3(
                 bam=bam_source,
                 reference=self.reference,
-                intervals=self.gatk_intervals,
+                intervals=intervals,
                 snps_dbsnp=self.snps_dbsnp,
                 snps_1000gp=self.snps_1000gp,
                 known_indels=self.known_indels,
@@ -114,7 +114,7 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
             "vc_gatk",
             GatkGermlineVariantCaller_4_1_3(
                 bam=self.bqsr.out,
-                intervals=self.gatk_intervals,
+                intervals=intervals,
                 reference=self.reference,
                 snps_dbsnp=self.snps_dbsnp,
             ),
@@ -247,6 +247,7 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
             "out_variants",
             source=self.combined_addbamstats.out,
             output_folder="variants",
+            output_name="combined",
             doc="Combined variants from all 3 callers",
         )
 
@@ -291,7 +292,7 @@ if __name__ == "__main__":
 
     w = WGSGermlineMultiCallersVariantsOnly()
     args = {
-        "to_console": True,
+        "to_console": False,
         "to_disk": False,
         "validate": True,
         "export_path": os.path.join(

@@ -7,6 +7,14 @@ workflow samtools_mpileup_subpipeline {
     File vcf
     File bam
     File bam_bai
+    File reference
+    File reference_fai
+    File reference_amb
+    File reference_ann
+    File reference_bwt
+    File reference_pac
+    File reference_sa
+    File reference_dict
     Boolean? samtools_mpileup_countOrphans = true
     Boolean? samtools_mpileup_noBAQ = true
     Int? samtools_mpileup_minBQ = 0
@@ -19,6 +27,7 @@ workflow samtools_mpileup_subpipeline {
       maxDepth=select_first([samtools_mpileup_maxDepth, 10000]),
       positions=vcf,
       minBQ=select_first([samtools_mpileup_minBQ, 0]),
+      reference=reference,
       bam=bam,
       bam_bai=bam_bai
   }

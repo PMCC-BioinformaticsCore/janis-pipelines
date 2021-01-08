@@ -37,10 +37,13 @@ inputs:
     items: string
   - 'null'
 - id: cutadapt_front
+  doc: |-
+    (-g)  Sequence of an adapter ligated to the 5' end (paired data: of the first read). The adapter and any preceding bases are trimmed. Partial matches at the 5' end are allowed. If a '^' character is prepended ('anchoring'), the adapter is only found if it is a prefix of the read.
   type:
   - string
   - 'null'
 - id: cutadapt_removeMiddle5Adapter
+  doc: 5' adapter to be removed from second read in a pair.
   type:
   - string
   - 'null'
@@ -138,7 +141,7 @@ steps:
     source: sortsam_tmpDir
   - id: validationStringency
     source: sortsam_validationStringency
-  run: Gatk4SortSam_4_1_3_0.cwl
+  run: Gatk4SortSam_4_1_2_0.cwl
   out:
   - id: out
 id: BwaAligner

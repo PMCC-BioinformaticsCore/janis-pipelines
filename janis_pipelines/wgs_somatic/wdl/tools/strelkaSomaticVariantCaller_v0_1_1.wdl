@@ -3,9 +3,9 @@ version development
 import "manta_1_5_0.wdl" as M
 import "strelka_somatic_2_9_10.wdl" as S
 import "ConcatStrelkaSomaticVcf_0_1_16.wdl" as C
-import "tabix_1_2_1.wdl" as T
-import "UncompressArchive_v1_0_0.wdl" as U
+import "bcftoolssort_v1_9.wdl" as B
 import "SplitMultiAllele_v0_5772.wdl" as S2
+import "extractStrelkaSomaticADDP_0_1_1.wdl" as E
 import "VcfTools_0_1_16.wdl" as V
 
 workflow strelkaSomaticVariantCaller {
@@ -35,12 +35,6 @@ workflow strelkaSomaticVariantCaller {
       bam_bai=normal_bam_bai,
       reference=reference,
       reference_fai=reference_fai,
-      reference_amb=reference_amb,
-      reference_ann=reference_ann,
-      reference_bwt=reference_bwt,
-      reference_pac=reference_pac,
-      reference_sa=reference_sa,
-      reference_dict=reference_dict,
       tumorBam=tumor_bam,
       tumorBam_bai=tumor_bam_bai,
       exome=is_exome,
@@ -55,12 +49,6 @@ workflow strelkaSomaticVariantCaller {
       tumorBam_bai=tumor_bam_bai,
       reference=reference,
       reference_fai=reference_fai,
-      reference_amb=reference_amb,
-      reference_ann=reference_ann,
-      reference_bwt=reference_bwt,
-      reference_pac=reference_pac,
-      reference_sa=reference_sa,
-      reference_dict=reference_dict,
       indelCandidates=[manta.candidateSmallIndels],
       indelCandidates_tbi=[manta.candidateSmallIndels_tbi],
       exome=is_exome,
@@ -74,17 +62,13 @@ workflow strelkaSomaticVariantCaller {
       contentVcfs=[strelka.snvs, strelka.indels],
       contentVcfs_tbi=[strelka.snvs_tbi, strelka.indels_tbi]
   }
-  call T.tabix as tabixvcf {
+  call B.bcftoolssort as sortvcf {
     input:
-      inp=concatvcf.out
-  }
-  call U.UncompressArchive as uncompressvcf {
-    input:
-      file=concatvcf.out
+      vcf=concatvcf.out
   }
   call S2.SplitMultiAllele as splitnormalisevcf {
     input:
-      vcf=uncompressvcf.out,
+      vcf=sortvcf.out,
       reference=reference,
       reference_fai=reference_fai,
       reference_amb=reference_amb,
@@ -94,9 +78,13 @@ workflow strelkaSomaticVariantCaller {
       reference_sa=reference_sa,
       reference_dict=reference_dict
   }
+  call E.extractStrelkaSomaticADDP as extractaddp {
+    input:
+      vcf=splitnormalisevcf.out
+  }
   call V.VcfTools as filterpass {
     input:
-      vcf=splitnormalisevcf.out,
+      vcf=extractaddp.out,
       removeFileteredAll=select_first([filterpass_removeFileteredAll, true]),
       recode=select_first([filterpass_recode, true]),
       recodeINFOAll=select_first([filterpass_recodeINFOAll, true])
@@ -104,8 +92,7 @@ workflow strelkaSomaticVariantCaller {
   output {
     File sv = manta.diploidSV
     File sv_tbi = manta.diploidSV_tbi
-    File variants = tabixvcf.out
-    File variants_tbi = tabixvcf.out_tbi
+    File variants = sortvcf.out
     File out = filterpass.out
   }
 }

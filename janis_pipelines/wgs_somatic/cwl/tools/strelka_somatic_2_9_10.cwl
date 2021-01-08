@@ -43,12 +43,6 @@ inputs:
   type: File
   secondaryFiles:
   - .fai
-  - .amb
-  - .ann
-  - .bwt
-  - .pac
-  - .sa
-  - ^.dict
   inputBinding:
     prefix: --referenceFasta=
     position: 1
@@ -292,14 +286,14 @@ outputs:
   type: File
   outputBinding:
     glob: $((inputs.rundir + "/runWorkflow.py.config.pickle"))
-    outputEval: $((inputs.rundir + "/runWorkflow.py.config.pickle"))
+    outputEval: $((inputs.rundir.basename + "/runWorkflow.py.config.pickle"))
     loadContents: false
 - id: script
   label: script
   type: File
   outputBinding:
     glob: $((inputs.rundir + "/runWorkflow.py"))
-    outputEval: $((inputs.rundir + "/runWorkflow.py"))
+    outputEval: $((inputs.rundir.basename + "/runWorkflow.py"))
     loadContents: false
 - id: stats
   label: stats
@@ -308,7 +302,7 @@ outputs:
   type: File
   outputBinding:
     glob: $((inputs.rundir + "/results/stats/runStats.tsv"))
-    outputEval: $((inputs.rundir + "/results/stats/runStats.tsv"))
+    outputEval: $((inputs.rundir.basename + "/results/stats/runStats.tsv"))
     loadContents: false
 - id: indels
   label: indels
@@ -318,7 +312,7 @@ outputs:
   - .tbi
   outputBinding:
     glob: $((inputs.rundir + "/results/variants/somatic.indels.vcf.gz"))
-    outputEval: $((inputs.rundir + "/results/variants/somatic.indels.vcf.gz"))
+    outputEval: $((inputs.rundir.basename + "/results/variants/somatic.indels.vcf.gz"))
     loadContents: false
 - id: snvs
   label: snvs
@@ -328,7 +322,7 @@ outputs:
   - .tbi
   outputBinding:
     glob: $((inputs.rundir + "/results/variants/somatic.snvs.vcf.gz"))
-    outputEval: $((inputs.rundir + "/results/variants/somatic.snvs.vcf.gz"))
+    outputEval: $((inputs.rundir.basename + "/results/variants/somatic.snvs.vcf.gz"))
     loadContents: false
 stdout: _stdout
 stderr: _stderr

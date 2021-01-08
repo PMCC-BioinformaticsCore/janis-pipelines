@@ -1,6 +1,13 @@
 from datetime import date
 
-from janis_bioinformatics.data_types import FastaWithDict, VcfTabix, Bed, BamBai
+from janis_bioinformatics.data_types import (
+    FastaWithDict,
+    VcfTabix,
+    Bed,
+    BamBai,
+    Vcf,
+    CompressedVcf,
+)
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
 from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
 from janis_bioinformatics.tools.common import GATKBaseRecalBQSRWorkflow_4_1_3
@@ -10,17 +17,42 @@ from janis_bioinformatics.tools.pmac import (
     PerformanceSummaryGenome_0_1_0,
     AddBamStatsGermline_0_1_0,
     GenerateGenomeFileForBedtoolsCoverage,
+    GenerateIntervalsByChromosome,
 )
 from janis_bioinformatics.tools.variantcallers import GatkGermlineVariantCaller_4_1_3
 from janis_core import (
-    File,
     String,
     Array,
     WorkflowMetadata,
-    InputDocumentation,
     InputQualityType,
 )
+from janis_core.operators.standard import FirstOperator
 from janis_unix.tools import UncompressArchive
+
+from janis_pipelines.reference import WGS_INPUTS
+
+INPUT_DOCS = {
+    **WGS_INPUTS,
+    "fastqs": {
+        "doc": "An array of FastqGz pairs. These are aligned separately and merged "
+        "to create higher depth coverages from multiple sets of reads",
+        "quality": InputQualityType.user,
+        "example": [
+            ["sample1_R1.fastq.gz", "sample1_R2.fastq.gz"],
+            ["sample1_R1-TOPUP.fastq.gz", "sample1_R2-TOPUP.fastq.gz"],
+        ],
+    },
+    "sample_name": {
+        "doc": "Sample name from which to generate the readGroupHeaderLine for BwaMem",
+        "quality": InputQualityType.user,
+        "example": "NA12878",
+    },
+    "bam": {
+        "doc": "Input indexed bam (+ .bam.bai) to process. You only specify the primary sample.bam, and the index (eg: NA12878.bam.bai) will be picked up automatically.",
+        "quality": InputQualityType.user,
+        "example": "NA12878.bam",
+    },
+}
 
 
 class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
@@ -43,25 +75,9 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
 
     def add_inputs(self):
         # INPUTS
-        self.input(
-            "sample_name",
-            String,
-            doc=InputDocumentation(
-                "Sample name from which to generate the readGroupHeaderLine for BwaMem",
-                quality=InputQualityType.user,
-                example="NA12878",
-            ),
-        )
+        self.input("sample_name", String, doc=INPUT_DOCS["sample_name"])
 
-        self.input(
-            "bam",
-            BamBai,
-            doc=InputDocumentation(
-                "Input indexed bam (+ .bam.bai) to process",
-                quality=InputQualityType.user,
-                example="NA12878.bam (the NA12878.bam.bai will be picked up automatically)",
-            ),
-        )
+        self.input("bam", BamBai, doc=INPUT_DOCS["bam"])
 
         self.inputs_for_reference()
         self.inputs_for_intervals()
@@ -70,99 +86,20 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
     def inputs_for_intervals(self):
         self.input(
             "gatk_intervals",
-            Array(Bed),
-            doc=InputDocumentation(
-                "List of intervals over which to split the GATK variant calling",
-                quality=InputQualityType.static,
-                example="BRCA1.bed",
-            ),
+            Array(Bed, optional=True),
+            doc=INPUT_DOCS["gatk_intervals"],
         )
 
     def inputs_for_configuration(self):
         pass
 
     def inputs_for_reference(self):
-        self.input(
-            "reference",
-            FastaWithDict,
-            doc=InputDocumentation(
-                """\
-    The reference genome from which to align the reads. This requires a number indexes (can be generated \
-    with the 'IndexFasta' pipeline This pipeline has been tested using the HG38 reference set.
+        self.input("reference", FastaWithDict, doc=INPUT_DOCS["reference"])
 
-    This pipeline expects the assembly references to be as they appear in the GCP example:
-
-    - (".fai", ".amb", ".ann", ".bwt", ".pac", ".sa", "^.dict").""",
-                quality=InputQualityType.static,
-                example="HG38: https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/\n\n"
-                "File: gs://genomics-public-data/references/hg38/v0/Homo_sapiens_assembly38.fasta",
-            ),
-        )
-
-        self.input(
-            "snps_dbsnp",
-            VcfTabix,
-            doc=InputDocumentation(
-                "From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``",
-                quality=InputQualityType.static,
-                example="HG38: https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/\n\n"
-                "(WARNING: The file available from the genomics-public-data resource on Google Cloud Storage is NOT compressed and indexed. This will need to be completed prior to starting the pipeline.\n\n"
-                "File: gs://genomics-public-data/references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.gz",
-            ),
-        )
-        self.input(
-            "snps_1000gp",
-            VcfTabix,
-            doc=InputDocumentation(
-                "From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``",
-                quality=InputQualityType.static,
-                example="HG38: https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/\n\n"
-                "File: gs://genomics-public-data/references/hg38/v0/1000G_phase1.snps.high_confidence.hg38.vcf.gz",
-            ),
-        )
-        self.input(
-            "known_indels",
-            VcfTabix,
-            doc=InputDocumentation(
-                "From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``",
-                quality=InputQualityType.static,
-                example="HG38: https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/\n\n"
-                "File: gs://genomics-public-data/references/hg38/v0/Homo_sapiens_assembly38.known_indels.vcf.gz",
-            ),
-        )
-        self.input(
-            "mills_indels",
-            VcfTabix,
-            doc=InputDocumentation(
-                "From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``",
-                quality=InputQualityType.static,
-                example="HG38: https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/\n\n"
-                "File: gs://genomics-public-data/references/hg38/v0/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz",
-            ),
-        )
-
-        self.input(
-            "cutadapt_adapters",
-            File(optional=True),
-            doc=InputDocumentation(
-                "Specifies a containment list for cutadapt, which contains a list of sequences to determine valid "
-                "overrepresented sequences from the FastQC report to trim with Cuatadapt. The file must contain sets "
-                "of named adapters in the form: ``name[tab]sequence``. Lines prefixed with a hash will be ignored.",
-                quality=InputQualityType.static,
-                example="https://github.com/csf-ngs/fastqc/blob/master/Contaminants/contaminant_list.txt",
-            ),
-        )
-
-        # for fast processing wgs bam
-        self.input(
-            "gridss_blacklist",
-            Bed,
-            doc=InputDocumentation(
-                "BED file containing regions to ignore.",
-                quality=InputQualityType.static,
-                example="https://github.com/PapenfussLab/gridss#blacklist",
-            ),
-        )
+        self.input("snps_dbsnp", VcfTabix, doc=INPUT_DOCS["snps_dbsnp"])
+        self.input("snps_1000gp", VcfTabix, doc=INPUT_DOCS["snps_1000gp"])
+        self.input("known_indels", VcfTabix, doc=INPUT_DOCS["known_indels"])
+        self.input("mills_indels", VcfTabix, doc=INPUT_DOCS["mills_indels"])
 
     def add_bam_qc(self, bam_source):
         # Temporarily remove GATK4 DepthOfCoverage for performance reasons, see:
@@ -174,7 +111,7 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
         #         bam=bam_source,
         #         reference=self.reference,
         #         outputPrefix=self.sample_name,
-        #         intervals=self.gatk_intervals,
+        #         intervals=intervals,
         #         # current version gatk 4.1.6.0 only support --count-type as COUNT_READS
         #         # countType="COUNT_FRAGMENTS_REQUIRE_SAME_BASE",
         #         omitDepthOutputAtEachBase=True,
@@ -213,6 +150,18 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
 
     def add_gatk_variantcaller(self, bam_source):
         # VARIANT CALLERS
+
+        intervals = FirstOperator(
+            [
+                self.gatk_intervals,
+                self.step(
+                    "generate_gatk_intervals",
+                    GenerateIntervalsByChromosome(reference=self.reference),
+                    when=self.gatk_intervals.is_null(),
+                ).out_regions,
+            ]
+        )
+
         # GATK
         self.step(
             "bqsr",
@@ -223,16 +172,16 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
                 snps_1000gp=self.snps_1000gp,
                 known_indels=self.known_indels,
                 mills_indels=self.mills_indels,
-                intervals=self.gatk_intervals,
+                intervals=intervals,
             ),
-            scatter=["intervals"],
+            scatter="intervals",
             doc="Perform base quality score recalibration",
         )
         self.step(
             "vc_gatk",
             GatkGermlineVariantCaller_4_1_3(
                 bam=self.bqsr.out,
-                intervals=self.gatk_intervals,
+                intervals=intervals,
                 reference=self.reference,
                 snps_dbsnp=self.snps_dbsnp,
             ),
@@ -241,7 +190,8 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
         self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out))
         self.step("vc_gatk_compressvcf", BGZipLatest(file=self.vc_gatk_merge.out))
         self.step(
-            "vc_gatk_sort_combined", BcfToolsSort_1_9(vcf=self.vc_gatk_compressvcf.out)
+            "vc_gatk_sort_combined",
+            BcfToolsSort_1_9(vcf=self.vc_gatk_compressvcf.out.as_type(CompressedVcf)),
         )
 
         self.step(
@@ -253,7 +203,7 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
             "vc_gatk_addbamstats",
             AddBamStatsGermline_0_1_0(
                 bam=bam_source,
-                vcf=self.vc_gatk_uncompress_for_bamstats.out,
+                vcf=self.vc_gatk_uncompress_for_bamstats.out.as_type(Vcf),
                 reference=self.reference,
             ),
         )
@@ -264,6 +214,12 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
             output_folder="variants",
             output_name="gatk",
             doc="Merged variants from the GATK caller",
+        )
+        self.output(
+            "out_variants_uncompressed",
+            source=self.vc_gatk_uncompress_for_bamstats.out.as_type(Vcf),
+            output_folder="variants",
+            output_name="gatk",
         )
         self.output(
             "out_variants_split",
@@ -281,11 +237,11 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
         meta.dateUpdated = date(2020, 6, 22)
         meta.short_documentation = "A variant-calling WGS pipeline using only the GATK Haplotype variant caller."
         meta.documentation = """\
-This is a genomics pipeline to ONLY call variants using GATK and GRIDSS from an indexed bam. The final variants are outputted in the VCF format.
+This is a genomics pipeline to ONLY call variants using GATK from an indexed bam. The final variants are outputted in the VCF format.
 
 This workflow is a reference pipeline using the Janis Python framework (pipelines assistant).
 
-- Call variants using GRIDSS and GATK4;
+- Call variants using GATK4;
 - Outputs the final variants in the VCF format.
 
 **Resources**
@@ -316,7 +272,7 @@ if __name__ == "__main__":
 
     w = WGSGermlineGATKVariantsOnly()
     args = {
-        "to_console": True,
+        "to_console": False,
         "to_disk": False,
         "validate": False,
         "export_path": os.path.join(

@@ -29,7 +29,7 @@ inputs:
   type:
   - string
   - 'null'
-  default: generated.strelka.vcf.gz
+  default: generated.strelka.vcf
   inputBinding:
     prefix: '>'
     position: 6
@@ -40,21 +40,21 @@ outputs:
   label: out
   type: File
   outputBinding:
-    glob: generated.strelka.vcf.gz
+    glob: generated.strelka.vcf
     loadContents: false
 stdout: _stdout
 stderr: _stderr
 arguments:
 - position: 0
-  valueFrom: vcf-concat
+  valueFrom: vcf-merge
   shellQuote: false
 - position: 2
   valueFrom: "| grep '^##' > header.vcf;"
   shellQuote: false
 - position: 3
-  valueFrom: vcf-merge
+  valueFrom: vcf-concat
   shellQuote: false
 - position: 5
-  valueFrom: "| grep -v '^##' > content.vcf; cat header.vcf content.vcf | bgzip -c "
+  valueFrom: "| grep -v '^##' > content.vcf; cat header.vcf content.vcf"
   shellQuote: false
 id: ConcatStrelkaSomaticVcf

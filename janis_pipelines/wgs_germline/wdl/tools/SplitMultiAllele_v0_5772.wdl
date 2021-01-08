@@ -18,6 +18,7 @@ task SplitMultiAllele {
     String? outputFilename
   }
   command <<<
+    set -e
      \
       vt decompose -s \
       ~{vcf} \

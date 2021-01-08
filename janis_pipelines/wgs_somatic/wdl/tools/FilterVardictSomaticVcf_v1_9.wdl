@@ -10,10 +10,11 @@ task FilterVardictSomaticVcf {
     String? outputFilename
   }
   command <<<
+    set -e
      \
-      bcftools filter -e 'STATUS="GERMLINE"' -o - \
+      bcftools filter -e 'STATUS=\"GERMLINE\"' -o - \
       ~{if defined(vcf) then ("'" + vcf + "'") else ""} \
-      | bcftools filter -i 'FILTER=="PASS"' \
+      | bcftools filter -i 'FILTER==\"PASS\"' \
       -o ~{select_first([outputFilename, "generated.filter.vcf"])}
   >>>
   runtime {

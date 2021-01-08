@@ -106,7 +106,7 @@ inputs:
   inputBinding:
     prefix: -O
     position: 8
-    valueFrom: $(inputs.bam.basename.replace(/.bam$/, "")).table
+    valueFrom: $(inputs.bam.basename).table
 - id: intervals
   label: intervals
   doc: -L (BASE) One or more genomic intervals over which to operate
@@ -131,7 +131,7 @@ outputs:
   label: out
   type: File
   outputBinding:
-    glob: $(inputs.bam.basename.replace(/.bam$/, "")).table
+    glob: $(inputs.bam.basename).table
     loadContents: false
 stdout: _stdout
 stderr: _stderr

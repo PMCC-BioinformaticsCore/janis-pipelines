@@ -494,7 +494,7 @@ arguments:
   shellQuote: false
 - prefix: -b
   position: 1
-  valueFrom: $(((inputs.tumorBam + "|") + inputs.normalBam))
+  valueFrom: $([inputs.tumorBam, inputs.normalBam].join("|"))
   shellQuote: true
 - prefix: -N
   position: 1
@@ -502,7 +502,7 @@ arguments:
   shellQuote: true
 - prefix: -N
   position: 5
-  valueFrom: $(((inputs.tumorName + "|") + inputs.normalName))
+  valueFrom: $([inputs.tumorName, inputs.normalName].join("|"))
   shellQuote: true
 - prefix: -f
   position: 5

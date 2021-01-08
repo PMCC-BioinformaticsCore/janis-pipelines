@@ -25,15 +25,16 @@ task tabix {
     File? targets
   }
   command <<<
-    cp -f ~{inp} .
+    set -e
+    cp -f '~{inp}' '.'
     tabix \
-      ~{if defined(zeroBased) then "--zero-based" else ""} \
-      ~{if defined(csi) then "--csi" else ""} \
-      ~{if defined(force) then "--force" else ""} \
+      ~{if (defined(zeroBased) && select_first([zeroBased])) then "--zero-based" else ""} \
+      ~{if (defined(csi) && select_first([csi])) then "--csi" else ""} \
+      ~{if (defined(force) && select_first([force])) then "--force" else ""} \
       ~{if defined(minShift) then ("--min-shift " + minShift) else ''} \
-      ~{if defined(printHeader) then "--print-header" else ""} \
-      ~{if defined(onlyHeader) then "--only-header" else ""} \
-      ~{if defined(listChroms) then "--list-chroms" else ""} \
+      ~{if (defined(printHeader) && select_first([printHeader])) then "--print-header" else ""} \
+      ~{if (defined(onlyHeader) && select_first([onlyHeader])) then "--only-header" else ""} \
+      ~{if (defined(listChroms) && select_first([listChroms])) then "--list-chroms" else ""} \
       ~{if defined(reheader) then ("--reheader '" + reheader + "'") else ""} \
       ~{if defined(select_first([preset, "vcf"])) then ("--preset '" + select_first([preset, "vcf"]) + "'") else ""} \
       ~{if defined(sequence) then ("--sequence " + sequence) else ''} \
@@ -41,7 +42,7 @@ task tabix {
       ~{if defined(end) then ("--end " + end) else ''} \
       ~{if defined(skipLines) then ("--skip-lines " + skipLines) else ''} \
       ~{if defined(comment) then ("--comment '" + comment + "'") else ""} \
-      ~{basename(inp)} \
+      '~{basename(inp)}' \
       ~{if defined(regions) then ("--regions '" + regions + "'") else ""} \
       ~{if defined(targets) then ("--targets '" + targets + "'") else ""}
   >>>

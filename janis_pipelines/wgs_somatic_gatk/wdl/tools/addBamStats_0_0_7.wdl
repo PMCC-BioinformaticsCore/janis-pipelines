@@ -16,6 +16,7 @@ task addBamStats {
     String type
   }
   command <<<
+    set -e
     add_bam_stats.py \
       ~{if defined(mpileup) then ("--mpileup '" + mpileup + "'") else ""} \
       ~{if defined(normalMpileup) then ("--normal_mpileup '" + normalMpileup + "'") else ""} \

@@ -83,6 +83,7 @@ steps:
   - id: alignmentStatsSummary
   - id: svCandidateGenerationStats
   - id: svLocusGraphStats
+  - id: somaticSVs
 - id: strelka
   label: Strelka (Germline)
   in:

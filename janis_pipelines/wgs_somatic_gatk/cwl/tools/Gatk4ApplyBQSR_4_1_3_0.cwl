@@ -94,7 +94,7 @@ inputs:
   default: generated.recalibrated.bam
   inputBinding:
     prefix: -O
-    valueFrom: $(inputs.bam.basename.replace(/.bam$/, "")).recalibrated.bam
+    valueFrom: $(inputs.bam.basename).recalibrated.bam
 - id: recalFile
   label: recalFile
   doc: Input recalibration table for BQSR
@@ -156,7 +156,7 @@ outputs:
 
     }
   outputBinding:
-    glob: $(inputs.bam.basename.replace(/.bam$/, "")).recalibrated.bam
+    glob: $(inputs.bam.basename).recalibrated.bam
     loadContents: false
 stdout: _stdout
 stderr: _stderr

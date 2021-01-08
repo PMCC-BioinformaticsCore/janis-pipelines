@@ -81,7 +81,9 @@ outputs:
   - .tbi
   outputSource: filtermutect2calls/out
 - id: out_bam
-  type: File
+  type:
+  - File
+  - 'null'
   secondaryFiles:
   - .bai
   outputSource: mutect2/bam
@@ -156,7 +158,7 @@ steps:
     source: gnomad
   - id: intervals
     source: intervals
-  run: Gatk4GetPileupSummaries_4_1_4_0.cwl
+  run: Gatk4GetPileupSummaries_4_1_6_0.cwl
   out:
   - id: out
 - id: calculatecontamination

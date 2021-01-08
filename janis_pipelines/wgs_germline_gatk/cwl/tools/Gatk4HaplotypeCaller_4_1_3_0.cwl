@@ -364,6 +364,14 @@ inputs:
   - 'null'
   inputBinding:
     prefix: --emit-ref-confidence
+- id: dontUseSoftClippedBases
+  label: dontUseSoftClippedBases
+  doc: Do not analyze soft clipped bases in the reads
+  type:
+  - boolean
+  - 'null'
+  inputBinding:
+    prefix: --dont-use-soft-clipped-bases
 - id: inputRead
   label: inputRead
   doc: BAM/SAM/CRAM file containing reads
@@ -417,7 +425,7 @@ inputs:
   inputBinding:
     prefix: --output
     position: 8
-    valueFrom: $(inputs.inputRead.basename.replace(/.bam$/, "")).vcf.gz
+    valueFrom: $(inputs.inputRead.basename).vcf.gz
 - id: dbsnp
   label: dbsnp
   doc: '(Also: -D) A dbSNP VCF file.'
@@ -447,7 +455,7 @@ inputs:
   inputBinding:
     prefix: -bamout
     position: 8
-    valueFrom: $(inputs.inputRead.basename.replace(/.bam$/, "")).bam
+    valueFrom: $(inputs.inputRead.basename).bam
 
 outputs:
 - id: out
@@ -458,7 +466,7 @@ outputs:
   secondaryFiles:
   - .tbi
   outputBinding:
-    glob: $(inputs.inputRead.basename.replace(/.bam$/, "")).vcf.gz
+    glob: $(inputs.inputRead.basename).vcf.gz
     loadContents: false
 - id: bam
   label: bam
@@ -486,7 +494,7 @@ outputs:
 
     }
   outputBinding:
-    glob: $(inputs.inputRead.basename.replace(/.bam$/, "")).bam
+    glob: $(inputs.inputRead.basename).bam
     loadContents: false
 stdout: _stdout
 stderr: _stderr
