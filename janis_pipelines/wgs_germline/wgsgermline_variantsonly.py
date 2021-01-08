@@ -15,7 +15,7 @@ from janis_bioinformatics.tools.variantcallers import (
     IlluminaGermlineVariantCaller,
     VardictGermlineVariantCaller,
 )
-from janis_core import Array, WorkflowMetadata, InputDocumentation, InputQualityType
+from janis_core import Array, WorkflowMetadata
 from janis_core.operators.standard import FirstOperator
 from janis_unix.tools import UncompressArchive
 
@@ -55,6 +55,8 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
         super().inputs_for_intervals()
         self.input("vardict_intervals", Array(Bed), doc=INPUT_DOCS["vardict_intervals"])
         self.input("strelka_intervals", BedTabix, doc=INPUT_DOCS["strelka_intervals"])
+        # for fast processing wgs bam
+        self.input("gridss_blacklist", Bed, doc=INPUT_DOCS["gridss_blacklist"])
 
     def add_gridss(self, bam_source):
         # GRIDSS
@@ -245,6 +247,7 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
             "out_variants",
             source=self.combined_addbamstats.out,
             output_folder="variants",
+            output_name="combined",
             doc="Combined variants from all 3 callers",
         )
 
