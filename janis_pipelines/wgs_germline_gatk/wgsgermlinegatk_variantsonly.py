@@ -1,6 +1,13 @@
 from datetime import date
 
-from janis_bioinformatics.data_types import FastaWithDict, VcfTabix, Bed, BamBai
+from janis_bioinformatics.data_types import (
+    FastaWithDict,
+    VcfTabix,
+    Bed,
+    BamBai,
+    Vcf,
+    CompressedVcf,
+)
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
 from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
 from janis_bioinformatics.tools.common import GATKBaseRecalBQSRWorkflow_4_1_3
@@ -14,11 +21,9 @@ from janis_bioinformatics.tools.pmac import (
 )
 from janis_bioinformatics.tools.variantcallers import GatkGermlineVariantCaller_4_1_3
 from janis_core import (
-    File,
     String,
     Array,
     WorkflowMetadata,
-    InputDocumentation,
     InputQualityType,
 )
 from janis_core.operators.standard import FirstOperator
@@ -95,9 +100,6 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
         self.input("snps_1000gp", VcfTabix, doc=INPUT_DOCS["snps_1000gp"])
         self.input("known_indels", VcfTabix, doc=INPUT_DOCS["known_indels"])
         self.input("mills_indels", VcfTabix, doc=INPUT_DOCS["mills_indels"])
-
-        # for fast processing wgs bam
-        self.input("gridss_blacklist", Bed, doc=INPUT_DOCS["gridss_blacklist"])
 
     def add_bam_qc(self, bam_source):
         # Temporarily remove GATK4 DepthOfCoverage for performance reasons, see:
@@ -188,7 +190,8 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
         self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out))
         self.step("vc_gatk_compressvcf", BGZipLatest(file=self.vc_gatk_merge.out))
         self.step(
-            "vc_gatk_sort_combined", BcfToolsSort_1_9(vcf=self.vc_gatk_compressvcf.out)
+            "vc_gatk_sort_combined",
+            BcfToolsSort_1_9(vcf=self.vc_gatk_compressvcf.out.as_type(CompressedVcf)),
         )
 
         self.step(
@@ -200,7 +203,7 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
             "vc_gatk_addbamstats",
             AddBamStatsGermline_0_1_0(
                 bam=bam_source,
-                vcf=self.vc_gatk_uncompress_for_bamstats.out,
+                vcf=self.vc_gatk_uncompress_for_bamstats.out.as_type(Vcf),
                 reference=self.reference,
             ),
         )
@@ -211,6 +214,12 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
             output_folder="variants",
             output_name="gatk",
             doc="Merged variants from the GATK caller",
+        )
+        self.output(
+            "out_variants_uncompressed",
+            source=self.vc_gatk_uncompress_for_bamstats.out.as_type(Vcf),
+            output_folder="variants",
+            output_name="gatk",
         )
         self.output(
             "out_variants_split",
@@ -228,11 +237,11 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
         meta.dateUpdated = date(2020, 6, 22)
         meta.short_documentation = "A variant-calling WGS pipeline using only the GATK Haplotype variant caller."
         meta.documentation = """\
-This is a genomics pipeline to ONLY call variants using GATK and GRIDSS from an indexed bam. The final variants are outputted in the VCF format.
+This is a genomics pipeline to ONLY call variants using GATK from an indexed bam. The final variants are outputted in the VCF format.
 
 This workflow is a reference pipeline using the Janis Python framework (pipelines assistant).
 
-- Call variants using GRIDSS and GATK4;
+- Call variants using GATK4;
 - Outputs the final variants in the VCF format.
 
 **Resources**
