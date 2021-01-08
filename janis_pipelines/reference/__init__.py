@@ -73,12 +73,12 @@ REFERENCE_INPUTS = {
 
 INTERVAL_INPUTS = {
     "gatk_intervals": {
-        "doc": "List of intervals over which to split the GATK variant calling",
+        "doc": "List of intervals over which to split the GATK variant calling. If no interval is provided, one interval for each chromosome in the reference will be generated.",
         "quality": "static",
         "example": "BRCA1.bed",
     },
     "vardict_intervals": {
-        "doc": "List of intervals over which to split the VarDict variant calling",
+        "doc": "List of intervals over which to split the VarDict variant calling. If no interval is provided, a set of intervals will be generated for each chromosome in the reference.",
         "quality": "static",
         "example": "BRCA1.bed",
     },
@@ -86,13 +86,16 @@ INTERVAL_INPUTS = {
         "doc": "An interval for which to restrict the analysis to.",
         "quality": "static",
         "example": "BRCA1.bed.gz",
+        "source": {
+            "hg38": "https://swift.rc.nectar.org.au/v1/AUTH_4df6e734a509497692be237549bbe9af/janis-test-data/bioinformatics/hg38/hg38.bed.gz"
+        },
     },
     "gridss_blacklist": {
         "doc": "BED file containing regions to ignore. For more information, visit: https://github.com/PapenfussLab/gridss#blacklist",
         "quality": "static",
         "source": {
             "hg19": "https://www.encodeproject.org/files/ENCFF001TDO/@@download/ENCFF001TDO.bed.gz",
-            "GRCh38": "https://www.encodeproject.org/files/ENCFF356LFX/@@download/ENCFF356LFX.bed.gz",
+            "hg38": "https://www.encodeproject.org/files/ENCFF356LFX/@@download/ENCFF356LFX.bed.gz",
         },
     },
 }
