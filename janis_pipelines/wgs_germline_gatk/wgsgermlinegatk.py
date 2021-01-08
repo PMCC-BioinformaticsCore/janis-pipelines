@@ -153,10 +153,11 @@ if __name__ == "__main__":
     tool = WGSGermlineGATK()
     # tool.translate("wdl")
 
-    run_test_case(
+    results = run_test_case(
         tool,
         test_case=tool.tests()[0].name,
         engine=EngineType.cromwell,
         # circumvent running tests by declaring outputs = {<outputs}>
         # output=outputs,
     )
+    print(results)
