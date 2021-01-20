@@ -1,6 +1,6 @@
 from datetime import date
 
-from janis_bioinformatics.data_types import Bed, BedTabix
+from janis_bioinformatics.data_types import Bed, BedTabix, Vcf, CompressedVcf
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
 from janis_bioinformatics.tools.common import GATKBaseRecalBQSRWorkflow_4_1_3
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
@@ -164,7 +164,9 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         self.step("vc_gatk_compress_for_sort", BGZipLatest(file=self.vc_gatk_merge.out))
         self.step(
             "vc_gatk_sort_combined",
-            BcfToolsSort_1_9(vcf=self.vc_gatk_compress_for_sort.out),
+            BcfToolsSort_1_9(
+                vcf=self.vc_gatk_compress_for_sort.out.as_type(CompressedVcf)
+            ),
         )
         self.step(
             "vc_gatk_uncompress_for_combine",
@@ -179,7 +181,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
                 normal_bam=normal_bam_source,
                 tumor_bam=tumor_bam_source,
                 reference=self.reference,
-                vcf=self.vc_gatk_uncompress_for_combine.out,
+                vcf=self.vc_gatk_uncompress_for_combine.out.as_type(Vcf),
             ),
         )
 
@@ -241,7 +243,9 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         )
         self.step(
             "vc_vardict_sort_combined",
-            BcfToolsSort_1_9(vcf=self.vc_vardict_compress_for_sort.out),
+            BcfToolsSort_1_9(
+                vcf=self.vc_vardict_compress_for_sort.out.as_type(CompressedVcf)
+            ),
         )
         self.step(
             "vc_vardict_uncompress_for_combine",
@@ -270,9 +274,9 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
                 normal=self.normal_name,
                 tumor=self.tumor_name,
                 vcfs=[
-                    self.vc_gatk_uncompress_for_combine.out,
+                    self.vc_gatk_uncompress_for_combine.out.as_type(Vcf),
                     self.vc_strelka.out,
-                    self.vc_vardict_uncompress_for_combine.out,
+                    self.vc_vardict_uncompress_for_combine.out.as_type(Vcf),
                 ],
                 type="somatic",
                 columns=["AD", "DP", "GT"],
@@ -280,7 +284,10 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         )
 
         self.step("combined_compress", BGZipLatest(file=self.combine_variants.out))
-        self.step("combined_sort", BcfToolsSort_1_9(vcf=self.combined_compress.out))
+        self.step(
+            "combined_sort",
+            BcfToolsSort_1_9(vcf=self.combined_compress.out.as_type(CompressedVcf)),
+        )
         self.step("combined_uncompress", UncompressArchive(file=self.combined_sort.out))
 
         self.step(
@@ -290,7 +297,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
                 tumor_id=self.tumor_name,
                 normal_bam=normal_bam_source,
                 tumor_bam=tumor_bam_source,
-                vcf=self.combined_uncompress.out,
+                vcf=self.combined_uncompress.out.as_type(Vcf),
                 reference=self.reference,
             ),
         )

@@ -1,6 +1,14 @@
 from datetime import date
 
-from janis_bioinformatics.data_types import FastaWithDict, VcfTabix, Bed, File, BamBai
+from janis_bioinformatics.data_types import (
+    FastaWithDict,
+    VcfTabix,
+    Bed,
+    File,
+    BamBai,
+    CompressedVcf,
+    Vcf,
+)
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
 from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
 from janis_bioinformatics.tools.common import GATKBaseRecalBQSRWorkflow_4_1_3
@@ -166,7 +174,8 @@ class WGSSomaticGATKVariantsOnly(BioinformaticsWorkflow):
         self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out))
         self.step("vc_gatk_compressvcf", BGZipLatest(file=self.vc_gatk_merge.out))
         self.step(
-            "vc_gatk_sort_combined", BcfToolsSort_1_9(vcf=self.vc_gatk_compressvcf.out)
+            "vc_gatk_sort_combined",
+            BcfToolsSort_1_9(vcf=self.vc_gatk_compressvcf.out.as_type(CompressedVcf)),
         )
         self.step(
             "vc_gatk_uncompressvcf",
@@ -181,7 +190,7 @@ class WGSSomaticGATKVariantsOnly(BioinformaticsWorkflow):
                 normal_bam=normal_bam_source,
                 tumor_bam=tumor_bam_source,
                 reference=self.reference,
-                vcf=self.vc_gatk_uncompressvcf.out,
+                vcf=self.vc_gatk_uncompressvcf.out.as_type(Vcf),
             ),
         )
 
@@ -241,15 +250,15 @@ if __name__ == "__main__":
     w = WGSSomaticGATKVariantsOnly()
     args = {
         "to_console": False,
-        "to_disk": True,
+        "to_disk": False,
         "validate": True,
         "export_path": os.path.join(
             os.path.dirname(os.path.realpath(__file__)), "{language}"
         ),
     }
-    w.get_dot_plot(show=True, expand_subworkflows=True)
+    # w.get_dot_plot(show=True, expand_subworkflows=True)
     # w.translate("cwl", **args)
-    # w.translate("wdl", **args)
+    w.translate("wdl", **args)
     #
     # # from cwltool import main
     # # import logging
