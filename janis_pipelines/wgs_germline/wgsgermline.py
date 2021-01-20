@@ -1,13 +1,7 @@
 import operator
 from typing import Optional, List
 
-from janis_core import (
-    Array,
-    String,
-    WorkflowMetadata,
-    InputDocumentation,
-    InputQualityType,
-)
+from janis_core import Array, String, WorkflowMetadata
 
 from janis_core.tool.test_classes import (
     TTestCase,
@@ -19,28 +13,29 @@ from janis_bioinformatics.data_types import FastqGzPair
 
 from janis_pipelines.wgs_germline.wgsgermline_variantsonly import (
     WGSGermlineMultiCallersVariantsOnly,
+    INPUT_DOCS,
 )
 from janis_pipelines.wgs_germline_gatk.wgsgermlinegatk import WGSGermlineGATK
 
 expected_performance_summary = """\	
 Total reads,Mapped reads,% Reads mapped,% Mapped reads duplicates,Total reads minus duplicates,Mapped reads minus duplicates,Paired in sequencing,Read1,Read2,Properly paired,With itself and mate mapped,Singletons,With mate mapped to a different chr,With mate mapped to a different chr (mapQ>=5),% Reads OnTarget,% OnTarget duplicates,OnTarget paired in sequencing,OnTarget read1,OnTarget read2,OnTarget properly paired,OnTarget With itself and mate mapped,OnTarget singletons,OnTarget with mate mapped to a different chr,OnTarget with mate mapped to a different chr (mapQ>=5),% Target bases >=1-fold Coverage,% Target bases >=10-fold Coverage,% Target bases >=20-fold Coverage,% Target bases >=100-fold Coverage,Mean coverage for target bases,% Target bases with one fifth of mean coverage,Median Fragment Length	
-19615,19582,99.83,0.12,19592,19559,19299,9645,9654,18386,19242,24,778,636,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,0.00,0.00,0.00,0.00,0.00,0.00,556	
+19615,19582,99.83,0.12,19592,19559,19299,9645,9654,18386,19242,24,778,636,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,0.00,0.00,0.00,0.00,0.00,0.00,556
 """
 
-expected_gridss_flagstat = """\	
-7 + 0 in total (QC-passed reads + QC-failed reads)	
-0 + 0 secondary	
-0 + 0 supplementary	
-0 + 0 duplicates	
-7 + 0 mapped (100.00% : N/A)	
-0 + 0 paired in sequencing	
-0 + 0 read1	
-0 + 0 read2	
-0 + 0 properly paired (N/A : N/A)	
-0 + 0 with itself and mate mapped	
-0 + 0 singletons (N/A : N/A)	
-0 + 0 with mate mapped to a different chr	
-0 + 0 with mate mapped to a different chr (mapQ>=5)	
+expected_gridss_flagstat = """\
+7 + 0 in total (QC-passed reads + QC-failed reads)
+0 + 0 secondary
+0 + 0 supplementary
+0 + 0 duplicates
+7 + 0 mapped (100.00% : N/A)
+0 + 0 paired in sequencing
+0 + 0 read1
+0 + 0 read2
+0 + 0 properly paired (N/A : N/A)
+0 + 0 with itself and mate mapped
+0 + 0 singletons (N/A : N/A)
+0 + 0 with mate mapped to a different chr
+0 + 0 with mate mapped to a different chr (mapQ>=5)
 """
 
 
@@ -77,25 +72,8 @@ class WGSGermlineMultiCallers(WGSGermlineGATK, WGSGermlineMultiCallersVariantsOn
 
     def add_inputs(self):
         # INPUTS
-        self.input(
-            "sample_name",
-            String,
-            doc=InputDocumentation(
-                "Sample name from which to generate the readGroupHeaderLine for BwaMem",
-                quality=InputQualityType.user,
-                example="NA12878",
-            ),
-        )
-        self.input(
-            "fastqs",
-            Array(FastqGzPair),
-            doc=InputDocumentation(
-                "An array of FastqGz pairs. These are aligned separately and merged "
-                "to create higher depth coverages from multiple sets of reads",
-                quality=InputQualityType.user,
-                example="[[BRCA1_R1.fastq.gz, BRCA1_R2.fastq.gz]]",
-            ),
-        )
+        self.input("sample_name", String, doc=INPUT_DOCS["sample_name"])
+        self.input("fastqs", Array(FastqGzPair), doc=INPUT_DOCS["fastqs"])
 
         self.inputs_for_reference()
         self.inputs_for_intervals()
@@ -201,7 +179,7 @@ if __name__ == "__main__":
     w = WGSGermlineMultiCallers()
     args = {
         "to_console": False,
-        "to_disk": False,
+        "to_disk": True,
         "validate": True,
         "export_path": os.path.join(
             os.path.dirname(os.path.realpath(__file__)), "{language}"

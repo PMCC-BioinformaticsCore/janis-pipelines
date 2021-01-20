@@ -250,15 +250,15 @@ if __name__ == "__main__":
     w = WGSSomaticGATKVariantsOnly()
     args = {
         "to_console": False,
-        "to_disk": False,
+        "to_disk": True,
         "validate": True,
         "export_path": os.path.join(
             os.path.dirname(os.path.realpath(__file__)), "{language}"
         ),
     }
-    # w.get_dot_plot(show=True, expand_subworkflows=True)
+    w.get_dot_plot(show=True, expand_subworkflows=True)
     # w.translate("cwl", **args)
-    w.translate("wdl", **args)
+    # w.translate("wdl", **args)
     #
     # # from cwltool import main
     # # import logging
