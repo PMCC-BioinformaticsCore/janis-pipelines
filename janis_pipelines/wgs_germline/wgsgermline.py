@@ -17,8 +17,8 @@ from janis_pipelines.wgs_germline.wgsgermline_variantsonly import (
 )
 from janis_pipelines.wgs_germline_gatk.wgsgermlinegatk import WGSGermlineGATK
 
-expected_performance_summary = """\	
-Total reads,Mapped reads,% Reads mapped,% Mapped reads duplicates,Total reads minus duplicates,Mapped reads minus duplicates,Paired in sequencing,Read1,Read2,Properly paired,With itself and mate mapped,Singletons,With mate mapped to a different chr,With mate mapped to a different chr (mapQ>=5),% Reads OnTarget,% OnTarget duplicates,OnTarget paired in sequencing,OnTarget read1,OnTarget read2,OnTarget properly paired,OnTarget With itself and mate mapped,OnTarget singletons,OnTarget with mate mapped to a different chr,OnTarget with mate mapped to a different chr (mapQ>=5),% Target bases >=1-fold Coverage,% Target bases >=10-fold Coverage,% Target bases >=20-fold Coverage,% Target bases >=100-fold Coverage,Mean coverage for target bases,% Target bases with one fifth of mean coverage,Median Fragment Length	
+expected_performance_summary = """\
+Total reads,Mapped reads,% Reads mapped,% Mapped reads duplicates,Total reads minus duplicates,Mapped reads minus duplicates,Paired in sequencing,Read1,Read2,Properly paired,With itself and mate mapped,Singletons,With mate mapped to a different chr,With mate mapped to a different chr (mapQ>=5),% Reads OnTarget,% OnTarget duplicates,OnTarget paired in sequencing,OnTarget read1,OnTarget read2,OnTarget properly paired,OnTarget With itself and mate mapped,OnTarget singletons,OnTarget with mate mapped to a different chr,OnTarget with mate mapped to a different chr (mapQ>=5),% Target bases >=1-fold Coverage,% Target bases >=10-fold Coverage,% Target bases >=20-fold Coverage,% Target bases >=100-fold Coverage,Mean coverage for target bases,% Target bases with one fifth of mean coverage,Median Fragment Length
 19615,19582,99.83,0.12,19592,19559,19299,9645,9654,18386,19242,24,778,636,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,0.00,0.00,0.00,0.00,0.00,0.00,556
 """
 
