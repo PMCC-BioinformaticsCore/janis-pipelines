@@ -148,16 +148,16 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
 
 
 if __name__ == "__main__":
-    from toolbuilder.runtest.runner import run_test_case, EngineType
+    # from toolbuilder.runtest.runner import run_test_case, EngineType
 
     tool = WGSGermlineGATK()
-    # tool.translate("wdl")
+    tool.translate("wdl", to_console=False)
 
-    results = run_test_case(
-        tool,
-        test_case=tool.tests()[0].name,
-        engine=EngineType.cromwell,
-        # circumvent running tests by declaring outputs = {<outputs}>
-        # output=outputs,
-    )
-    print(results)
+    # results = run_test_case(
+    #     tool,
+    #     test_case=tool.tests()[0].name,
+    #     engine=EngineType.cromwell,
+    #     # circumvent running tests by declaring outputs = {<outputs}>
+    #     # output=outputs,
+    # )
+    # print(results)

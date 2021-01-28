@@ -1,17 +1,15 @@
 import operator
 from typing import Optional, List
 
-from janis_bioinformatics.data_types import FastqGzPair, Bam
-from janis_core import (
-    Array,
-    String,
-    WorkflowMetadata,
-)
+from janis_core import Array, String, WorkflowMetadata
+
 from janis_core.tool.test_classes import (
     TTestCase,
     TTestExpectedOutput,
     TTestPreprocessor,
 )
+
+from janis_bioinformatics.data_types import FastqGzPair
 
 from janis_pipelines.wgs_germline.wgsgermline_variantsonly import (
     WGSGermlineMultiCallersVariantsOnly,
@@ -111,7 +109,6 @@ The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be 
 """
 
     def tests(self) -> Optional[List[TTestCase]]:
-
         bioinf_base = "https://swift.rc.nectar.org.au/v1/AUTH_4df6e734a509497692be237549bbe9af/janis-test-data/bioinformatics"
         hg38 = f"{bioinf_base}/hg38"
 
@@ -179,7 +176,7 @@ The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be 
 if __name__ == "__main__":
     import os.path
 
-    tool = WGSGermlineMultiCallers()
+    w = WGSGermlineMultiCallers()
     args = {
         "to_console": False,
         "to_disk": True,

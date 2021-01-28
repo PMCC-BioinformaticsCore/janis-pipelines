@@ -1,4 +1,4 @@
-from janis_bioinformatics.data_types import Bed, BedTabix
+from janis_bioinformatics.data_types import Bed, BedTabix, Vcf, CompressedVcf
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
 from janis_bioinformatics.tools.common import GATKBaseRecalBQSRWorkflow_4_1_3
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
@@ -124,12 +124,16 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
         self.step("vc_gatk_compress_for_sort", BGZipLatest(file=self.vc_gatk_merge.out))
         self.step(
             "vc_gatk_sort_combined",
-            BcfToolsSort_1_9(vcf=self.vc_gatk_compress_for_sort.out),
+            BcfToolsSort_1_9(
+                vcf=self.vc_gatk_compress_for_sort.out.as_type(CompressedVcf)
+            ),
         )
 
         self.step(
             "vc_gatk_uncompress_for_combine",
-            UncompressArchive(file=self.vc_gatk_sort_combined.out),
+            UncompressArchive(
+                file=self.vc_gatk_sort_combined.out.as_type(CompressedVcf)
+            ),
         )
 
         self.output(
@@ -187,11 +191,14 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
         )
         self.step("vc_vardict_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_vardict.out))
         self.step(
-            "vc_vardict_compress_for_sort", BGZipLatest(file=self.vc_vardict_merge.out)
+            "vc_vardict_compress_for_sort",
+            BGZipLatest(file=self.vc_vardict_merge.out.as_type(Vcf)),
         )
         self.step(
             "vc_vardict_sort_combined",
-            BcfToolsSort_1_9(vcf=self.vc_vardict_compress_for_sort.out),
+            BcfToolsSort_1_9(
+                vcf=self.vc_vardict_compress_for_sort.out.as_type(CompressedVcf)
+            ),
         )
 
         self.step(
@@ -222,23 +229,26 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
             "combine_variants",
             CombineVariants_0_0_8(
                 vcfs=[
-                    self.vc_gatk_uncompress_for_combine.out,
+                    self.vc_gatk_uncompress_for_combine.out.as_type(Vcf),
                     self.vc_strelka.out,
-                    self.vc_vardict_uncompress_for_combine.out,
+                    self.vc_vardict_uncompress_for_combine.out.as_type(Vcf),
                 ],
                 type="germline",
                 columns=["AC", "AN", "AF", "AD", "DP", "GT"],
             ),
         )
         self.step("combined_compress", BGZipLatest(file=self.combine_variants.out))
-        self.step("combined_sort", BcfToolsSort_1_9(vcf=self.combined_compress.out))
+        self.step(
+            "combined_sort",
+            BcfToolsSort_1_9(vcf=self.combined_compress.out.as_type(CompressedVcf)),
+        )
         self.step("combined_uncompress", UncompressArchive(file=self.combined_sort.out))
 
         self.step(
             "combined_addbamstats",
             AddBamStatsGermline_0_1_0(
                 bam=bam_source,
-                vcf=self.combined_uncompress.out,
+                vcf=self.combined_uncompress.out.as_type(Vcf),
                 reference=self.reference,
             ),
         )
