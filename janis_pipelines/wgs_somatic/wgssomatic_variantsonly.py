@@ -173,18 +173,6 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
             UncompressArchive(file=self.vc_gatk_sort_combined.out),
         )
 
-        self.step(
-            "addbamstats",
-            AddBamStatsSomatic_0_1_0(
-                normal_id=self.normal_name,
-                tumor_id=self.tumor_name,
-                normal_bam=normal_bam_source,
-                tumor_bam=tumor_bam_source,
-                reference=self.reference,
-                vcf=self.vc_gatk_uncompress_for_combine.out.as_type(Vcf),
-            ),
-        )
-
         # VCF
         self.output(
             "out_variants_gatk",
@@ -304,7 +292,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
 
         self.output(
             "out_variants",
-            source=self.addbamstats.out,
+            source=self.combined_addbamstats.out,
             output_folder="variants",
             doc="Combined variants from GATK, VarDict and Strelka callers",
         )
