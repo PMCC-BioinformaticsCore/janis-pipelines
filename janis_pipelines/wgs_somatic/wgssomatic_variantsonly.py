@@ -25,6 +25,7 @@ from janis_core import (
     WorkflowMetadata,
     InputDocumentation,
     InputQualityType,
+    StringFormatter,
 )
 from janis_core.operators.standard import FirstOperator
 from janis_unix.tools import UncompressArchive
@@ -99,13 +100,27 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         self.output(
             "out_gridss_assembly",
             source=self.vc_gridss.assembly,
-            output_folder="gridss",
+            output_folder=[
+                "gridss",
+            ],
+            output_name=StringFormatter(
+                "{tumor_name}--{normal_name}_gridss",
+                tumor_name=self.tumor_name,
+                normal_name=self.normal_name,
+            ),
             doc="Assembly returned by GRIDSS",
         )
         self.output(
             "out_variants_gridss",
             source=self.vc_gridss.out,
-            output_folder="gridss",
+            output_folder=[
+                "gridss",
+            ],
+            output_name=StringFormatter(
+                "{tumor_name}--{normal_name}_gridss",
+                tumor_name=self.tumor_name,
+                normal_name=self.normal_name,
+            ),
             doc="Variants from the GRIDSS variant caller",
         )
 
@@ -177,13 +192,23 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         self.output(
             "out_variants_gatk",
             source=self.vc_gatk_sort_combined.out,
-            output_folder="variants",
+            output_folder=[
+                "vcf",
+            ],
+            output_name=StringFormatter(
+                "{tumor_name}--{normal_name}_gatk",
+                tumor_name=self.tumor_name,
+                normal_name=self.normal_name,
+            ),
             doc="Merged variants from the GATK caller",
         )
         self.output(
             "out_variants_split",
             source=self.vc_gatk.out,
-            output_folder=["variants", "byInterval"],
+            output_folder=[
+                "vcf",
+                "GATKByInterval",
+            ],
             doc="Unmerged variants from the GATK caller (by interval)",
         )
 
@@ -197,12 +222,19 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
                 reference=self.reference,
             ),
         )
+        self.step("vc_strelka_compress", BGZipLatest(file=self.vc_strelka.out))
 
         self.output(
             "out_variants_strelka",
-            source=self.vc_strelka.out,
-            output_folder="variants",
-            output_name="strelka",
+            source=self.vc_strelka_compress.out.as_type(CompressedVcf),
+            output_folder=[
+                "vcf",
+            ],
+            output_name=StringFormatter(
+                "{tumor_name}--{normal_name}_strelka",
+                tumor_name=self.tumor_name,
+                normal_name=self.normal_name,
+            ),
             doc="Variants from the Strelka variant caller",
         )
 
@@ -241,18 +273,26 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         )
 
         self.output(
-            "out_variants_vardict_split",
-            source=self.vc_vardict.out,
-            output_folder=["variants", "vardict"],
-            doc="Unmerged variants from the VarDict caller (by interval)",
-        )
-
-        self.output(
             "out_variants_vardict",
             source=self.vc_vardict_sort_combined.out,
-            output_folder="variants",
-            output_name="vardict",
+            output_folder=[
+                "vcf",
+            ],
+            output_name=StringFormatter(
+                "{tumor_name}--{normal_name}_vardict",
+                tumor_name=self.tumor_name,
+                normal_name=self.normal_name,
+            ),
             doc="Merged variants from the VarDict caller",
+        )
+        self.output(
+            "out_variants_vardict_split",
+            source=self.vc_vardict.out,
+            output_folder=[
+                "vcf",
+                "VardictByInterval",
+            ],
+            doc="Unmerged variants from the GATK caller (by interval)",
         )
 
     def add_combine_variants(self, normal_bam_source, tumor_bam_source):
@@ -293,7 +333,14 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         self.output(
             "out_variants",
             source=self.combined_addbamstats.out,
-            output_folder="variants",
+            output_folder=[
+                "vcf",
+            ],
+            output_name=StringFormatter(
+                "{tumor_name}--{normal_name}_combined",
+                tumor_name=self.tumor_name,
+                normal_name=self.normal_name,
+            ),
             doc="Combined variants from GATK, VarDict and Strelka callers",
         )
 
