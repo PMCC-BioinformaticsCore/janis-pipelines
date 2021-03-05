@@ -145,7 +145,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
     def add_facets(self, normal_bam_source, tumor_bam_source):
 
         self.step(
-            "facets",
+            "vc_facets",
             FacestWorkflow(
                 normal_bam=normal_bam_source,
                 tumor_bam=tumor_bam_source,
@@ -163,7 +163,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         )
         self.output(
             "out_facets_summary",
-            source=self.facets.out_summary,
+            source=self.vc_facets.out_summary,
             output_folder="facets",
             output_name=StringFormatter(
                 "{tumour}--{normal}.txt",
@@ -173,7 +173,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         )
         self.output(
             "out_facets_purity_png",
-            source=self.facets.out_purity_png,
+            source=self.vc_facets.out_purity_png,
             output_folder="facets",
             output_name=StringFormatter(
                 "{tumour}--{normal}_purity.png",
@@ -183,7 +183,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         ),
         self.output(
             "out_facets_purity_seg",
-            source=self.facets.out_purity_seg,
+            source=self.vc_facets.out_purity_seg,
             output_folder="facets",
             output_name=StringFormatter(
                 "{tumour}--{normal}_purity.seg",
@@ -193,7 +193,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         ),
         self.output(
             "out_facets_purity_rds",
-            source=self.facets.out_purity_rds,
+            source=self.vc_facets.out_purity_rds,
             output_folder="facets",
             output_name=StringFormatter(
                 "{tumour}--{normal}_purity.rds",
@@ -203,7 +203,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         ),
         self.output(
             "out_facets_hisens_png",
-            source=self.facets.out_hisens_png,
+            source=self.vc_facets.out_hisens_png,
             output_folder="facets",
             output_name=StringFormatter(
                 "{tumour}--{normal}_hisens.png",
@@ -213,7 +213,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         ),
         self.output(
             "out_facets_hisens_seg",
-            source=self.facets.out_hisens_seg,
+            source=self.vc_facets.out_hisens_seg,
             output_folder="facets",
             output_name=StringFormatter(
                 "{tumour}--{normal}_hisens.seg",
@@ -223,7 +223,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         ),
         self.output(
             "out_facets_hisens_rds",
-            source=self.facets.out_hisens_rds,
+            source=self.vc_facets.out_hisens_rds,
             output_folder="facets",
             output_name=StringFormatter(
                 "{tumour}--{normal}_hisens.rds",
@@ -233,7 +233,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         ),
         self.output(
             "out_facets_arm_level",
-            source=self.facets.out_arm_level,
+            source=self.vc_facets.out_arm_level,
             output_folder="facets",
             output_name=StringFormatter(
                 "{tumour}--{normal}.arm_level.txt",
@@ -243,7 +243,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         ),
         self.output(
             "out_facets_gene_level",
-            source=self.facets.out_gene_level,
+            source=self.vc_facets.out_gene_level,
             output_folder="facets",
             output_name=StringFormatter(
                 "{tumour}--{normal}.gene_level.txt",
@@ -253,7 +253,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         ),
         self.output(
             "out_facets_qc",
-            source=self.facets.out_qc,
+            source=self.vc_facets.out_qc,
             output_folder="facets",
             output_name=StringFormatter(
                 "{tumour}--{normal}.qc.txt",
