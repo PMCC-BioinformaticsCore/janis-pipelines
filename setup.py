@@ -31,6 +31,14 @@ setup(
         "janis-pipelines.bioinformatics>=0.10.0",
         "janis-pipelines.unix>=0.10.0",
     ],
+    extras_require={
+        "ci": [
+            "keyring==21.4.0",
+            "setuptools",
+            "wheel",
+            "twine",
+        ],
+    },
     zip_safe=False,
     long_description=long_description,
     long_description_content_type="text/markdown",
