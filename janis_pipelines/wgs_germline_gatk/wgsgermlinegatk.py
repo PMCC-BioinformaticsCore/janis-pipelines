@@ -108,25 +108,26 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
 
         bioinf_base = "https://swift.rc.nectar.org.au/v1/AUTH_4df6e734a509497692be237549bbe9af/janis-test-data/bioinformatics"
         hg38 = f"{bioinf_base}/hg38"
+        chr17 = f"{bioinf_base}/petermac_testdata"
 
         return [
             TTestCase(
                 name="brca1",
                 input={
                     "sample_name": "NA12878",
-                    "reference": f"{hg38}/reference/Homo_sapiens_assembly38.fasta",
+                    "reference": f"{chr17}/Homo_sapiens_assembly38.chr17.fasta",
                     "fastqs": [
                         [
-                            f"{bioinf_base}/BRCA1_R1.fastq.gz",
-                            f"{bioinf_base}/BRCA1_R2.fastq.gz",
+                            f"{chr17}/NA12878-BRCA1_R1.fastq.gz",
+                            f"{chr17}/NA12878-BRCA1_R2.fastq.gz",
                         ]
                     ],
-                    "gatk_intervals": [f"{hg38}/NA12878/BRCA1.bed"],
-                    "known_indels": f"{hg38}/known_indels/Homo_sapiens_assembly38.known_indels.vcf.gz",
-                    "mills_indels": f"{hg38}/mills_indels/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz",
-                    "snps_1000gp": f"{hg38}/snps_1000GP/1000G_phase1.snps.high_confidence.hg38.vcf.gz",
-                    "snps_dbsnp": f"{hg38}/snps_dbsnp/Homo_sapiens_assembly38.dbsnp138.vcf.gz",
-                    "cutadapt_adapters": "https://raw.githubusercontent.com/csf-ngs/fastqc/master/Contaminants/contaminant_list.txt",
+                    "gatk_intervals": [f"{chr17}/BRCA1.hg38.bed"],
+                    "known_indels": f"{chr17}/Homo_sapiens_assembly38.known_indels.BRCA1.vcf.gz",
+                    "mills_indels": f"{chr17}/Mills_and_1000G_gold_standard.indels.hg38.BRCA1.vcf.gz",
+                    "snps_1000gp": f"{chr17}/1000G_phase1.snps.high_confidence.hg38.BRCA1.vcf.gz",
+                    "snps_dbsnp": f"{chr17}/Homo_sapiens_assembly38.dbsnp138.BRCA1.vcf.gz",
+                    "cutadapt_adapters": f"{chr17}/contaminant_list.txt",
                 },
                 output=[
                     TTestExpectedOutput(

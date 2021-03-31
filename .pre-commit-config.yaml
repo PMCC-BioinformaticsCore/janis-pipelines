@@ -3,10 +3,9 @@ repos:
     rev: stable
     hooks:
     - id: black
-      language_version: python3.7
-#- repo: local
-#  hooks:
-#    - id: nosetests
-#      name: nosetests
-#      entry: sh -ec 'nosetests -w janis'
-#      language: system
+- repo: local
+  hooks:
+    - id: nosetests
+      name: nosetests
+      entry: sh -ec 'nosetests -w janis_pipelines'
+      language: system
