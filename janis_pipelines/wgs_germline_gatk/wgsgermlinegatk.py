@@ -129,19 +129,51 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
                     "snps_dbsnp": f"{chr17}/Homo_sapiens_assembly38.dbsnp138.BRCA1.vcf.gz",
                     "cutadapt_adapters": f"{chr17}/contaminant_list.txt",
                 },
+                # Just a placeholder to check if files exist
                 output=[
                     TTestExpectedOutput(
                         tag="out_variants_uncompressed",
-                        preprocessor=TTestPreprocessor.LinesDiff,
-                        file_diff_source=f"{hg38}/NA12878/brca1.germline.gatk.vcf",
-                        operator=operator.eq,
-                        expected_value=(1, 1),
+                        preprocessor=TTestPreprocessor.FileSize,
+                        operator=operator.gt,
+                        expected_value=0,
+                    ),
+                    TTestExpectedOutput(
+                        tag="out_variants",
+                        preprocessor=TTestPreprocessor.FileSize,
+                        operator=operator.gt,
+                        expected_value=0,
+                    ),
+                    TTestExpectedOutput(
+                        tag="out_variants_split",
+                        preprocessor=TTestPreprocessor.FileSize,
+                        operator=operator.gt,
+                        expected_value=0,
                     ),
                     TTestExpectedOutput(
                         tag="out_bam",
-                        preprocessor=TTestPreprocessor.Value,
-                        operator=Bam.equal,
-                        expected_value=f"{hg38}/NA12878/NA12878.bam",
+                        preprocessor=TTestPreprocessor.FileSize,
+                        operator=operator.gt,
+                        expected_value=0,
+                    ),
+                    TTestExpectedOutput(
+                        tag="out_performance_summary",
+                        preprocessor=TTestPreprocessor.FileSize,
+                        operator=operator.gt,
+                        expected_value=0,
+                    ),
+                    TTestExpectedOutput(
+                        tag="out_fastqc_reports",
+                        array_index=0,
+                        preprocessor=TTestPreprocessor.FileSize,
+                        operator=operator.gt,
+                        expected_value=0,
+                    ),
+                    TTestExpectedOutput(
+                        tag="out_fastqc_reports",
+                        array_index=1,
+                        preprocessor=TTestPreprocessor.FileSize,
+                        operator=operator.gt,
+                        expected_value=0,
                     ),
                 ],
             )
