@@ -110,6 +110,7 @@ The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be 
 
     def tests(self) -> Optional[List[TTestCase]]:
         bioinf_base = "https://swift.rc.nectar.org.au/v1/AUTH_4df6e734a509497692be237549bbe9af/janis-test-data/bioinformatics"
+        chr17 = f"{bioinf_base}/petermac_testdata"
         hg38 = f"{bioinf_base}/hg38"
 
         return [
@@ -117,28 +118,29 @@ The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be 
                 name="brca1",
                 input={
                     "sample_name": "NA12878",
-                    "reference": f"{hg38}/reference/Homo_sapiens_assembly38.fasta",
+                    "reference": f"{chr17}/Homo_sapiens_assembly38.chr17.fasta",
                     "fastqs": [
                         [
-                            f"{bioinf_base}/BRCA1_R1.fastq.gz",
-                            f"{bioinf_base}/BRCA1_R2.fastq.gz",
+                            f"{chr17}/NA12878-BRCA1_R1.fastq.gz",
+                            f"{chr17}/NA12878-BRCA1_R2.fastq.gz",
                         ]
                     ],
-                    "gatk_intervals": [f"{hg38}/NA12878/BRCA1.bed"],
+                    "gatk_intervals": [f"{chr17}/BRCA1.hg38.bed"],
                     "vardict_intervals": [f"{hg38}/NA12878/BRCA1.intersect.bed"],
-                    "strelka_intervals": f"{hg38}/hg38.bed.gz",
-                    "known_indels": f"{hg38}/known_indels/Homo_sapiens_assembly38.known_indels.vcf.gz",
-                    "mills_indels": f"{hg38}/mills_indels/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz",
-                    "snps_1000gp": f"{hg38}/snps_1000GP/1000G_phase1.snps.high_confidence.hg38.vcf.gz",
-                    "snps_dbsnp": f"{hg38}/snps_dbsnp/Homo_sapiens_assembly38.dbsnp138.vcf.gz",
-                    "cutadapt_adapters": "https://raw.githubusercontent.com/csf-ngs/fastqc/master/Contaminants/contaminant_list.txt",
-                    "gridss_blacklist": f"{hg38}/NA12878/BRCA1.bed",
+                    "strelka_intervals": f"{chr17}/BRCA1.hg38.bed.gz",
+                    "known_indels": f"{chr17}/Homo_sapiens_assembly38.known_indels.BRCA1.vcf.gz",
+                    "mills_indels": f"{chr17}/Mills_and_1000G_gold_standard.indels.hg38.BRCA1.vcf.gz",
+                    "snps_1000gp": f"{chr17}/1000G_phase1.snps.high_confidence.hg38.BRCA1.vcf.gz",
+                    "snps_dbsnp": f"{chr17}/Homo_sapiens_assembly38.dbsnp138.BRCA1.vcf.gz",
+                    "cutadapt_adapters": f"{chr17}/contaminant_list.txt",
+                    "gridss_blacklist": f"{chr17}/consensusBlacklist.hg38.chr17.bed",
+                    "MINIMUM_PCT": f""
                 },
                 output=[
                     TTestExpectedOutput(
                         tag="out_variants",
                         preprocessor=TTestPreprocessor.LinesDiff,
-                        file_diff_source=f"{hg38}/NA12878/brca1.germline.combined.vcf",
+                        file_diff_source=f"{chr17}/NA12878/brca1.germline.combined.vcf",
                         operator=lambda actual, expected: all(
                             a <= b for a, b in zip(actual, expected)
                         ),
@@ -148,13 +150,13 @@ The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be 
                         "out_variants_gridss",
                         preprocessor=TTestPreprocessor.FileContent,
                         operator=operator.eq,
-                        expected_file=f"{hg38}/NA12878/brca1.germline.gridss.vcf",
+                        expected_file=f"{chr17}/NA12878/brca1.germline.gridss.vcf",
                     ),
                     TTestExpectedOutput(
                         tag="out_bam",
                         preprocessor=TTestPreprocessor.Value,
                         operator=Bam.equal,
-                        expected_value=f"{hg38}/NA12878/NA12878.bam",
+                        expected_value=f"{chr17}/NA12878/NA12878.bam",
                     ),
                     TTestExpectedOutput(
                         tag="out_gridss_assembly",
