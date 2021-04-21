@@ -1,7 +1,9 @@
 import operator
+import os
 from typing import Optional, List
 
-from janis_bioinformatics.data_types import FastqGzPair, Bam
+from janis_bioinformatics.data_types import FastqGzPair, Bam, Vcf, CompressedVcf, BamBai
+from janis_bioinformatics.tools import BioinformaticsTool
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_8
 from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
 from janis_bioinformatics.tools.pmac import ParseFastqcAdaptors
@@ -11,6 +13,7 @@ from janis_core.tool.test_classes import (
     TTestExpectedOutput,
     TTestPreprocessor,
 )
+from janis_unix.data_types import TextFile, ZipFile
 
 from janis_pipelines.wgs_germline_gatk.wgsgermlinegatk_variantsonly import (
     WGSGermlineGATKVariantsOnly,
@@ -105,7 +108,6 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
         )
 
     def tests(self) -> Optional[List[TTestCase]]:
-
         bioinf_base = "https://swift.rc.nectar.org.au/v1/AUTH_4df6e734a509497692be237549bbe9af/janis-test-data/bioinformatics"
         hg38 = f"{bioinf_base}/hg38"
         chr17 = f"{bioinf_base}/petermac_testdata"
@@ -115,67 +117,85 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
                 name="brca1",
                 input={
                     "sample_name": "NA12878",
-                    "reference": f"{chr17}/Homo_sapiens_assembly38.chr17.fasta",
+                    "reference": os.path.join(
+                        BioinformaticsTool.test_data_path(),
+                        "wgsgermline_data",
+                        "Homo_sapiens_assembly38.chr17.fasta",
+                    ),
                     "fastqs": [
                         [
-                            f"{chr17}/NA12878-BRCA1_R1.fastq.gz",
-                            f"{chr17}/NA12878-BRCA1_R2.fastq.gz",
+                            os.path.join(
+                                BioinformaticsTool.test_data_path(),
+                                "wgsgermline_data",
+                                "NA12878-BRCA1_R1.fastq.gz",
+                            ),
+                            os.path.join(
+                                BioinformaticsTool.test_data_path(),
+                                "wgsgermline_data",
+                                "NA12878-BRCA1_R2.fastq.gz",
+                            ),
                         ]
                     ],
-                    "gatk_intervals": [f"{chr17}/BRCA1.hg38.bed"],
-                    "known_indels": f"{chr17}/Homo_sapiens_assembly38.known_indels.BRCA1.vcf.gz",
-                    "mills_indels": f"{chr17}/Mills_and_1000G_gold_standard.indels.hg38.BRCA1.vcf.gz",
-                    "snps_1000gp": f"{chr17}/1000G_phase1.snps.high_confidence.hg38.BRCA1.vcf.gz",
-                    "snps_dbsnp": f"{chr17}/Homo_sapiens_assembly38.dbsnp138.BRCA1.vcf.gz",
-                    "cutadapt_adapters": f"{chr17}/contaminant_list.txt",
+                    "gatk_intervals": [
+                        os.path.join(
+                            BioinformaticsTool.test_data_path(),
+                            "wgsgermline_data",
+                            "BRCA1.hg38.bed",
+                        )
+                    ],
+                    "known_indels": os.path.join(
+                        BioinformaticsTool.test_data_path(),
+                        "wgsgermline_data",
+                        "Homo_sapiens_assembly38.known_indels.BRCA1.vcf.gz",
+                    ),
+                    "mills_indels": os.path.join(
+                        BioinformaticsTool.test_data_path(),
+                        "wgsgermline_data",
+                        "Mills_and_1000G_gold_standard.indels.hg38.BRCA1.vcf.gz",
+                    ),
+                    "snps_1000gp": os.path.join(
+                        BioinformaticsTool.test_data_path(),
+                        "wgsgermline_data",
+                        "1000G_phase1.snps.high_confidence.hg38.BRCA1.vcf.gz",
+                    ),
+                    "snps_dbsnp": os.path.join(
+                        BioinformaticsTool.test_data_path(),
+                        "wgsgermline_data",
+                        "Homo_sapiens_assembly38.dbsnp138.BRCA1.vcf.gz",
+                    ),
+                    "cutadapt_adapters": os.path.join(
+                        BioinformaticsTool.test_data_path(),
+                        "wgsgermline_data",
+                        "contaminant_list.txt",
+                    ),
                 },
-                # Just a placeholder to check if files exist
-                output=[
-                    TTestExpectedOutput(
-                        tag="out_variants_uncompressed",
-                        preprocessor=TTestPreprocessor.FileSize,
-                        operator=operator.gt,
-                        expected_value=0,
-                    ),
-                    TTestExpectedOutput(
-                        tag="out_variants",
-                        preprocessor=TTestPreprocessor.FileSize,
-                        operator=operator.gt,
-                        expected_value=0,
-                    ),
-                    TTestExpectedOutput(
-                        tag="out_variants_split",
-                        preprocessor=TTestPreprocessor.FileSize,
-                        operator=operator.gt,
-                        expected_value=0,
-                    ),
-                    TTestExpectedOutput(
-                        tag="out_bam",
-                        preprocessor=TTestPreprocessor.FileSize,
-                        operator=operator.gt,
-                        expected_value=0,
-                    ),
-                    TTestExpectedOutput(
-                        tag="out_performance_summary",
-                        preprocessor=TTestPreprocessor.FileSize,
-                        operator=operator.gt,
-                        expected_value=0,
-                    ),
+                output=Vcf.basic_test("out_variants_uncompressed", 51300, 221)
+                + CompressedVcf.basic_test("out_variants", 11500, 221)
+                + Vcf.basic_test("out_variants_split", 51300, 221)
+                + BamBai.basic_test("out_bam", 2822000, 49600)
+                + TextFile.basic_test(
+                    "out_performance_summary",
+                    948,
+                    md5="575354942cfb8d0367725f9020181443",
+                )
+                + [
                     TTestExpectedOutput(
                         tag="out_fastqc_reports",
                         array_index=0,
                         preprocessor=TTestPreprocessor.FileSize,
                         operator=operator.gt,
-                        expected_value=0,
+                        expected_value=408000,
                     ),
                     TTestExpectedOutput(
                         tag="out_fastqc_reports",
                         array_index=1,
                         preprocessor=TTestPreprocessor.FileSize,
                         operator=operator.gt,
-                        expected_value=0,
+                        expected_value=416000,
                     ),
-                ],
+                ]
+                # An example of how array_wrapper will be called
+                # ZipFile.array_wrapper("out_fastqc_reports", ZipFile.basic_test, 2, {"min_siz": [408000, 416000]})
             )
         ]
 
