@@ -117,57 +117,19 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
                 name="brca1",
                 input={
                     "sample_name": "NA12878",
-                    "reference": os.path.join(
-                        BioinformaticsTool.test_data_path(),
-                        "wgsgermline_data",
-                        "Homo_sapiens_assembly38.chr17.fasta",
-                    ),
+                    "reference": f"{chr17}/Homo_sapiens_assembly38.chr17.fasta",
                     "fastqs": [
                         [
-                            os.path.join(
-                                BioinformaticsTool.test_data_path(),
-                                "wgsgermline_data",
-                                "NA12878-BRCA1_R1.fastq.gz",
-                            ),
-                            os.path.join(
-                                BioinformaticsTool.test_data_path(),
-                                "wgsgermline_data",
-                                "NA12878-BRCA1_R2.fastq.gz",
-                            ),
+                            f"{chr17}/NA12878-BRCA1_R1.fastq.gz",
+                            f"{chr17}/NA12878-BRCA1_R2.fastq.gz",
                         ]
                     ],
-                    "gatk_intervals": [
-                        os.path.join(
-                            BioinformaticsTool.test_data_path(),
-                            "wgsgermline_data",
-                            "BRCA1.hg38.bed",
-                        )
-                    ],
-                    "known_indels": os.path.join(
-                        BioinformaticsTool.test_data_path(),
-                        "wgsgermline_data",
-                        "Homo_sapiens_assembly38.known_indels.BRCA1.vcf.gz",
-                    ),
-                    "mills_indels": os.path.join(
-                        BioinformaticsTool.test_data_path(),
-                        "wgsgermline_data",
-                        "Mills_and_1000G_gold_standard.indels.hg38.BRCA1.vcf.gz",
-                    ),
-                    "snps_1000gp": os.path.join(
-                        BioinformaticsTool.test_data_path(),
-                        "wgsgermline_data",
-                        "1000G_phase1.snps.high_confidence.hg38.BRCA1.vcf.gz",
-                    ),
-                    "snps_dbsnp": os.path.join(
-                        BioinformaticsTool.test_data_path(),
-                        "wgsgermline_data",
-                        "Homo_sapiens_assembly38.dbsnp138.BRCA1.vcf.gz",
-                    ),
-                    "cutadapt_adapters": os.path.join(
-                        BioinformaticsTool.test_data_path(),
-                        "wgsgermline_data",
-                        "contaminant_list.txt",
-                    ),
+                    "gatk_intervals": [f"{chr17}/BRCA1.hg38.bed"],
+                    "known_indels": f"{chr17}/Homo_sapiens_assembly38.known_indels.BRCA1.vcf.gz",
+                    "mills_indels": f"{chr17}/Mills_and_1000G_gold_standard.indels.hg38.BRCA1.vcf.gz",
+                    "snps_1000gp": f"{chr17}/1000G_phase1.snps.high_confidence.hg38.BRCA1.vcf.gz",
+                    "snps_dbsnp": f"{chr17}/Homo_sapiens_assembly38.dbsnp138.BRCA1.vcf.gz",
+                    "cutadapt_adapters": f"{chr17}/contaminant_list.txt",
                 },
                 output=Vcf.basic_test("out_variants_uncompressed", 51300, 221)
                 + CompressedVcf.basic_test("out_variants", 11500, 221)
@@ -178,24 +140,12 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
                     948,
                     md5="575354942cfb8d0367725f9020181443",
                 )
-                + [
-                    TTestExpectedOutput(
-                        tag="out_fastqc_reports",
-                        array_index=0,
-                        preprocessor=TTestPreprocessor.FileSize,
-                        operator=operator.gt,
-                        expected_value=408000,
-                    ),
-                    TTestExpectedOutput(
-                        tag="out_fastqc_reports",
-                        array_index=1,
-                        preprocessor=TTestPreprocessor.FileSize,
-                        operator=operator.gt,
-                        expected_value=416000,
-                    ),
-                ]
-                # An example of how array_wrapper will be called
-                # ZipFile.array_wrapper("out_fastqc_reports", ZipFile.basic_test, 2, {"min_siz": [408000, 416000]})
+                + Array.array_wrapper(
+                    [
+                        ZipFile.basic_test("out_fastqc_reports", 408000),
+                        ZipFile.basic_test("out_fastqc_reports", 416000),
+                    ]
+                ),
             )
         ]
 
