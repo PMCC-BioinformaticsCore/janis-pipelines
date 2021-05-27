@@ -11,6 +11,7 @@ from janis_bioinformatics.tools.pmac import (
     GenerateVardictHeaderLines,
     AddBamStatsSomatic_0_1_0,
     GenerateIntervalsByChromosome,
+    GenerateMantaConfig,
 )
 from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
 from janis_bioinformatics.tools.variantcallers.illuminasomatic_strelka import (
@@ -200,6 +201,8 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         )
 
     def add_strelka_variantcaller(self, normal_bam_source, tumor_bam_source):
+        self.step("generate_manta_config", GenerateMantaConfig())
+
         self.step(
             "vc_strelka",
             IlluminaSomaticVariantCaller(
@@ -207,6 +210,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
                 tumor_bam=tumor_bam_source,
                 intervals=self.strelka_intervals,
                 reference=self.reference,
+                manta_config=self.generate_manta_config.out,
             ),
         )
 
