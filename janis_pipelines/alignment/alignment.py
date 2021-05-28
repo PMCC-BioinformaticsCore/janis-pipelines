@@ -11,7 +11,7 @@ class BwaAlignment(BioinformaticsWorkflow):
         return "alignment"
 
     def friendly_name(self):
-        return "Alignment (BWA MEM) and MarkDups"
+        return "Alignment (BWA MEM) and MarkDuplicates"
 
     @staticmethod
     def tool_provider():
@@ -61,7 +61,8 @@ class BwaAlignment(BioinformaticsWorkflow):
         )
 
     def bind_metadata(self):
-        self.metadata.documentation = "Alignment and MarkDuplicates"
+        self.metadata.documentation = "Alignment and sort of reads using \
+BWA Mem + SamTools + Gatk4SortSam, mark duplicate reads using Gatk4MarkDuplicates"
         self.metadata.creator = ["Michael Franklin", "Jiaan Yu"]
         self.metadata.dateCreated = date(2018, 12, 24)
         self.metadata.dateUpdated = date(2021, 5, 28)
