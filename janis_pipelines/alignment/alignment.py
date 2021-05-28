@@ -1,11 +1,9 @@
 from datetime import date
 
-from janis_core import Array
-from janis_bioinformatics.data_types import FastqGzPair, FastaWithDict
+from janis_core import Array, String
 from janis_bioinformatics.tools import BioinformaticsWorkflow
-from janis_bioinformatics.tools.common.bwamem_samtoolsview import BwaMem_SamToolsView
-from janis_bioinformatics.tools.cutadapt import CutAdapt_2_6
-from janis_bioinformatics.tools.gatk4 import Gatk4SortSam_4_1_2
+from janis_bioinformatics.data_types import FastqGzPair, FastaWithDict
+from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
 
 
 class BwaAlignment(BioinformaticsWorkflow):
@@ -13,7 +11,7 @@ class BwaAlignment(BioinformaticsWorkflow):
         return "alignment"
 
     def friendly_name(self):
-        return "Alignment (BWA MEM)"
+        return "Alignment (BWA MEM) and MarkDups"
 
     @staticmethod
     def tool_provider():
@@ -26,59 +24,47 @@ class BwaAlignment(BioinformaticsWorkflow):
     def constructor(self):
 
         # Inputs
-        self.input("sample_name", str)
+        self.input("sample_name", String)
         self.input("reference", FastaWithDict)
-        self.input("fastq", FastqGzPair)
+        self.input("fastqs", Array(FastqGzPair))
 
-        # pipe adapters
+        # Optionals
         self.input("cutadapt_adapter", Array(str, optional=True))
         self.input("cutadapt_removeMiddle3Adapter", Array(str, optional=True))
 
         # Steps
         self.step(
-            "cutadapt",
-            CutAdapt_2_6(
-                fastq=self.fastq,
-                adapter=self.cutadapt_adapter,
-                front=None,
-                removeMiddle5Adapter=None,
-                removeMiddle3Adapter=self.cutadapt_removeMiddle3Adapter,
-                qualityCutoff=15,
-                minimumLength=50,
-            ),
-        )
-
-        self.step(
-            "bwamem",
-            BwaMem_SamToolsView(
-                reads=self.cutadapt.out,
-                sampleName=self.sample_name,
+            "align_and_sort",
+            BwaAligner(
+                fastq=self.fastqs,
                 reference=self.reference,
+                sample_name=self.sample_name,
+                sortsam_tmpDir="./tmp",
+                cutadapt_adapter=self.cutadapt_adapter,
+                cutadapt_removeMiddle3Adapter=self.cutadapt_removeMiddle3Adapter,
             ),
+            scatter=["fastq"],
         )
 
         self.step(
-            "sortsam",
-            Gatk4SortSam_4_1_2(
-                bam=self.bwamem.out,
-                sortOrder="coordinate",
-                createIndex=True,
-                validationStringency="SILENT",
-                maxRecordsInRam=5000000,
-                tmpDir=".",
+            "merge_and_mark",
+            MergeAndMarkBams_4_1_3(
+                bams=self.align_and_sort.out, sampleName=self.sample_name
             ),
         )
 
-        # outputs
-        self.output("out", source=self.sortsam)
+        self.output(
+            "out",
+            source=self.merge_and_mark.out,
+            output_folder="output",
+            output_name=self.sample_name,
+        )
 
     def bind_metadata(self):
-        self.metadata.documentation = (
-            "Alignment and sort of reads using BWA Mem + SamTools + Gatk4SortSam"
-        )
-        self.metadata.creator = "Michael Franklin"
+        self.metadata.documentation = "Alignment and MarkDuplicates"
+        self.metadata.creator = ["Michael Franklin", "Jiaan Yu"]
         self.metadata.dateCreated = date(2018, 12, 24)
-        self.metadata.dateUpdated = date(2019, 8, 20)
+        self.metadata.dateUpdated = date(2021, 5, 28)
         self.metadata.version = "1.0.0"
 
 
