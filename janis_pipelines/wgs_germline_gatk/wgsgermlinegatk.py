@@ -40,10 +40,7 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
 
         # Add variant callers
         self.add_gatk_variantcaller(bam_source=self.merge_and_mark.out)
-        self.add_addbamstats(
-            bam_source=self.merge_and_mark.out,
-            vcf_source=self.vc_gatk_uncompress.out.as_type(Vcf),
-        )
+        self.add_addbamstats(bam_source=self.merge_and_mark.out)
 
     def add_inputs(self):
         # INPUTS
@@ -155,8 +152,7 @@ if __name__ == "__main__":
     # from toolbuilder.runtest.runner import run_test_case, EngineType
 
     tool = WGSGermlineGATK()
-    # tool.translate("wdl", to_console=False)
-    tool.translate("wdl")
+    tool.translate("wdl", to_console=False)
     # results = run_test_case(
     #     tool,
     #     test_case=tool.tests()[0].name,
