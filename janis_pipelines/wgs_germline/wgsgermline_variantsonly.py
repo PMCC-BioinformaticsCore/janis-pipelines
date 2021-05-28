@@ -82,74 +82,6 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
             doc="Variants from the GRIDSS variant caller",
         )
 
-    def add_gatk_variantcaller(self, bam_source):
-
-        intervals = FirstOperator(
-            [
-                self.gatk_intervals,
-                self.step(
-                    "generate_gatk_intervals",
-                    GenerateIntervalsByChromosome(reference=self.reference),
-                    when=self.gatk_intervals.is_null(),
-                ).out_regions,
-            ]
-        )
-
-        # VARIANT CALLERS
-        # GATK
-        self.step(
-            "bqsr",
-            GATKBaseRecalBQSRWorkflow_4_1_3(
-                bam=bam_source,
-                reference=self.reference,
-                intervals=intervals,
-                snps_dbsnp=self.snps_dbsnp,
-                snps_1000gp=self.snps_1000gp,
-                known_indels=self.known_indels,
-                mills_indels=self.mills_indels,
-            ),
-            scatter="intervals",
-        )
-        self.step(
-            "vc_gatk",
-            GatkGermlineVariantCaller_4_1_3(
-                bam=self.bqsr.out,
-                intervals=intervals,
-                reference=self.reference,
-                snps_dbsnp=self.snps_dbsnp,
-            ),
-            scatter=["intervals", "bam"],
-        )
-        self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out))
-        self.step("vc_gatk_compress_for_sort", BGZipLatest(file=self.vc_gatk_merge.out))
-        self.step(
-            "vc_gatk_sort_combined",
-            BcfToolsSort_1_9(
-                vcf=self.vc_gatk_compress_for_sort.out.as_type(CompressedVcf)
-            ),
-        )
-
-        self.step(
-            "vc_gatk_uncompress_for_combine",
-            UncompressArchive(
-                file=self.vc_gatk_sort_combined.out.as_type(CompressedVcf)
-            ),
-        )
-
-        self.output(
-            "out_variants_gatk",
-            source=self.vc_gatk_sort_combined.out,
-            output_folder="variants",
-            output_name="gatk",
-            doc="Merged variants from the GATK caller",
-        )
-        self.output(
-            "out_variants_gatk_split",
-            source=self.vc_gatk.out,
-            output_folder=["variants", "gatk"],
-            doc="Unmerged variants from the GATK caller (by interval)",
-        )
-
     def add_strelka_variantcaller(self, bam_source):
 
         # Strelka
@@ -229,7 +161,7 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
             "combine_variants",
             CombineVariants_0_0_8(
                 vcfs=[
-                    self.vc_gatk_uncompress_for_combine.out.as_type(Vcf),
+                    self.vc_gatk_uncompress.out.as_type(Vcf),
                     self.vc_strelka.out,
                     self.vc_vardict_uncompress_for_combine.out.as_type(Vcf),
                 ],
