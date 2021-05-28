@@ -72,9 +72,7 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
         # Add variant callers
 
         self.add_gatk_variantcaller(bam_source=self.bam)
-        self.add_addbamstats(
-            bam_source=self.bam, vcf_source=self.vc_gatk_uncompress.out.as_type(Vcf)
-        )
+        self.add_addbamstats(bam_source=self.bam)
 
     def add_inputs(self):
         # INPUTS
@@ -202,31 +200,25 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
         )
 
         self.output(
-            "out_variants",
+            "out_variants_gatk",
             source=self.vc_gatk_sort_combined.out,
             output_folder="variants",
             output_name="gatk",
             doc="Merged variants from the GATK caller",
         )
         self.output(
-            "out_variants_uncompressed",
-            source=self.vc_gatk_uncompress.out.as_type(Vcf),
-            output_folder="variants",
-            output_name="gatk",
-        )
-        self.output(
-            "out_variants_split",
+            "out_variants_gatk_split",
             source=self.vc_gatk.out,
             output_folder=["variants", "gatk"],
             doc="Unmerged variants from the GATK caller (by interval)",
         )
 
-    def add_addbamstats(self, bam_source, vcf_source):
+    def add_addbamstats(self, bam_source):
         self.step(
             "vc_gatk_addbamstats",
             AddBamStatsGermline_0_1_0(
                 bam=bam_source,
-                vcf=vcf_source,
+                vcf=self.vc_gatk_uncompress.out.as_type(Vcf),
                 reference=self.reference,
             ),
         )
