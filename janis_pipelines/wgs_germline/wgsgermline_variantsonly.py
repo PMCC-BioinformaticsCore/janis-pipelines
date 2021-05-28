@@ -9,6 +9,7 @@ from janis_bioinformatics.tools.pmac import (
     GenerateVardictHeaderLines,
     AddBamStatsGermline_0_1_0,
     GenerateIntervalsByChromosome,
+    GenerateMantaConfig,
 )
 from janis_bioinformatics.tools.variantcallers import (
     GatkGermlineVariantCaller_4_1_3,
@@ -51,8 +52,8 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
         # Combine gatk / strelka / vardict variants
         self.add_combine_variants(bam_source=self.bam)
 
-    def inputs_for_intervals(self):
-        super().inputs_for_intervals()
+    def add_inputs_for_intervals(self):
+        super().add_inputs_for_intervals()
         self.input("vardict_intervals", Array(Bed), doc=INPUT_DOCS["vardict_intervals"])
         self.input("strelka_intervals", BedTabix, doc=INPUT_DOCS["strelka_intervals"])
         # for fast processing wgs bam
@@ -153,12 +154,15 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
     def add_strelka_variantcaller(self, bam_source):
 
         # Strelka
+        self.step("generate_manta_config", GenerateMantaConfig())
+
         self.step(
             "vc_strelka",
             IlluminaGermlineVariantCaller(
                 bam=bam_source,
                 reference=self.reference,
                 intervals=self.strelka_intervals,
+                manta_config=self.generate_manta_config.out,
             ),
         )
 
