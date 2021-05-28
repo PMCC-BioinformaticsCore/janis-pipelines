@@ -75,9 +75,9 @@ class WGSGermlineMultiCallers(WGSGermlineGATK, WGSGermlineMultiCallersVariantsOn
         self.input("sample_name", String, doc=INPUT_DOCS["sample_name"])
         self.input("fastqs", Array(FastqGzPair), doc=INPUT_DOCS["fastqs"])
 
-        self.inputs_for_reference()
-        self.inputs_for_intervals()
-        self.inputs_for_configuration()
+        self.add_inputs_for_reference()
+        self.add_inputs_for_intervals()
+        self.add_inputs_for_configuration()
 
     def bind_metadata(self):
         meta: WorkflowMetadata = super().bind_metadata() or self.metadata
