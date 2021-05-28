@@ -1,7 +1,7 @@
 import operator
 from typing import Optional, List
 
-from janis_bioinformatics.data_types import FastqGzPair, Bam
+from janis_bioinformatics.data_types import FastqGzPair, Bam, Vcf
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_8
 from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
 from janis_bioinformatics.tools.pmac import ParseFastqcAdaptors
@@ -40,6 +40,10 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
 
         # Add variant callers
         self.add_gatk_variantcaller(bam_source=self.merge_and_mark.out)
+        self.add_addbamstats(
+            bam_source=self.merge_and_mark.out,
+            vcf_source=self.vc_gatk_uncompress.out.as_type(Vcf),
+        )
 
     def add_inputs(self):
         # INPUTS
@@ -151,8 +155,8 @@ if __name__ == "__main__":
     # from toolbuilder.runtest.runner import run_test_case, EngineType
 
     tool = WGSGermlineGATK()
-    tool.translate("wdl", to_console=False)
-
+    # tool.translate("wdl", to_console=False)
+    tool.translate("wdl")
     # results = run_test_case(
     #     tool,
     #     test_case=tool.tests()[0].name,

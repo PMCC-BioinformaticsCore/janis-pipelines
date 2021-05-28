@@ -72,6 +72,9 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
         # Add variant callers
 
         self.add_gatk_variantcaller(bam_source=self.bam)
+        self.add_addbamstats(
+            bam_source=self.bam, vcf_source=self.vc_gatk_uncompress.out.as_type(Vcf)
+        )
 
     def add_inputs(self):
         # INPUTS
@@ -193,19 +196,9 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
             "vc_gatk_sort_combined",
             BcfToolsSort_1_9(vcf=self.vc_gatk_compressvcf.out.as_type(CompressedVcf)),
         )
-
         self.step(
-            "vc_gatk_uncompress_for_bamstats",
+            "vc_gatk_uncompress",
             UncompressArchive(file=self.vc_gatk_sort_combined.out),
-        )
-
-        self.step(
-            "vc_gatk_addbamstats",
-            AddBamStatsGermline_0_1_0(
-                bam=bam_source,
-                vcf=self.vc_gatk_uncompress_for_bamstats.out.as_type(Vcf),
-                reference=self.reference,
-            ),
         )
 
         self.output(
@@ -217,7 +210,7 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
         )
         self.output(
             "out_variants_uncompressed",
-            source=self.vc_gatk_uncompress_for_bamstats.out.as_type(Vcf),
+            source=self.vc_gatk_uncompress.out.as_type(Vcf),
             output_folder="variants",
             output_name="gatk",
         )
@@ -228,13 +221,29 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
             doc="Unmerged variants from the GATK caller (by interval)",
         )
 
+    def add_addbamstats(self, bam_source, vcf_source):
+        self.step(
+            "vc_gatk_addbamstats",
+            AddBamStatsGermline_0_1_0(
+                bam=bam_source,
+                vcf=vcf_source,
+                reference=self.reference,
+            ),
+        )
+        self.output(
+            "out_variants_bamstats",
+            source=self.vc_gatk_addbamstats.out,
+            output_folder="variants",
+            output_name="gatk_bamstats",
+        )
+
     def bind_metadata(self):
         meta: WorkflowMetadata = self.metadata
 
         meta.keywords = ["wgs", "cancer", "germline", "variants", "gatk"]
         meta.contributors = ["Michael Franklin", "Richard Lupat", "Jiaan Yu"]
         meta.dateCreated = date(2018, 12, 24)
-        meta.dateUpdated = date(2020, 6, 22)
+        meta.dateUpdated = date(2021, 5, 28)
         meta.short_documentation = "A variant-calling WGS pipeline using only the GATK Haplotype variant caller."
         meta.documentation = """\
 This is a genomics pipeline to ONLY call variants using GATK from an indexed bam. The final variants are outputted in the VCF format.
@@ -281,4 +290,5 @@ if __name__ == "__main__":
         "with_resource_overrides": True,
     }
     # w.translate("cwl", **args)
-    w.translate("wdl", **args)
+    # w.translate("wdl", **args)
+    w.translate("wdl")
