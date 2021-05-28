@@ -109,96 +109,6 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
             doc="Variants from the GRIDSS variant caller",
         )
 
-    def add_gatk_variantcaller(self, normal_bam_source, tumor_bam_source):
-        """
-        Reimplemented because need steps for combine
-        """
-
-        if "generate_gatk_intervals" in self.step_nodes:
-            generated_intervals = self.generate_gatk_intervals.out_regions
-        else:
-            generated_intervals = self.step(
-                "generate_gatk_intervals",
-                GenerateIntervalsByChromosome(reference=self.reference),
-                when=self.gatk_intervals.is_null(),
-            ).out_regions
-
-        intervals = FirstOperator([self.gatk_intervals, generated_intervals])
-
-        recal_ins = {
-            "reference": self.reference,
-            "intervals": intervals,
-            "snps_dbsnp": self.snps_dbsnp,
-            "snps_1000gp": self.snps_1000gp,
-            "known_indels": self.known_indels,
-            "mills_indels": self.mills_indels,
-        }
-
-        self.step(
-            "bqsr_normal",
-            GATKBaseRecalBQSRWorkflow_4_1_3(bam=normal_bam_source, **recal_ins),
-            scatter="intervals",
-        )
-
-        self.step(
-            "bqsr_tumor",
-            GATKBaseRecalBQSRWorkflow_4_1_3(bam=tumor_bam_source, **recal_ins),
-            scatter="intervals",
-        )
-
-        self.step(
-            "vc_gatk",
-            GatkSomaticVariantCaller_4_1_3(
-                normal_bam=self.bqsr_normal.out,
-                tumor_bam=self.bqsr_tumor.out,
-                normal_name=self.normal_name,
-                intervals=intervals,
-                reference=self.reference,
-                gnomad=self.gnomad,
-                panel_of_normals=self.panel_of_normals,
-            ),
-            scatter=["intervals", "normal_bam", "tumor_bam"],
-        )
-
-        self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out))
-        self.step("vc_gatk_compress_for_sort", BGZipLatest(file=self.vc_gatk_merge.out))
-        self.step(
-            "vc_gatk_sort_combined",
-            BcfToolsSort_1_9(
-                vcf=self.vc_gatk_compress_for_sort.out.as_type(CompressedVcf)
-            ),
-        )
-        self.step(
-            "vc_gatk_uncompress_for_combine",
-            UncompressArchive(file=self.vc_gatk_sort_combined.out),
-        )
-
-        self.step(
-            "addbamstats",
-            AddBamStatsSomatic_0_1_0(
-                normal_id=self.normal_name,
-                tumor_id=self.tumor_name,
-                normal_bam=normal_bam_source,
-                tumor_bam=tumor_bam_source,
-                reference=self.reference,
-                vcf=self.vc_gatk_uncompress_for_combine.out.as_type(Vcf),
-            ),
-        )
-
-        # VCF
-        self.output(
-            "out_variants_gatk",
-            source=self.vc_gatk_sort_combined.out,
-            output_folder="variants",
-            doc="Merged variants from the GATK caller",
-        )
-        self.output(
-            "out_variants_split",
-            source=self.vc_gatk.out,
-            output_folder=["variants", "byInterval"],
-            doc="Unmerged variants from the GATK caller (by interval)",
-        )
-
     def add_strelka_variantcaller(self, normal_bam_source, tumor_bam_source):
         self.step(
             "vc_strelka",
@@ -274,7 +184,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
                 normal=self.normal_name,
                 tumor=self.tumor_name,
                 vcfs=[
-                    self.vc_gatk_uncompress_for_combine.out.as_type(Vcf),
+                    self.vc_gatk_uncompressvcf.out.as_type(Vcf),
                     self.vc_strelka.out,
                     self.vc_vardict_uncompress_for_combine.out.as_type(Vcf),
                 ],
@@ -304,7 +214,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
 
         self.output(
             "out_variants",
-            source=self.addbamstats.out,
+            source=self.combined_addbamstats.out,
             output_folder="variants",
             doc="Combined variants from GATK, VarDict and Strelka callers",
         )
@@ -324,7 +234,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         ]
         meta.contributors = ["Michael Franklin", "Richard Lupat", "Jiaan Yu"]
         meta.dateCreated = date(2018, 12, 24)
-        meta.dateUpdated = date(2020, 8, 19)
+        meta.dateUpdated = date(2021, 5, 28)
         meta.short_documentation = "A somatic tumor-normal variant-calling WGS pipeline using GATK, VarDict and Strelka2."
         meta.documentation = """\
 This is a genomics pipeline to align sequencing data (Fastq pairs) into BAMs:
