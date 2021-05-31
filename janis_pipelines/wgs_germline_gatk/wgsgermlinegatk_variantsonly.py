@@ -79,21 +79,21 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
 
         self.input("bam", BamBai, doc=INPUT_DOCS["bam"])
 
-        self.inputs_for_reference()
-        self.inputs_for_intervals()
-        self.inputs_for_configuration()
+        self.add_inputs_for_reference()
+        self.add_inputs_for_intervals()
+        self.add_inputs_for_configuration()
 
-    def inputs_for_intervals(self):
+    def add_inputs_for_intervals(self):
         self.input(
             "gatk_intervals",
             Array(Bed, optional=True),
             doc=INPUT_DOCS["gatk_intervals"],
         )
 
-    def inputs_for_configuration(self):
+    def add_inputs_for_configuration(self):
         pass
 
-    def inputs_for_reference(self):
+    def add_inputs_for_reference(self):
         self.input("reference", FastaWithDict, doc=INPUT_DOCS["reference"])
 
         self.input("snps_dbsnp", VcfTabix, doc=INPUT_DOCS["snps_dbsnp"])

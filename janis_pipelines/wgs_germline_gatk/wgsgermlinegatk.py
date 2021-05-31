@@ -49,12 +49,12 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
         self.input("sample_name", String, doc=INPUT_DOCS["sample_name"])
         self.input("fastqs", Array(FastqGzPair), doc=INPUT_DOCS["fastqs"])
 
-        self.inputs_for_reference()
-        self.inputs_for_intervals()
-        self.inputs_for_configuration()
+        self.add_inputs_for_reference()
+        self.add_inputs_for_intervals()
+        self.add_inputs_for_configuration()
 
-    def inputs_for_configuration(self):
-        super().inputs_for_configuration()
+    def add_inputs_for_configuration(self):
+        super().add_inputs_for_configuration()
 
         self.input("cutadapt_adapters", File, doc=INPUT_DOCS["cutadapt_adapters"])
 
