@@ -43,6 +43,7 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
 
         # Add variant callers
         self.add_gatk_variantcaller(bam_source=self.merge_and_mark.out)
+        self.add_addbamstats(bam_source=self.merge_and_mark.out)
 
     def add_inputs(self):
         # INPUTS
@@ -155,7 +156,6 @@ if __name__ == "__main__":
 
     tool = WGSGermlineGATK()
     tool.translate("wdl", to_console=False)
-
     # results = run_test_case(
     #     tool,
     #     test_case=tool.tests()[0].name,

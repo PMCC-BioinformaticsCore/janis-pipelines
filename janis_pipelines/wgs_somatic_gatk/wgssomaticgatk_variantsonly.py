@@ -91,6 +91,9 @@ class WGSSomaticGATKVariantsOnly(BioinformaticsWorkflow):
         self.add_gatk_variantcaller(
             normal_bam_source=self.normal_bam, tumor_bam_source=self.tumor_bam
         )
+        self.add_addbamstats(
+            normal_bam_source=self.normal_bam, tumor_bam_source=self.tumor_bam
+        )
 
     def add_inputs(self):
 
@@ -182,6 +185,7 @@ class WGSSomaticGATKVariantsOnly(BioinformaticsWorkflow):
             UncompressArchive(file=self.vc_gatk_sort_combined.out),
         )
 
+    def add_addbamstats(self, normal_bam_source, tumor_bam_source):
         self.step(
             "addbamstats",
             AddBamStatsSomatic_0_1_0(
@@ -202,13 +206,13 @@ class WGSSomaticGATKVariantsOnly(BioinformaticsWorkflow):
             doc="Merged variants from the GATK caller",
         )
         self.output(
-            "out_variants_split",
+            "out_variants_gakt_split",
             source=self.vc_gatk.out,
             output_folder=["variants", "byInterval"],
             doc="Unmerged variants from the GATK caller (by interval)",
         )
         self.output(
-            "out_variants",
+            "out_variants_bamstats",
             source=self.addbamstats.out,
             output_folder="variants",
             doc="Final vcf",
@@ -219,7 +223,7 @@ class WGSSomaticGATKVariantsOnly(BioinformaticsWorkflow):
 
         meta.keywords = ["wgs", "cancer", "somatic", "variants", "gatk"]
         meta.dateUpdated = date(2019, 10, 16)
-        meta.dateUpdated = date(2020, 8, 18)
+        meta.dateUpdated = date(2021, 5, 28)
 
         meta.contributors = ["Michael Franklin", "Richard Lupat", "Jiaan Yu"]
         meta.short_documentation = "A somatic tumor-normal variant-calling WGS pipeline using only GATK Mutect2"

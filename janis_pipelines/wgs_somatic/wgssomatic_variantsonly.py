@@ -323,7 +323,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
             ),
         )
         self.step(
-            "vc_gatk_uncompress_for_combine",
+            "vc_gatk_uncompressvcf",
             UncompressArchive(file=self.vc_gatk_sort_combined.out),
         )
 
@@ -446,7 +446,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
                 normal=self.normal_name,
                 tumor=self.tumor_name,
                 vcfs=[
-                    self.vc_gatk_uncompress_for_combine.out.as_type(Vcf),
+                    self.vc_gatk_uncompressvcf.out.as_type(Vcf),
                     self.vc_strelka.out,
                     self.vc_vardict_uncompress_for_combine.out.as_type(Vcf),
                 ],
@@ -503,7 +503,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         ]
         meta.contributors = ["Michael Franklin", "Richard Lupat", "Jiaan Yu"]
         meta.dateCreated = date(2018, 12, 24)
-        meta.dateUpdated = date(2020, 8, 19)
+        meta.dateUpdated = date(2021, 5, 28)
         meta.short_documentation = "A somatic tumor-normal variant-calling WGS pipeline using GATK, VarDict and Strelka2."
         meta.documentation = """\
 This is a genomics pipeline to align sequencing data (Fastq pairs) into BAMs:
