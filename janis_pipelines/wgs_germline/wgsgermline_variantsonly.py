@@ -9,13 +9,14 @@ from janis_bioinformatics.tools.pmac import (
     GenerateVardictHeaderLines,
     AddBamStatsGermline_0_1_0,
     GenerateIntervalsByChromosome,
+    GenerateMantaConfig,
 )
 from janis_bioinformatics.tools.variantcallers import (
     GatkGermlineVariantCaller_4_1_3,
     IlluminaGermlineVariantCaller,
     VardictGermlineVariantCaller,
 )
-from janis_core import Array, WorkflowMetadata
+from janis_core import Array, Float, Int, String, WorkflowMetadata
 from janis_core.operators.standard import FirstOperator
 from janis_unix.tools import UncompressArchive
 
@@ -51,8 +52,8 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
         # Combine gatk / strelka / vardict variants
         self.add_combine_variants(bam_source=self.bam)
 
-    def inputs_for_intervals(self):
-        super().inputs_for_intervals()
+    def add_inputs_for_intervals(self):
+        super().add_inputs_for_intervals()
         self.input("vardict_intervals", Array(Bed), doc=INPUT_DOCS["vardict_intervals"])
         self.input("strelka_intervals", BedTabix, doc=INPUT_DOCS["strelka_intervals"])
         # for fast processing wgs bam
@@ -85,12 +86,15 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
     def add_strelka_variantcaller(self, bam_source):
 
         # Strelka
+        self.step("generate_manta_config", GenerateMantaConfig())
+
         self.step(
             "vc_strelka",
             IlluminaGermlineVariantCaller(
                 bam=bam_source,
                 reference=self.reference,
                 intervals=self.strelka_intervals,
+                manta_config=self.generate_manta_config.out,
             ),
         )
 
@@ -103,7 +107,13 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
         )
 
     def add_vardict_variantcaller(self, bam_source):
-
+        self.input(
+            "allele_freq_threshold",
+            Float,
+            0.05,
+        ),
+        self.input("minMappingQual", Int(optional=True))
+        self.input("filter", String(optional=True))
         # Vardict
         self.step(
             "generate_vardict_headerlines",
@@ -116,8 +126,10 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
                 reference=self.reference,
                 intervals=self.vardict_intervals,
                 sample_name=self.sample_name,
-                allele_freq_threshold=0.05,
+                allele_freq_threshold=self.allele_freq_threshold,
                 header_lines=self.generate_vardict_headerlines.out,
+                minMappingQual=self.minMappingQual,
+                filter=self.filter,
             ),
             scatter="intervals",
         )
@@ -244,3 +256,5 @@ if __name__ == "__main__":
     }
     # w.translate("cwl", **args)
     w.translate("wdl", **args)
+
+    # WGSGermlineMultiCallersVariantsOnly().translate("wdl")
