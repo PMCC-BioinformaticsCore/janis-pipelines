@@ -133,7 +133,6 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
                     "cutadapt_adapters": f"{chr17}/contaminant_list.txt",
                 },
                 output=Vcf.basic_test("out_variants_gatk", 51300, 221)
-                + CompressedVcf.basic_test("out_variants", 11500, 221)
                 + Vcf.basic_test("out_variants_gatk_split", 51300, 221)
                 + BamBai.basic_test("out_bam", 2822000, 49600)
                 + TextFile.basic_test(
