@@ -189,7 +189,8 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
             scatter=["intervals", "bam"],
         )
         self.step(
-            "vc_gatk_merge", BcfToolsConcat_1_9(vcf=self.vc_gatk.out.as_type(Vcf))
+            "vc_gatk_merge",
+            BcfToolsConcat_1_9(vcf=self.vc_gatk.out.as_type(Array(Vcf))),
         )
         self.step(
             "vc_gatk_sort_combined",
