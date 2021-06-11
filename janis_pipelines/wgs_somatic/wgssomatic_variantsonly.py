@@ -448,6 +448,5 @@ if __name__ == "__main__":
         ),
     }
     # w.translate("cwl", **args)
-    # w.translate("wdl", **args)
-    w.translate("wdl")
+    w.translate("wdl", **args)
     # WGSSomaticMultiCallersVariantsOnly().translate("wdl")
