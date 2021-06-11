@@ -134,7 +134,8 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
             scatter="intervals",
         )
         self.step(
-            "vc_vardict_merge", BcfToolsConcat_1_9(vcf=self.vc_vardict.out.as_type(Vcf))
+            "vc_vardict_merge",
+            BcfToolsConcat_1_9(vcf=self.vc_vardict.out.as_type(Array(Vcf))),
         )
         self.step(
             "vc_vardict_sort_combined",
@@ -252,5 +253,4 @@ if __name__ == "__main__":
     }
     # w.translate("cwl", **args)
     w.translate("wdl", **args)
-
     # WGSGermlineMultiCallersVariantsOnly().translate("wdl")
