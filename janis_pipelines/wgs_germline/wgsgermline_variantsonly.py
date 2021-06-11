@@ -1,5 +1,5 @@
 from janis_bioinformatics.data_types import Bed, BedTabix, Vcf, CompressedVcf
-from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
+from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9, BcfToolsConcat_1_9
 from janis_bioinformatics.tools.common import GATKBaseRecalBQSRWorkflow_4_1_3
 from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
 from janis_bioinformatics.tools.htslib import BGZipLatest
@@ -133,16 +133,12 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
             ),
             scatter="intervals",
         )
-        self.step("vc_vardict_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_vardict.out))
         self.step(
-            "vc_vardict_compress_for_sort",
-            BGZipLatest(file=self.vc_vardict_merge.out.as_type(Vcf)),
+            "vc_vardict_merge", BcfToolsConcat_1_9(vcf=self.vc_vardict.out.as_type(Vcf))
         )
         self.step(
             "vc_vardict_sort_combined",
-            BcfToolsSort_1_9(
-                vcf=self.vc_vardict_compress_for_sort.out.as_type(CompressedVcf)
-            ),
+            BcfToolsSort_1_9(vcf=self.vc_vardict_merge.out.as_type(CompressedVcf)),
         )
 
         self.step(
