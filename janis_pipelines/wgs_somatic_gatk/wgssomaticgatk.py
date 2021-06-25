@@ -255,8 +255,6 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
         return w(**connections)
 
     def tests(self) -> Optional[List[TTestCase]]:
-        bioinf_base = "https://swift.rc.nectar.org.au/v1/AUTH_4df6e734a509497692be237549bbe9af/janis-test-data/bioinformatics"
-        chr17 = f"{bioinf_base}/petermac_testdata"
         parent_dir = "https://swift.rc.nectar.org.au/v1/AUTH_4df6e734a509497692be237549bbe9af/janis-test-data/bioinformatics"
         germline_data = f"{parent_dir}/wgsgermline_data"
         somatic_data = f"{parent_dir}/wgssomatic_data"
