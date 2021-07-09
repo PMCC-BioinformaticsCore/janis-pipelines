@@ -412,8 +412,8 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
             doc="Variants from the Strelka variant caller",
         )
         self.output(
-            "out_variants_manta",
-            source=self.vc_strelka.sv,
+            "out_variants_manta_somatic",
+            source=self.vc_strelka.tumor_sv,
             output_folder=[
                 "sv",
                 "manta",
