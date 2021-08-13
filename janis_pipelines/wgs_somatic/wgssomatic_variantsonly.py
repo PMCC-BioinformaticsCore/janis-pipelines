@@ -119,6 +119,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
             "out_gridss_assembly",
             source=self.vc_gridss.assembly,
             output_folder=[
+                "sv",
                 "gridss",
             ],
             output_name=StringFormatter(
@@ -132,6 +133,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
             "out_variants_gridss",
             source=self.vc_gridss.out,
             output_folder=[
+                "sv",
                 "gridss",
             ],
             output_name=StringFormatter(
@@ -164,9 +166,12 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         self.output(
             "out_facets_summary",
             source=self.vc_facets.out_summary,
-            output_folder="facets",
+            output_folder=[
+                "cnv",
+                "facets",
+            ],
             output_name=StringFormatter(
-                "{tumour}--{normal}.txt",
+                "{tumour}--{normal}",
                 tumour=self.tumor_name,
                 normal=self.normal_name,
             ),
@@ -174,9 +179,12 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         self.output(
             "out_facets_purity_png",
             source=self.vc_facets.out_purity_png,
-            output_folder="facets",
+            output_folder=[
+                "cnv",
+                "facets",
+            ],
             output_name=StringFormatter(
-                "{tumour}--{normal}_purity.png",
+                "{tumour}--{normal}_purity",
                 tumour=self.tumor_name,
                 normal=self.normal_name,
             ),
@@ -184,9 +192,12 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         self.output(
             "out_facets_purity_seg",
             source=self.vc_facets.out_purity_seg,
-            output_folder="facets",
+            output_folder=[
+                "cnv",
+                "facets",
+            ],
             output_name=StringFormatter(
-                "{tumour}--{normal}_purity.seg",
+                "{tumour}--{normal}_purity",
                 tumour=self.tumor_name,
                 normal=self.normal_name,
             ),
@@ -194,9 +205,12 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         self.output(
             "out_facets_purity_rds",
             source=self.vc_facets.out_purity_rds,
-            output_folder="facets",
+            output_folder=[
+                "cnv",
+                "facets",
+            ],
             output_name=StringFormatter(
-                "{tumour}--{normal}_purity.rds",
+                "{tumour}--{normal}_purity",
                 tumour=self.tumor_name,
                 normal=self.normal_name,
             ),
@@ -204,9 +218,12 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         self.output(
             "out_facets_hisens_png",
             source=self.vc_facets.out_hisens_png,
-            output_folder="facets",
+            output_folder=[
+                "cnv",
+                "facets",
+            ],
             output_name=StringFormatter(
-                "{tumour}--{normal}_hisens.png",
+                "{tumour}--{normal}_hisens",
                 tumour=self.tumor_name,
                 normal=self.normal_name,
             ),
@@ -214,9 +231,12 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         self.output(
             "out_facets_hisens_seg",
             source=self.vc_facets.out_hisens_seg,
-            output_folder="facets",
+            output_folder=[
+                "cnv",
+                "facets",
+            ],
             output_name=StringFormatter(
-                "{tumour}--{normal}_hisens.seg",
+                "{tumour}--{normal}_hisens",
                 tumour=self.tumor_name,
                 normal=self.normal_name,
             ),
@@ -224,9 +244,12 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         self.output(
             "out_facets_hisens_rds",
             source=self.vc_facets.out_hisens_rds,
-            output_folder="facets",
+            output_folder=[
+                "cnv",
+                "facets",
+            ],
             output_name=StringFormatter(
-                "{tumour}--{normal}_hisens.rds",
+                "{tumour}--{normal}_hisens",
                 tumour=self.tumor_name,
                 normal=self.normal_name,
             ),
@@ -234,9 +257,12 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         self.output(
             "out_facets_arm_level",
             source=self.vc_facets.out_arm_level,
-            output_folder="facets",
+            output_folder=[
+                "cnv",
+                "facets",
+            ],
             output_name=StringFormatter(
-                "{tumour}--{normal}.arm_level.txt",
+                "{tumour}--{normal}.arm_level",
                 tumour=self.tumor_name,
                 normal=self.normal_name,
             ),
@@ -244,9 +270,12 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         self.output(
             "out_facets_gene_level",
             source=self.vc_facets.out_gene_level,
-            output_folder="facets",
+            output_folder=[
+                "cnv",
+                "facets",
+            ],
             output_name=StringFormatter(
-                "{tumour}--{normal}.gene_level.txt",
+                "{tumour}--{normal}.gene_level",
                 tumour=self.tumor_name,
                 normal=self.normal_name,
             ),
@@ -254,9 +283,12 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         self.output(
             "out_facets_qc",
             source=self.vc_facets.out_qc,
-            output_folder="facets",
+            output_folder=[
+                "cnv",
+                "facets",
+            ],
             output_name=StringFormatter(
-                "{tumour}--{normal}.qc.txt",
+                "{tumour}--{normal}.qc",
                 tumour=self.tumor_name,
                 normal=self.normal_name,
             ),
@@ -289,6 +321,20 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
                 normal_name=self.normal_name,
             ),
             doc="Variants from the Strelka variant caller",
+        )
+        self.output(
+            "out_variants_manta_somatic",
+            source=self.vc_strelka.tumor_sv,
+            output_folder=[
+                "sv",
+                "manta",
+            ],
+            output_name=StringFormatter(
+                "{tumor_name}--{normal_name}_manta",
+                tumor_name=self.tumor_name,
+                normal_name=self.normal_name,
+            ),
+            doc="SV variants from the Manta caller",
         )
 
     def add_vardict_variantcaller(self, normal_bam_source, tumor_bam_source):
@@ -448,5 +494,5 @@ if __name__ == "__main__":
         ),
     }
     # w.translate("cwl", **args)
-    w.translate("wdl", **args)
-    # WGSSomaticMultiCallersVariantsOnly().translate("wdl")
+    # w.translate("wdl", **args)
+    WGSSomaticMultiCallersVariantsOnly().translate("wdl")

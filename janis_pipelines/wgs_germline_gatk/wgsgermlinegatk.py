@@ -109,31 +109,30 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
         )
 
     def tests(self) -> Optional[List[TTestCase]]:
-        bioinf_base = "https://swift.rc.nectar.org.au/v1/AUTH_4df6e734a509497692be237549bbe9af/janis-test-data/bioinformatics"
-        hg38 = f"{bioinf_base}/hg38"
-        chr17 = f"{bioinf_base}/petermac_testdata"
+        parent_dir = "https://swift.rc.nectar.org.au/v1/AUTH_4df6e734a509497692be237549bbe9af/janis-test-data/bioinformatics"
+        germline_data = f"{parent_dir}/wgsgermline_data"
 
         return [
             TTestCase(
                 name="brca1",
                 input={
                     "sample_name": "NA12878",
-                    "reference": f"{chr17}/Homo_sapiens_assembly38.chr17.fasta",
+                    "reference": f"{germline_data}/Homo_sapiens_assembly38.chr17.fasta",
                     "fastqs": [
                         [
-                            f"{chr17}/NA12878-BRCA1_R1.fastq.gz",
-                            f"{chr17}/NA12878-BRCA1_R2.fastq.gz",
+                            f"{germline_data}/NA12878-BRCA1_R1.fastq.gz",
+                            f"{germline_data}/NA12878-BRCA1_R2.fastq.gz",
                         ]
                     ],
-                    "gatk_intervals": [f"{chr17}/BRCA1.hg38.bed"],
-                    "known_indels": f"{chr17}/Homo_sapiens_assembly38.known_indels.BRCA1.vcf.gz",
-                    "mills_indels": f"{chr17}/Mills_and_1000G_gold_standard.indels.hg38.BRCA1.vcf.gz",
-                    "snps_1000gp": f"{chr17}/1000G_phase1.snps.high_confidence.hg38.BRCA1.vcf.gz",
-                    "snps_dbsnp": f"{chr17}/Homo_sapiens_assembly38.dbsnp138.BRCA1.vcf.gz",
-                    "cutadapt_adapters": f"{chr17}/contaminant_list.txt",
+                    "gatk_intervals": [f"{germline_data}/BRCA1.hg38.bed"],
+                    "known_indels": f"{germline_data}/Homo_sapiens_assembly38.known_indels.BRCA1.vcf.gz",
+                    "mills_indels": f"{germline_data}/Mills_and_1000G_gold_standard.indels.hg38.BRCA1.vcf.gz",
+                    "snps_1000gp": f"{germline_data}/1000G_phase1.snps.high_confidence.hg38.BRCA1.vcf.gz",
+                    "snps_dbsnp": f"{germline_data}/Homo_sapiens_assembly38.dbsnp138.BRCA1.vcf.gz",
+                    "cutadapt_adapters": f"{germline_data}/contaminant_list.txt",
                 },
                 output=Vcf.basic_test("out_variants_bamstats", 51300, 230)
-                + Vcf.basic_test("out_variants_gatk_split", 51300, 221)
+                + Vcf.basic_test("out_variants_gatk_split", 50700, 221)
                 + BamBai.basic_test("out_bam", 2822000, 49600)
                 + TextFile.basic_test(
                     "out_performance_summary",
@@ -143,7 +142,7 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
                 + Array.array_wrapper(
                     [
                         ZipFile.basic_test("out_fastqc_reports", 408000),
-                        ZipFile.basic_test("out_fastqc_reports", 416000),
+                        ZipFile.basic_test("out_fastqc_reports", 408000),
                     ]
                 ),
             )
