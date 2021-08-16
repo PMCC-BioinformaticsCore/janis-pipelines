@@ -294,6 +294,20 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
             ),
         ),
 
+        # Save gatk output
+        self.output(
+            "out_variants_gatk",
+            source=self.vc_gatk_sort_combined.out,
+            output_folder="variants",
+            doc="Merged variants from the GATK caller",
+        )
+        self.output(
+            "out_variants_gakt_split",
+            source=self.vc_gatk.out,
+            output_folder=["variants", "byInterval"],
+            doc="Unmerged variants from the GATK caller (by interval)",
+        )
+
     def add_strelka_variantcaller(self, normal_bam_source, tumor_bam_source):
         self.step("generate_manta_config", GenerateMantaConfig())
 
@@ -313,7 +327,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
             "out_variants_strelka",
             source=self.vc_strelka_compress.out.as_type(CompressedVcf),
             output_folder=[
-                "vcf",
+                "variants",
             ],
             output_name=StringFormatter(
                 "{tumor_name}--{normal_name}_strelka",
@@ -375,7 +389,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
             "out_variants_vardict",
             source=self.vc_vardict_sort_combined.out,
             output_folder=[
-                "vcf",
+                "variants",
             ],
             output_name=StringFormatter(
                 "{tumor_name}--{normal_name}_vardict",
@@ -388,7 +402,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
             "out_variants_vardict_split",
             source=self.vc_vardict.out,
             output_folder=[
-                "vcf",
+                "variants",
                 "VardictByInterval",
             ],
             doc="Unmerged variants from the GATK caller (by interval)",
@@ -433,7 +447,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
             "out_variants",
             source=self.combined_addbamstats.out,
             output_folder=[
-                "vcf",
+                "variants",
             ],
             output_name=StringFormatter(
                 "{tumor_name}--{normal_name}_combined",
