@@ -1,34 +1,30 @@
 from datetime import date
 
+from janis_unix.tools import UncompressArchive
+from janis_core import (
+    String,
+    Array,
+    WorkflowMetadata,
+    InputQualityType,
+)
+from janis_core.operators.standard import FirstOperator
+
 from janis_bioinformatics.data_types import (
     FastaWithDict,
     VcfTabix,
     Bed,
-    File,
     BamBai,
     CompressedVcf,
     Vcf,
 )
-from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
+from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9, BcfToolsConcat_1_9
 from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
 from janis_bioinformatics.tools.common import GATKBaseRecalBQSRWorkflow_4_1_3
-from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
-from janis_bioinformatics.tools.htslib import BGZipLatest
-from janis_bioinformatics.tools.papenfuss import Gridss_2_6_2
 from janis_bioinformatics.tools.pmac import (
     AddBamStatsSomatic_0_1_0,
     GenerateIntervalsByChromosome,
 )
 from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
-from janis_core import (
-    String,
-    Array,
-    WorkflowMetadata,
-    InputDocumentation,
-    InputQualityType,
-)
-from janis_core.operators.standard import FirstOperator
-from janis_unix.tools import UncompressArchive
 
 from janis_pipelines.reference import WGS_INPUTS
 
@@ -174,11 +170,13 @@ class WGSSomaticGATKVariantsOnly(BioinformaticsWorkflow):
             scatter=["intervals", "normal_bam", "tumor_bam"],
         )
 
-        self.step("vc_gatk_merge", Gatk4GatherVcfs_4_1_3(vcfs=self.vc_gatk.out))
-        self.step("vc_gatk_compressvcf", BGZipLatest(file=self.vc_gatk_merge.out))
+        self.step(
+            "vc_gatk_merge",
+            BcfToolsConcat_1_9(vcf=self.vc_gatk.out.as_type(Array(Vcf))),
+        )
         self.step(
             "vc_gatk_sort_combined",
-            BcfToolsSort_1_9(vcf=self.vc_gatk_compressvcf.out.as_type(CompressedVcf)),
+            BcfToolsSort_1_9(vcf=self.vc_gatk_merge.out.as_type(CompressedVcf)),
         )
         self.step(
             "vc_gatk_uncompressvcf",
