@@ -1,5 +1,15 @@
 from datetime import date
 
+from janis_core import (
+    String,
+    Array,
+    WorkflowMetadata,
+    InputQualityType,
+    StringFormatter,
+)
+from janis_core.operators.standard import FirstOperator
+from janis_unix.tools import UncompressArchive
+
 from janis_bioinformatics.data_types import (
     FastaWithDict,
     VcfTabix,
@@ -11,8 +21,6 @@ from janis_bioinformatics.data_types import (
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9, BcfToolsConcat_1_9
 from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
 from janis_bioinformatics.tools.common import GATKBaseRecalBQSRWorkflow_4_1_3
-from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
-from janis_bioinformatics.tools.htslib import BGZipLatest
 from janis_bioinformatics.tools.pmac import (
     PerformanceSummaryGenome_0_1_0,
     AddBamStatsGermline_0_1_0,
@@ -20,14 +28,7 @@ from janis_bioinformatics.tools.pmac import (
     GenerateIntervalsByChromosome,
 )
 from janis_bioinformatics.tools.variantcallers import GatkGermlineVariantCaller_4_1_3
-from janis_core import (
-    String,
-    Array,
-    WorkflowMetadata,
-    InputQualityType,
-)
-from janis_core.operators.standard import FirstOperator
-from janis_unix.tools import UncompressArchive
+
 
 from janis_pipelines.reference import WGS_INPUTS
 
@@ -204,14 +205,22 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
         self.output(
             "out_variants_gatk",
             source=self.vc_gatk_sort_combined.out,
-            output_folder="variants",
-            output_name="gatk",
+            output_folder=[
+                "variants",
+            ],
+            output_name=StringFormatter(
+                "{sample_name}_gatk",
+                sample_name=self.sample_name,
+            ),
             doc="Merged variants from the GATK caller",
         )
         self.output(
             "out_variants_gatk_split",
             source=self.vc_gatk.out,
-            output_folder=["variants", "gatk"],
+            output_folder=[
+                "variants",
+                "GatkByInterval",
+            ],
             doc="Unmerged variants from the GATK caller (by interval)",
         )
 
@@ -227,8 +236,14 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
         self.output(
             "out_variants_bamstats",
             source=self.vc_gatk_addbamstats.out,
-            output_folder="variants",
-            output_name="gatk_bamstats",
+            output_folder=[
+                "variants",
+            ],
+            output_name=StringFormatter(
+                "{sample_name}",
+                sample_name=self.sample_name,
+            ),
+            doc="Final vcf from GATK",
         )
 
     def bind_metadata(self):
@@ -237,7 +252,7 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
         meta.keywords = ["wgs", "cancer", "germline", "variants", "gatk"]
         meta.contributors = ["Michael Franklin", "Richard Lupat", "Jiaan Yu"]
         meta.dateCreated = date(2018, 12, 24)
-        meta.dateUpdated = date(2021, 5, 28)
+        meta.dateUpdated = date(2021, 9, 3)
         meta.short_documentation = "A variant-calling WGS pipeline using only the GATK Haplotype variant caller."
         meta.documentation = """\
 This is a genomics pipeline to ONLY call variants using GATK from an indexed bam. The final variants are outputted in the VCF format.

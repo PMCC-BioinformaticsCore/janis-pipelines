@@ -1,25 +1,5 @@
 from datetime import date
 
-from janis_bioinformatics.data_types import Bed, BedTabix, Vcf, CompressedVcf
-from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9, BcfToolsConcat_1_9
-from janis_bioinformatics.tools.common import GATKBaseRecalBQSRWorkflow_4_1_3
-from janis_bioinformatics.tools.htslib import BGZipLatest
-from janis_bioinformatics.tools.papenfuss import Gridss_2_6_2
-from janis_bioinformatics.tools.pmac import (
-    CombineVariants_0_0_8,
-    GenerateVardictHeaderLines,
-    AddBamStatsSomatic_0_1_0,
-    GenerateIntervalsByChromosome,
-    GenerateMantaConfig,
-)
-from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
-from janis_bioinformatics.tools.variantcallers.illuminasomatic_strelka import (
-    IlluminaSomaticVariantCaller,
-)
-from janis_bioinformatics.tools.variantcallers.vardictsomatic_variants import (
-    VardictSomaticVariantCaller,
-)
-from janis_bioinformatics.tools.common.facetsWorkflow import FacestWorkflow
 from janis_core import (
     Array,
     Float,
@@ -31,8 +11,25 @@ from janis_core import (
     InputQualityType,
     StringFormatter,
 )
-from janis_core.operators.standard import FirstOperator
 from janis_unix.tools import UncompressArchive
+
+from janis_bioinformatics.data_types import Bed, BedTabix, Vcf, CompressedVcf
+from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9, BcfToolsConcat_1_9
+from janis_bioinformatics.tools.htslib import BGZipLatest
+from janis_bioinformatics.tools.papenfuss import Gridss_2_6_2
+from janis_bioinformatics.tools.pmac import (
+    CombineVariants_0_0_8,
+    GenerateVardictHeaderLines,
+    AddBamStatsSomatic_0_1_0,
+    GenerateMantaConfig,
+)
+from janis_bioinformatics.tools.variantcallers.illuminasomatic_strelka import (
+    IlluminaSomaticVariantCaller,
+)
+from janis_bioinformatics.tools.variantcallers.vardictsomatic_variants import (
+    VardictSomaticVariantCaller,
+)
+from janis_bioinformatics.tools.common.facetsWorkflow import FacestWorkflow
 
 from janis_pipelines.wgs_somatic_gatk.wgssomaticgatk_variantsonly import (
     WGSSomaticGATKVariantsOnly,
@@ -295,18 +292,29 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         ),
 
         # Save gatk output
-        self.output(
-            "out_variants_gatk",
-            source=self.vc_gatk_sort_combined.out,
-            output_folder="variants",
-            doc="Merged variants from the GATK caller",
-        )
-        self.output(
-            "out_variants_gakt_split",
-            source=self.vc_gatk.out,
-            output_folder=["variants", "byInterval"],
-            doc="Unmerged variants from the GATK caller (by interval)",
-        )
+        # Testing, ideally this section is not needed
+        # self.output(
+        #     "out_variants_gatk",
+        #     source=self.vc_gatk_sort_combined.out,
+        #     output_folder=[
+        #         "variants",
+        #     ],
+        #     output_name=StringFormatter(
+        #         "{tumor_name}--{normal_name}_gatk",
+        #         tumor_name=self.tumor_name,
+        #         normal_name=self.normal_name,
+        #     ),
+        #     doc="Merged variants from the GATK caller",
+        # )
+        # self.output(
+        #     "out_variants_gakt_split",
+        #     source=self.vc_gatk.out,
+        #     output_folder=[
+        #         "variants",
+        #         "GatkByInterval",
+        #     ],
+        #     doc="Unmerged variants from the GATK caller (by interval)",
+        # )
 
     def add_strelka_variantcaller(self, normal_bam_source, tumor_bam_source):
         self.step("generate_manta_config", GenerateMantaConfig())
@@ -472,7 +480,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         ]
         meta.contributors = ["Michael Franklin", "Richard Lupat", "Jiaan Yu"]
         meta.dateCreated = date(2018, 12, 24)
-        meta.dateUpdated = date(2021, 5, 28)
+        meta.dateUpdated = date(2021, 9, 3)
         meta.short_documentation = "A somatic tumor-normal variant-calling WGS pipeline using GATK, VarDict and Strelka2."
         meta.documentation = """\
 This is a genomics pipeline to align sequencing data (Fastq pairs) into BAMs:
