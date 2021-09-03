@@ -1,24 +1,20 @@
+from janis_core import Array, Float, Int, String, WorkflowMetadata, StringFormatter
+from janis_unix.tools import UncompressArchive
+
 from janis_bioinformatics.data_types import Bed, BedTabix, Vcf, CompressedVcf
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9, BcfToolsConcat_1_9
-from janis_bioinformatics.tools.common import GATKBaseRecalBQSRWorkflow_4_1_3
-from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
 from janis_bioinformatics.tools.htslib import BGZipLatest
 from janis_bioinformatics.tools.papenfuss import Gridss_2_6_2
 from janis_bioinformatics.tools.pmac import (
     CombineVariants_0_0_8,
     GenerateVardictHeaderLines,
     AddBamStatsGermline_0_1_0,
-    GenerateIntervalsByChromosome,
     GenerateMantaConfig,
 )
 from janis_bioinformatics.tools.variantcallers import (
-    GatkGermlineVariantCaller_4_1_3,
     IlluminaGermlineVariantCaller,
     VardictGermlineVariantCaller,
 )
-from janis_core import Array, Float, Int, String, WorkflowMetadata
-from janis_core.operators.standard import FirstOperator
-from janis_unix.tools import UncompressArchive
 
 from janis_pipelines.wgs_germline_gatk.wgsgermlinegatk_variantsonly import (
     WGSGermlineGATKVariantsOnly,
@@ -101,8 +97,13 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
         self.output(
             "out_variants_strelka",
             source=self.vc_strelka.out,
-            output_folder="variants",
-            output_name="strelka",
+            output_folder=[
+                "variants",
+            ],
+            output_name=StringFormatter(
+                "{sample_name}_strelka",
+                sample_name=self.sample_name,
+            ),
             doc="Variants from the Strelka variant caller",
         )
 
@@ -150,14 +151,22 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
         self.output(
             "out_variants_vardict",
             source=self.vc_vardict_sort_combined.out,
-            output_folder=["variants"],
-            output_name="vardict",
+            output_folder=[
+                "variants",
+            ],
+            output_name=StringFormatter(
+                "{sample_name}_vardict",
+                sample_name=self.sample_name,
+            ),
             doc="Merged variants from the VarDict caller",
         )
         self.output(
             "out_variants_vardict_split",
             source=self.vc_vardict.out,
-            output_folder=["variants", "vardict"],
+            output_folder=[
+                "variants",
+                "VardictByInterval",
+            ],
             doc="Unmerged variants from the VarDict caller (by interval)",
         )
 
@@ -252,5 +261,5 @@ if __name__ == "__main__":
         "with_resource_overrides": True,
     }
     # w.translate("cwl", **args)
-    w.translate("wdl", **args)
-    # WGSGermlineMultiCallersVariantsOnly().translate("wdl")
+    # w.translate("wdl", **args)
+    WGSGermlineMultiCallersVariantsOnly().translate("wdl")
