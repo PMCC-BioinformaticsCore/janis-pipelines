@@ -184,19 +184,6 @@ class WGSSomaticGATKVariantsOnly(BioinformaticsWorkflow):
             UncompressArchive(file=self.vc_gatk_sort_combined.out),
         )
 
-    def add_addbamstats(self, normal_bam_source, tumor_bam_source):
-        self.step(
-            "addbamstats",
-            AddBamStatsSomatic_0_1_0(
-                normal_id=self.normal_name,
-                tumor_id=self.tumor_name,
-                normal_bam=normal_bam_source,
-                tumor_bam=tumor_bam_source,
-                reference=self.reference,
-                vcf=self.vc_gatk_uncompressvcf.out.as_type(Vcf),
-            ),
-        )
-
         # VCF
         self.output(
             "out_variants_gatk",
@@ -218,6 +205,20 @@ class WGSSomaticGATKVariantsOnly(BioinformaticsWorkflow):
             ],
             doc="Unmerged variants from the GATK caller (by interval)",
         )
+
+    def add_addbamstats(self, normal_bam_source, tumor_bam_source):
+        self.step(
+            "addbamstats",
+            AddBamStatsSomatic_0_1_0(
+                normal_id=self.normal_name,
+                tumor_id=self.tumor_name,
+                normal_bam=normal_bam_source,
+                tumor_bam=tumor_bam_source,
+                reference=self.reference,
+                vcf=self.vc_gatk_uncompressvcf.out.as_type(Vcf),
+            ),
+        )
+
         self.output(
             "out_variants_bamstats",
             source=self.addbamstats.out,
