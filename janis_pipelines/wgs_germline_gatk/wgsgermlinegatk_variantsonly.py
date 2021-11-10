@@ -6,6 +6,7 @@ from janis_core import (
     WorkflowMetadata,
     InputQualityType,
     StringFormatter,
+    File,
 )
 from janis_core.operators.standard import FirstOperator
 from janis_unix.tools import UncompressArchive
@@ -28,7 +29,6 @@ from janis_bioinformatics.tools.pmac import (
     GenerateIntervalsByChromosome,
 )
 from janis_bioinformatics.tools.variantcallers import GatkGermlineVariantCaller_4_1_3
-
 
 from janis_pipelines.reference import WGS_INPUTS
 
@@ -102,6 +102,10 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
         self.input("snps_1000gp", VcfTabix, doc=INPUT_DOCS["snps_1000gp"])
         self.input("known_indels", VcfTabix, doc=INPUT_DOCS["known_indels"])
         self.input("mills_indels", VcfTabix, doc=INPUT_DOCS["mills_indels"])
+
+    def add_inputs_for_adapter_trimming(self):
+        self.input("adapter_file", File)
+        self.input("contamination_file", File)
 
     def add_bam_qc(self, bam_source):
         # Temporarily remove GATK4 DepthOfCoverage for performance reasons, see:

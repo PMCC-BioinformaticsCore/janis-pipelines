@@ -6,7 +6,7 @@ from janis_bioinformatics.data_types import FastqGzPair, Bam, Vcf, CompressedVcf
 from janis_bioinformatics.tools import BioinformaticsTool
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_8
 from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
-from janis_bioinformatics.tools.pmac import ParseFastqcAdaptors
+from janis_bioinformatics.tools.pmac import ParseFastqcAdapters
 from janis_core import String, Array, File
 from janis_core.tool.test_classes import (
     TTestCase,
@@ -52,19 +52,28 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
 
         self.add_inputs_for_reference()
         self.add_inputs_for_intervals()
+        self.add_inputs_for_adapter_trimming()
         self.add_inputs_for_configuration()
 
     def add_inputs_for_configuration(self):
         super().add_inputs_for_configuration()
 
-        self.input("cutadapt_adapters", File, doc=INPUT_DOCS["cutadapt_adapters"])
-
     def add_fastqc(self):
-        self.step("fastqc", FastQC_0_11_8(reads=self.fastqs), scatter="reads")
+        self.step(
+            "fastqc",
+            FastQC_0_11_8(reads=self.fastqs),
+            scatter="reads",
+        )
 
         self.output(
-            "out_fastqc_reports",
-            source=self.fastqc.out,
+            "out_fastqc_R1_reports",
+            source=self.fastqc.out_R1,
+            output_folder="reports",
+            doc="A zip file of the FastQC quality report.",
+        )
+        self.output(
+            "out_fastqc_R2_reports",
+            source=self.fastqc.out_R2,
             output_folder="reports",
             doc="A zip file of the FastQC quality report.",
         )
@@ -72,11 +81,13 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
     def add_align(self):
         self.step(
             "getfastqc_adapters",
-            ParseFastqcAdaptors(
-                fastqc_datafiles=self.fastqc.datafile,
-                cutadapt_adaptors_lookup=self.cutadapt_adapters,
+            ParseFastqcAdapters(
+                read1_fastqc_datafile=self.fastqc.out_R1_datafile,
+                read2_fastqc_datafile=self.fastqc.out_R2_datafile,
+                adapters_lookup=self.adapter_file,
+                contamination_lookup=self.contamination_file,
             ),
-            scatter="fastqc_datafiles",
+            scatter=["read1_fastqc_datafile", "read2_fastqc_datafile"],
         )
 
         self.step(
@@ -86,10 +97,10 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
                 reference=self.reference,
                 sample_name=self.sample_name,
                 sortsam_tmpDir="./tmp",
-                cutadapt_adapter=self.getfastqc_adapters,
-                cutadapt_removeMiddle3Adapter=self.getfastqc_adapters,
+                three_prim_adapter_read1=self.getfastqc_adapters.out_R1_sequences,
+                three_prim_adapter_read2=self.getfastqc_adapters.out_R2_sequences,
             ),
-            scatter=["fastq", "cutadapt_adapter", "cutadapt_removeMiddle3Adapter"],
+            scatter=["fastq", "three_prim_adapter_read1", "three_prim_adapter_read2"],
         )
 
     def add_bam_process(self):
@@ -129,7 +140,8 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
                     "mills_indels": f"{germline_data}/Mills_and_1000G_gold_standard.indels.hg38.BRCA1.vcf.gz",
                     "snps_1000gp": f"{germline_data}/1000G_phase1.snps.high_confidence.hg38.BRCA1.vcf.gz",
                     "snps_dbsnp": f"{germline_data}/Homo_sapiens_assembly38.dbsnp138.BRCA1.vcf.gz",
-                    "cutadapt_adapters": f"{germline_data}/contaminant_list.txt",
+                    # Need to add adapter sequence file
+                    "contamination_file": f"{germline_data}/contaminant_list.txt",
                 },
                 output=Vcf.basic_test("out_variants_bamstats", 51300, 230)
                 + Vcf.basic_test("out_variants_gatk_split", 50700, 221)

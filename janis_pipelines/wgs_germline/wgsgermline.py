@@ -77,6 +77,7 @@ class WGSGermlineMultiCallers(WGSGermlineGATK, WGSGermlineMultiCallersVariantsOn
 
         self.add_inputs_for_reference()
         self.add_inputs_for_intervals()
+        self.add_inputs_for_adapter_trimming()
         self.add_inputs_for_configuration()
 
     def bind_metadata(self):
@@ -134,7 +135,7 @@ The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be 
                     "snps_dbsnp": f"{chr17}/Homo_sapiens_assembly38.dbsnp138.BRCA1.vcf.gz",
                     "cutadapt_adapters": f"{chr17}/contaminant_list.txt",
                     "gridss_blacklist": f"{chr17}/consensusBlacklist.hg38.chr17.bed",
-                    "MINIMUM_PCT": f""
+                    "MINIMUM_PCT": f"",
                 },
                 output=[
                     TTestExpectedOutput(
