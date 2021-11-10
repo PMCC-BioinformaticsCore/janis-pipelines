@@ -7,6 +7,7 @@ from janis_core import (
     WorkflowMetadata,
     InputQualityType,
     StringFormatter,
+    File,
 )
 from janis_core.operators.standard import FirstOperator
 
@@ -124,6 +125,10 @@ class WGSSomaticGATKVariantsOnly(BioinformaticsWorkflow):
         self.input("snps_1000gp", VcfTabix, doc=INPUT_DOCS["snps_1000gp"])
         self.input("known_indels", VcfTabix, doc=INPUT_DOCS["known_indels"])
         self.input("mills_indels", VcfTabix, doc=INPUT_DOCS["mills_indels"])
+
+    def add_inputs_for_adapter_trimming(self):
+        self.input("adapter_file", File)
+        self.input("contamination_file", File)
 
     def add_gatk_variantcaller(self, normal_bam_source, tumor_bam_source):
         if "generate_gatk_intervals" in self.step_nodes:

@@ -81,6 +81,7 @@ class WGSSomaticMultiCallers(WGSSomaticMultiCallersVariantsOnly, WGSSomaticGATK)
         )
 
         self.add_inputs_for_reference()
+        self.add_inputs_for_adapter_trimming()
         self.add_inputs_for_intervals()
         self.add_inputs_for_configuration()
 

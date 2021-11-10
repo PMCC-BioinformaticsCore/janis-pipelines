@@ -23,7 +23,7 @@ from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
 from janis_bioinformatics.tools.htslib import BGZipLatest
 from janis_bioinformatics.tools.papenfuss import Gridss_2_6_2
 from janis_bioinformatics.tools.pmac import (
-    ParseFastqcAdaptors,
+    ParseFastqcAdapters,
     PerformanceSummaryGenome_0_1_0,
     AddBamStatsSomatic_0_1_0,
     GenerateGenomeFileForBedtoolsCoverage,
@@ -73,11 +73,11 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
 
         self.add_inputs_for_reference()
         self.add_inputs_for_intervals()
+        self.add_inputs_for_adapter_trimming()
         self.add_inputs_for_configuration()
 
     def add_inputs_for_configuration(self):
         super().add_inputs_for_configuration()
-        self.input("cutadapt_adapters", File, doc=INPUT_DOCS["cutadapt_adapters"])
 
     def add_preprocessing_steps(self):
         intervals = FirstOperator(
@@ -93,7 +93,8 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
 
         sub_inputs = {
             "reference": self.reference,
-            "cutadapt_adapters": self.cutadapt_adapters,
+            "adapter_file": self.adapter_file,
+            "contamination_file": self.contamination_file,
             "gatk_intervals": intervals,
             "snps_dbsnp": self.snps_dbsnp,
             "snps_1000gp": self.snps_1000gp,
@@ -117,13 +118,23 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
 
         # FASTQC
         self.output(
-            "out_normal_fastqc_reports",
-            source=self.normal.out_fastqc_reports,
+            "out_normal_R1_fastqc_reports",
+            source=self.normal.out_R1_fastqc_reports,
             output_folder="reports",
         )
         self.output(
-            "out_tumor_fastqc_reports",
-            source=self.tumor.out_fastqc_reports,
+            "out_tumor_R1_fastqc_reports",
+            source=self.tumor.out_R1_fastqc_reports,
+            output_folder="reports",
+        )
+        self.output(
+            "out_normal_R2_fastqc_reports",
+            source=self.normal.out_R2_fastqc_reports,
+            output_folder="reports",
+        )
+        self.output(
+            "out_tumor_R2_fastqc_reports",
+            source=self.tumor.out_R2_fastqc_reports,
             output_folder="reports",
         )
 
@@ -176,23 +187,26 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
         w.input("reads", Array(FastqGzPair))
         w.input("sample_name", String)
         w.input("reference", FastaWithDict)
-        w.input("cutadapt_adapters", File(optional=True))
         w.input("gatk_intervals", Array(Bed))
         w.input("snps_dbsnp", VcfTabix)
         w.input("snps_1000gp", VcfTabix)
         w.input("known_indels", VcfTabix)
         w.input("mills_indels", VcfTabix)
+        w.input("adapter_file", File)
+        w.input("contamination_file", File)
 
         # STEPS
         w.step("fastqc", FastQC_0_11_8(reads=w.reads), scatter="reads")
 
         w.step(
             "getfastqc_adapters",
-            ParseFastqcAdaptors(
-                fastqc_datafiles=w.fastqc.datafile,
-                cutadapt_adaptors_lookup=w.cutadapt_adapters,
+            ParseFastqcAdapters(
+                read1_fastqc_datafile=w.fastqc.out_R1_datafile,
+                read2_fastqc_datafile=w.fastqc.out_R2_datafile,
+                adapters_lookup=w.adapter_file,
+                contamination_lookup=w.contamination_file,
             ),
-            scatter="fastqc_datafiles",
+            scatter=["read1_fastqc_datafile", "read2_fastqc_datafile"],
         )
 
         w.step(
@@ -201,11 +215,11 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
                 fastq=w.reads,
                 reference=w.reference,
                 sample_name=w.sample_name,
-                sortsam_tmpDir=None,
-                cutadapt_adapter=w.getfastqc_adapters,
-                cutadapt_removeMiddle3Adapter=w.getfastqc_adapters,
+                sortsam_tmpDir="./tmp",
+                three_prim_adapter_read1=w.getfastqc_adapters.out_R1_sequences,
+                three_prim_adapter_read2=w.getfastqc_adapters.out_R2_sequences,
             ),
-            scatter=["fastq", "cutadapt_adapter", "cutadapt_removeMiddle3Adapter"],
+            scatter=["fastq", "three_prim_adapter_read1", "three_prim_adapter_read2"],
         )
 
         w.step(
@@ -245,7 +259,8 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
 
         # OUTPUTS
         w.output("out_bam", source=w.merge_and_mark.out)
-        w.output("out_fastqc_reports", source=w.fastqc.out)
+        w.output("out_R1_fastqc_reports", source=w.fastqc.out_R1)
+        w.output("out_R2_fastqc_reports", source=w.fastqc.out_R2)
         # w.output("depth_of_coverage", source=w.coverage.out_sampleSummary)
         w.output(
             "out_performance_summary",
@@ -318,7 +333,7 @@ if __name__ == "__main__":
         ),
     }
     # w.translate("cwl", **args)
-    w.translate("wdl", **args)
+    w.translate("wdl")
 
     # from cwltool import main
     # import logging
