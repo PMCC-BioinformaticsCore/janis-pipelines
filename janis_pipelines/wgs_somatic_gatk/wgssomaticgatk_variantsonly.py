@@ -6,6 +6,7 @@ from janis_core import (
     Array,
     WorkflowMetadata,
     InputQualityType,
+    StringFormatter,
 )
 from janis_core.operators.standard import FirstOperator
 
@@ -183,6 +184,28 @@ class WGSSomaticGATKVariantsOnly(BioinformaticsWorkflow):
             UncompressArchive(file=self.vc_gatk_sort_combined.out),
         )
 
+        # VCF
+        self.output(
+            "out_variants_gatk",
+            source=self.vc_gatk_sort_combined.out,
+            output_folder="variants",
+            output_name=StringFormatter(
+                "{tumor_name}--{normal_name}_gatk",
+                tumor_name=self.tumor_name,
+                normal_name=self.normal_name,
+            ),
+            doc="Merged variants from the GATK caller",
+        )
+        self.output(
+            "out_variants_gakt_split",
+            source=self.vc_gatk.out,
+            output_folder=[
+                "variants",
+                "GatkByInterval",
+            ],
+            doc="Unmerged variants from the GATK caller (by interval)",
+        )
+
     def add_addbamstats(self, normal_bam_source, tumor_bam_source):
         self.step(
             "addbamstats",
@@ -196,24 +219,18 @@ class WGSSomaticGATKVariantsOnly(BioinformaticsWorkflow):
             ),
         )
 
-        # VCF
-        self.output(
-            "out_variants_gatk",
-            source=self.vc_gatk_sort_combined.out,
-            output_folder="variants",
-            doc="Merged variants from the GATK caller",
-        )
-        self.output(
-            "out_variants_gakt_split",
-            source=self.vc_gatk.out,
-            output_folder=["variants", "byInterval"],
-            doc="Unmerged variants from the GATK caller (by interval)",
-        )
         self.output(
             "out_variants_bamstats",
             source=self.addbamstats.out,
-            output_folder="variants",
-            doc="Final vcf",
+            output_folder=[
+                "variants",
+            ],
+            output_name=StringFormatter(
+                "{tumor_name}--{normal_name}",
+                tumor_name=self.tumor_name,
+                normal_name=self.normal_name,
+            ),
+            doc="Final vcf from GATK",
         )
 
     def bind_metadata(self):
@@ -221,7 +238,7 @@ class WGSSomaticGATKVariantsOnly(BioinformaticsWorkflow):
 
         meta.keywords = ["wgs", "cancer", "somatic", "variants", "gatk"]
         meta.dateUpdated = date(2019, 10, 16)
-        meta.dateUpdated = date(2021, 5, 28)
+        meta.dateUpdated = date(2021, 9, 3)
 
         meta.contributors = ["Michael Franklin", "Richard Lupat", "Jiaan Yu"]
         meta.short_documentation = "A somatic tumor-normal variant-calling WGS pipeline using only GATK Mutect2"
@@ -258,7 +275,7 @@ if __name__ == "__main__":
             os.path.dirname(os.path.realpath(__file__)), "{language}"
         ),
     }
-    w.get_dot_plot(show=True, expand_subworkflows=True)
+    # w.get_dot_plot(show=True, expand_subworkflows=True)
     # w.translate("cwl", **args)
     # w.translate("wdl", **args)
     #
@@ -268,3 +285,4 @@ if __name__ == "__main__":
     # # op = os.path.dirname(os.path.realpath(__file__)) + "/cwl/WGSGermlineGATK.py"
     #
     # # main.run(*["--validate", op], logger_handler=logging.Handler())
+    w.translate("wdl")
