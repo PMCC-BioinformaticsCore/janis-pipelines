@@ -1,6 +1,6 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
-cwlVersion: v1.0
+cwlVersion: v1.2
 label: 'GATK4: SplitReads'
 doc: |-
   USAGE: SplitReads [arguments]
@@ -303,13 +303,13 @@ inputs:
   - File
   - 'null'
   secondaryFiles:
-  - .fai
-  - .amb
-  - .ann
-  - .bwt
-  - .pac
-  - .sa
-  - ^.dict
+  - pattern: .fai
+  - pattern: .amb
+  - pattern: .ann
+  - pattern: .bwt
+  - pattern: .pac
+  - pattern: .sa
+  - pattern: ^.dict
   inputBinding:
     prefix: --reference
 - id: secondsBetweenProgressUpdates
@@ -626,7 +626,6 @@ outputs:
     }
   outputBinding:
     glob: $(inputs.bam.basename)
-    outputEval: $(inputs.bam.basename.basename)
     loadContents: false
 stdout: _stdout
 stderr: _stderr
@@ -639,4 +638,9 @@ arguments:
   position: -1
   valueFrom: |-
     $("-Xmx{memory}G {compression} {otherargs}".replace(/\{memory\}/g, (([inputs.runtime_memory, 4, 4].filter(function (inner) { return inner != null })[0] * 3) / 4)).replace(/\{compression\}/g, (inputs.compression_level != null) ? ("-Dsamjdk.compress_level=" + inputs.compression_level) : "").replace(/\{otherargs\}/g, [inputs.javaOptions, []].filter(function (inner) { return inner != null })[0].join(" ")))
+
+hints:
+- class: ToolTimeLimit
+  timelimit: |-
+    $([inputs.runtime_seconds, 86400].filter(function (inner) { return inner != null })[0])
 id: Gatk4SplitReads

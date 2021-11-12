@@ -1,13 +1,13 @@
 #!/usr/bin/env cwl-runner
 class: Workflow
-cwlVersion: v1.0
-label: WGS Germline (GATK)
+cwlVersion: v1.2
+label: Janis Germline Variant-Calling Workflow (GATK)
 doc: |
-  This is a genomics pipeline to ONLY call variants using GATK and GRIDSS from an indexed bam. The final variants are outputted in the VCF format.
+  This is a genomics pipeline to do a single germline sample variant-calling, adapted from GATK Best Practice Workflow.
 
-  This workflow is a reference pipeline using the Janis Python framework (pipelines assistant).
-
-  - Call variants using GRIDSS and GATK4;
+  This workflow is a reference pipeline for using the Janis Python framework (pipelines assistant).
+  - Alignment: bwa-mem
+  - Variant-Calling: GATK HaplotypeCaller
   - Outputs the final variants in the VCF format.
 
   **Resources**
@@ -24,7 +24,6 @@ requirements:
 - class: StepInputExpressionRequirement
 - class: ScatterFeatureRequirement
 - class: SubworkflowFeatureRequirement
-- class: MultipleInputFeatureRequirement
 
 inputs:
 - id: sample_name
@@ -48,43 +47,41 @@ inputs:
         - (".fai", ".amb", ".ann", ".bwt", ".pac", ".sa", "^.dict").
   type: File
   secondaryFiles:
-  - .fai
-  - .amb
-  - .ann
-  - .bwt
-  - .pac
-  - .sa
-  - ^.dict
+  - pattern: .fai
+  - pattern: .amb
+  - pattern: .ann
+  - pattern: .bwt
+  - pattern: .pac
+  - pattern: .sa
+  - pattern: ^.dict
 - id: snps_dbsnp
   doc: From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``
   type: File
   secondaryFiles:
-  - .tbi
+  - pattern: .tbi
 - id: snps_1000gp
   doc: |-
     From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``. Accessible from the HG38 genomics-public-data google cloud bucket: https://console.cloud.google.com/storage/browser/genomics-public-data/references/hg38/v0/ 
   type: File
   secondaryFiles:
-  - .tbi
+  - pattern: .tbi
 - id: known_indels
   doc: From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``
   type: File
   secondaryFiles:
-  - .tbi
+  - pattern: .tbi
 - id: mills_indels
   doc: From the GATK resource bundle, passed to BaseRecalibrator as ``known_sites``
   type: File
   secondaryFiles:
-  - .tbi
-- id: gridss_blacklist
-  doc: |-
-    BED file containing regions to ignore. For more information, visit: https://github.com/PapenfussLab/gridss#blacklist
-  type: File
+  - pattern: .tbi
 - id: gatk_intervals
-  doc: List of intervals over which to split the GATK variant calling
+  doc: |-
+    List of intervals over which to split the GATK variant calling. If no interval is provided, one interval for each chromosome in the reference will be generated.
   type:
-    type: array
+  - type: array
     items: File
+  - 'null'
 - id: cutadapt_adapters
   doc: |2-
                     Specifies a containment list for cutadapt, which contains a list of sequences to determine valid
@@ -109,30 +106,25 @@ outputs:
   doc: Aligned and indexed bam.
   type: File
   secondaryFiles:
-  - .bai
+  - pattern: .bai
   outputSource: merge_and_mark/out
 - id: out_performance_summary
   doc: A text file of performance summary of bam
   type: File
   outputSource: performance_summary/performanceSummaryOut
-- id: out_gridss_assembly
-  doc: Assembly returned by GRIDSS
-  type: File
-  outputSource: vc_gridss/assembly
-- id: out_variants_gridss
-  doc: Variants from the GRIDSS variant caller
-  type: File
-  outputSource: vc_gridss/out
-- id: out_variants
+- id: out_variants_gatk
   doc: Merged variants from the GATK caller
   type: File
   outputSource: vc_gatk_sort_combined/out
-- id: out_variants_split
+- id: out_variants_gatk_split
   doc: Unmerged variants from the GATK caller (by interval)
   type:
     type: array
     items: File
   outputSource: vc_gatk/out
+- id: out_variants_bamstats
+  type: File
+  outputSource: vc_gatk_addbamstats/out
 
 steps:
 - id: fastqc
@@ -211,21 +203,48 @@ steps:
   run: tools/PerformanceSummaryGenome_v0_1_0.cwl
   out:
   - id: performanceSummaryOut
-- id: vc_gridss
-  label: Gridss
+- id: generate_gatk_intervals
+  label: Generating genomic intervals by chromosome
   in:
-  - id: bams
-    source:
-    - merge_and_mark/out
-    linkMerge: merge_nested
   - id: reference
     source: reference
-  - id: blacklist
-    source: gridss_blacklist
-  run: tools/gridss_v2_6_2.cwl
+  - id: __when_gatkintervals
+    source: gatk_intervals
+  run: tools/GenerateIntervalsByChromosome_v0_1_0.cwl
+  when: $(!((inputs.__when_gatkintervals != null)))
   out:
-  - id: out
-  - id: assembly
+  - id: out_regions
+- id: _evaluate_prescatter-bqsr-intervals
+  in:
+  - id: _gatkintervals
+    source: gatk_intervals
+  - id: _generategatkintervalsoutregions
+    source: generate_gatk_intervals/out_regions
+  run:
+    class: ExpressionTool
+
+    inputs:
+    - id: _gatkintervals
+      type:
+        type: array
+        items: File
+      loadContents: false
+    - id: _generategatkintervalsoutregions
+      type:
+      - type: array
+        items: File
+      - 'null'
+      loadContents: false
+
+    outputs:
+    - id: out
+      type:
+        type: array
+        items: File
+    expression: |-
+      ${return {out: [inputs._gatkintervals, inputs._generategatkintervalsoutregions].filter(function (inner) { return inner != null })[0] }}
+  out:
+  - out
 - id: bqsr
   label: GATK Base Recalibration on Bam
   doc: Perform base quality score recalibration
@@ -233,7 +252,7 @@ steps:
   - id: bam
     source: merge_and_mark/out
   - id: intervals
-    source: gatk_intervals
+    source: _evaluate_prescatter-bqsr-intervals/out
   - id: reference
     source: reference
   - id: snps_dbsnp
@@ -249,13 +268,44 @@ steps:
   run: tools/GATKBaseRecalBQSRWorkflow_4_1_3.cwl
   out:
   - id: out
+- id: _evaluate_prescatter-vc_gatk-intervals
+  in:
+  - id: _gatkintervals
+    source: gatk_intervals
+  - id: _generategatkintervalsoutregions
+    source: generate_gatk_intervals/out_regions
+  run:
+    class: ExpressionTool
+
+    inputs:
+    - id: _gatkintervals
+      type:
+        type: array
+        items: File
+      loadContents: false
+    - id: _generategatkintervalsoutregions
+      type:
+      - type: array
+        items: File
+      - 'null'
+      loadContents: false
+
+    outputs:
+    - id: out
+      type:
+        type: array
+        items: File
+    expression: |-
+      ${return {out: [inputs._gatkintervals, inputs._generategatkintervalsoutregions].filter(function (inner) { return inner != null })[0] }}
+  out:
+  - out
 - id: vc_gatk
   label: GATK4 Germline Variant Caller
   in:
   - id: bam
     source: bqsr/out
   - id: intervals
-    source: gatk_intervals
+    source: _evaluate_prescatter-vc_gatk-intervals/out
   - id: reference
     source: reference
   - id: snps_dbsnp
@@ -293,7 +343,7 @@ steps:
   run: tools/bcftoolssort_v1_9.cwl
   out:
   - id: out
-- id: vc_gatk_uncompress_for_bamstats
+- id: vc_gatk_uncompress
   label: UncompressArchive
   in:
   - id: file
@@ -307,7 +357,7 @@ steps:
   - id: bam
     source: merge_and_mark/out
   - id: vcf
-    source: vc_gatk_uncompress_for_bamstats/out
+    source: vc_gatk_uncompress/out
   - id: reference
     source: reference
   run: tools/AddBamStatsGermline_v0_1_0.cwl

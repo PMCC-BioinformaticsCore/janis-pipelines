@@ -1,6 +1,6 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
-cwlVersion: v1.0
+cwlVersion: v1.2
 label: 'SamTools: Flagstat'
 doc: |-
   Does a full pass through the input file to calculate and print statistics to stdout.
@@ -74,4 +74,9 @@ baseCommand:
 - samtools
 - flagstat
 arguments: []
+
+hints:
+- class: ToolTimeLimit
+  timelimit: |-
+    $([inputs.runtime_seconds, 86400].filter(function (inner) { return inner != null })[0])
 id: SamToolsFlagstat

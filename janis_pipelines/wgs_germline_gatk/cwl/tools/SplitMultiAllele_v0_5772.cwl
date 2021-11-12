@@ -1,7 +1,8 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
-cwlVersion: v1.0
+cwlVersion: v1.2
 label: Split Multiple Alleles
+doc: ''
 
 requirements:
 - class: ShellCommandRequirement
@@ -20,13 +21,13 @@ inputs:
   label: reference
   type: File
   secondaryFiles:
-  - .fai
-  - .amb
-  - .ann
-  - .bwt
-  - .pac
-  - .sa
-  - ^.dict
+  - pattern: .fai
+  - pattern: .amb
+  - pattern: .ann
+  - pattern: .bwt
+  - pattern: .pac
+  - pattern: .sa
+  - pattern: ^.dict
   inputBinding:
     prefix: -r
     position: 4
@@ -40,6 +41,7 @@ inputs:
   inputBinding:
     prefix: -o
     position: 6
+    valueFrom: $(inputs.vcf.basename.replace(/.vcf.gz$/, "").replace(/.vcf$/, "")).norm.vcf
     shellQuote: false
 
 outputs:
@@ -47,7 +49,7 @@ outputs:
   label: out
   type: File
   outputBinding:
-    glob: generated.norm.vcf
+    glob: $(inputs.vcf.basename.replace(/.vcf.gz$/, "").replace(/.vcf$/, "")).norm.vcf
     loadContents: false
 stdout: _stdout
 stderr: _stderr
@@ -58,4 +60,9 @@ arguments:
 - position: 2
   valueFrom: '| vt normalize -n -q - '
   shellQuote: false
+
+hints:
+- class: ToolTimeLimit
+  timelimit: |-
+    $([inputs.runtime_seconds, 86400].filter(function (inner) { return inner != null })[0])
 id: SplitMultiAllele

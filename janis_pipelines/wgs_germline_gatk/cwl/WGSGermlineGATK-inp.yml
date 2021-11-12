@@ -3,10 +3,6 @@ cutadapt_adapters:
   class: File
   path: null
 fastqs: null
-gatk_intervals: null
-gridss_blacklist:
-  class: File
-  path: null
 known_indels:
   class: File
   path: null
