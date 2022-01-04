@@ -11,6 +11,7 @@ from janis_bioinformatics.tools.pmac import (
     AddBamStatsSomatic_0_1_0,
     GenerateIntervalsByChromosome,
     GenerateMantaConfig,
+    CircosPlot_0_1_2,
 )
 from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
 from janis_bioinformatics.tools.variantcallers.illuminasomatic_strelka import (
@@ -69,6 +70,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         self.add_strelka_variantcaller(
             normal_bam_source=self.normal_bam, tumor_bam_source=self.tumor_bam
         )
+        self.add_circos_plot()
         self.add_combine_variants(
             normal_bam_source=self.normal_bam, tumor_bam_source=self.tumor_bam
         )
@@ -294,20 +296,6 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
             ),
         ),
 
-        # Save gatk output
-        self.output(
-            "out_variants_gatk",
-            source=self.vc_gatk_sort_combined.out,
-            output_folder="variants",
-            doc="Merged variants from the GATK caller",
-        )
-        self.output(
-            "out_variants_gakt_split",
-            source=self.vc_gatk.out,
-            output_folder=["variants", "byInterval"],
-            doc="Unmerged variants from the GATK caller (by interval)",
-        )
-
     def add_strelka_variantcaller(self, normal_bam_source, tumor_bam_source):
         self.step("generate_manta_config", GenerateMantaConfig())
 
@@ -406,6 +394,27 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
                 "VardictByInterval",
             ],
             doc="Unmerged variants from the GATK caller (by interval)",
+        )
+
+    def add_circos_plot(self):
+        self.step(
+            "circos_plot",
+            CircosPlot_0_1_2(
+                tumor_name=self.tumor_name,
+                normal_name=self.normal_name,
+                facets_file=self.vc_facets.out_hisens_rds,
+                sv_file=self.vc_strelka.tumor_sv,
+            ),
+        )
+        self.output(
+            "out_circos_plot",
+            source=self.circos_plot.out,
+            output_folder="circos_plot",
+            output_name=StringFormatter(
+                "{tumor_name}--{normal_name}_circos_plot.pdf",
+                tumor_name=self.tumor_name,
+                normal_name=self.normal_name,
+            ),
         )
 
     def add_combine_variants(self, normal_bam_source, tumor_bam_source):
