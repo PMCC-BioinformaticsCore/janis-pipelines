@@ -1,6 +1,6 @@
 #!/usr/bin/env cwl-runner
 class: Workflow
-cwlVersion: v1.0
+cwlVersion: v1.2
 label: Annotate Bam Stats to Germline Vcf Workflow
 
 requirements:
@@ -11,19 +11,19 @@ inputs:
 - id: bam
   type: File
   secondaryFiles:
-  - .bai
+  - pattern: .bai
 - id: vcf
   type: File
 - id: reference
   type: File
   secondaryFiles:
-  - .fai
-  - .amb
-  - .ann
-  - .bwt
-  - .pac
-  - .sa
-  - ^.dict
+  - pattern: .fai
+  - pattern: .amb
+  - pattern: .ann
+  - pattern: .bwt
+  - pattern: .pac
+  - pattern: .sa
+  - pattern: ^.dict
 - id: samtoolsmpileup_countOrphans
   doc: do not discard anomalous read pairs
   type: boolean

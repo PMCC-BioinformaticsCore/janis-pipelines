@@ -1,6 +1,6 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
-cwlVersion: v1.0
+cwlVersion: v1.2
 label: Cutadapt
 doc: |
   cutadapt version 2.4
@@ -33,6 +33,10 @@ requirements:
   dockerPull: quay.io/biocontainers/cutadapt:2.1--py37h14c3975_0
 
 inputs:
+- id: outputPrefix
+  label: outputPrefix
+  doc: Used for naming purposes
+  type: string
 - id: fastq
   label: fastq
   type:
@@ -58,18 +62,20 @@ inputs:
   type:
   - string
   - 'null'
-  default: generated--R1.fastq.gz
+  default: generated-R1.fastq.gz
   inputBinding:
     prefix: -o
+    valueFrom: $(inputs.outputPrefix)-R1.fastq.gz
 - id: secondReadFile
   label: secondReadFile
   doc: Write second read in a pair to FILE.
   type:
   - string
   - 'null'
-  default: generated--R2.fastq.gz
+  default: generated-R2.fastq.gz
   inputBinding:
     prefix: -p
+    valueFrom: $(inputs.outputPrefix)-R2.fastq.gz
 - id: cores
   label: cores
   doc: '(-j)  Number of CPU cores to use. Use 0 to auto-detect. Default: 1'
@@ -511,11 +517,18 @@ outputs:
     type: array
     items: File
   outputBinding:
-    glob: '*.fastq.gz'
+    glob:
+    - $((inputs.outputPrefix + "-R1.fastq.gz"))
+    - $((inputs.outputPrefix + "-R2.fastq.gz"))
     loadContents: false
 stdout: _stdout
 stderr: _stderr
 
 baseCommand: cutadapt
 arguments: []
+
+hints:
+- class: ToolTimeLimit
+  timelimit: |-
+    $([inputs.runtime_seconds, 86400].filter(function (inner) { return inner != null })[0])
 id: cutadapt

@@ -1,6 +1,6 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
-cwlVersion: v1.0
+cwlVersion: v1.2
 label: GenerateGenomeFileForBedtoolsCoverage
 doc: ''
 
@@ -87,7 +87,7 @@ inputs:
   label: reference
   type: File
   secondaryFiles:
-  - ^.dict
+  - pattern: ^.dict
   inputBinding:
     prefix: --reference
 - id: output_filename

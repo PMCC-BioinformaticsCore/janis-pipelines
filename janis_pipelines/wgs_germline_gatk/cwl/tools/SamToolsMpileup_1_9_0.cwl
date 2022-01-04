@@ -1,6 +1,6 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
-cwlVersion: v1.0
+cwlVersion: v1.2
 label: 'SamTools: Mpileup'
 doc: |-
   Generate text pileup output for one or multiple BAM files. Each input file produces a separate group of pileup columns in the output.
@@ -194,7 +194,7 @@ inputs:
   label: bam
   type: File
   secondaryFiles:
-  - .bai
+  - pattern: .bai
   inputBinding:
     position: 10
 
@@ -209,4 +209,9 @@ baseCommand:
 - samtools
 - mpileup
 arguments: []
+
+hints:
+- class: ToolTimeLimit
+  timelimit: |-
+    $([inputs.runtime_seconds, 86400].filter(function (inner) { return inner != null })[0])
 id: SamToolsMpileup

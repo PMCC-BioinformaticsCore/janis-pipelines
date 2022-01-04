@@ -1,6 +1,6 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
-cwlVersion: v1.0
+cwlVersion: v1.2
 label: 'GATK4: CollectInsertSizeMetrics'
 doc: |-
   Provides useful metrics for validating library construction including the insert size distribution and read orientation of paired-end libraries
@@ -30,7 +30,7 @@ inputs:
   doc: Input SAM or BAM file.  Required.
   type: File
   secondaryFiles:
-  - .bai
+  - pattern: .bai
   inputBinding:
     prefix: -I
     position: 10
@@ -43,6 +43,7 @@ inputs:
   default: generated.metrics.txt
   inputBinding:
     prefix: -O
+    valueFrom: $(inputs.bam.basename.replace(/.bam$/, "")).metrics.txt
 - id: outputHistogram
   label: outputHistogram
   doc: 'File to write insert size Histogram chart to.  Required. '
@@ -52,6 +53,7 @@ inputs:
   default: generated.histogram.pdf
   inputBinding:
     prefix: -H
+    valueFrom: $(inputs.bam.basename.replace(/.bam$/, "")).histogram.pdf
 - id: argumentsFile
   label: argumentsFile
   doc: read one or more arguments files and add them to the command line
@@ -158,13 +160,13 @@ outputs:
   label: out
   type: File
   outputBinding:
-    glob: generated.metrics.txt
+    glob: $(inputs.bam.basename.replace(/.bam$/, "")).metrics.txt
     loadContents: false
 - id: outHistogram
   label: outHistogram
   type: File
   outputBinding:
-    glob: generated.histogram.pdf
+    glob: $(inputs.bam.basename.replace(/.bam$/, "")).histogram.pdf
     loadContents: false
 stdout: _stdout
 stderr: _stderr
@@ -177,4 +179,9 @@ arguments:
   position: -1
   valueFrom: |-
     $("-Xmx{memory}G {compression} {otherargs}".replace(/\{memory\}/g, (([inputs.runtime_memory, 8, 4].filter(function (inner) { return inner != null })[0] * 3) / 4)).replace(/\{compression\}/g, (inputs.compression_level != null) ? ("-Dsamjdk.compress_level=" + inputs.compression_level) : "").replace(/\{otherargs\}/g, [inputs.javaOptions, []].filter(function (inner) { return inner != null })[0].join(" ")))
+
+hints:
+- class: ToolTimeLimit
+  timelimit: |-
+    $([inputs.runtime_seconds, 86400].filter(function (inner) { return inner != null })[0])
 id: Gatk4CollectInsertSizeMetrics

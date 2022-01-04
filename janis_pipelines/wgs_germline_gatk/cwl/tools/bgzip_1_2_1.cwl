@@ -1,6 +1,6 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
-cwlVersion: v1.0
+cwlVersion: v1.2
 label: BGZip
 doc: |-
   bgzip – Block compression/decompression utility
@@ -38,7 +38,6 @@ inputs:
   inputBinding:
     position: 102
     valueFrom: $(inputs.file.basename).gz
-    shellQuote: false
 - id: offset
   label: offset
   doc: |-
@@ -154,4 +153,9 @@ arguments:
 - position: 101
   valueFrom: '>'
   shellQuote: false
+
+hints:
+- class: ToolTimeLimit
+  timelimit: |-
+    $([inputs.runtime_seconds, 86400].filter(function (inner) { return inner != null })[0])
 id: bgzip

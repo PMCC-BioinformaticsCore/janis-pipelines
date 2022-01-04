@@ -1,7 +1,8 @@
 #!/usr/bin/env cwl-runner
 class: Workflow
-cwlVersion: v1.0
+cwlVersion: v1.2
 label: Merge and Mark Duplicates
+doc: ''
 
 requirements:
 - class: InlineJavascriptRequirement
@@ -14,7 +15,7 @@ inputs:
     type: array
     items: File
   secondaryFiles:
-  - .bai
+  - pattern: .bai
 - id: createIndex
   type: boolean
   default: true
@@ -40,7 +41,7 @@ outputs:
 - id: out
   type: File
   secondaryFiles:
-  - .bai
+  - pattern: .bai
   outputSource: markDuplicates/out
 
 steps:
@@ -69,6 +70,8 @@ steps:
     source:
     - mergeSamFiles/out
     linkMerge: merge_nested
+  - id: outputPrefix
+    source: sampleName
   - id: createIndex
     source: createIndex
   - id: maxRecordsInRam

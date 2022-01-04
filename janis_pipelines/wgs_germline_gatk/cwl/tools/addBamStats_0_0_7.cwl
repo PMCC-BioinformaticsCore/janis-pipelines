@@ -1,6 +1,6 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
-cwlVersion: v1.0
+cwlVersion: v1.2
 label: Add Bam Statistics to Vcf
 doc: |-
   usage: add_bam_stats.py [-h] -i I -o O --type {germline,somatic}
@@ -113,4 +113,9 @@ stderr: _stderr
 
 baseCommand: add_bam_stats.py
 arguments: []
+
+hints:
+- class: ToolTimeLimit
+  timelimit: |-
+    $([inputs.runtime_seconds, 86400].filter(function (inner) { return inner != null })[0])
 id: addBamStats

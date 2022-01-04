@@ -22,6 +22,7 @@ from janis_bioinformatics.tools.pmac import (
     GenerateVardictHeaderLines,
     AddBamStatsSomatic_0_1_0,
     GenerateMantaConfig,
+    CircosPlot_0_1_2,
 )
 from janis_bioinformatics.tools.variantcallers.illuminasomatic_strelka import (
     IlluminaSomaticVariantCaller,
@@ -66,6 +67,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         self.add_strelka_variantcaller(
             normal_bam_source=self.normal_bam, tumor_bam_source=self.tumor_bam
         )
+        self.add_circos_plot()
         self.add_combine_variants(
             normal_bam_source=self.normal_bam, tumor_bam_source=self.tumor_bam
         )
@@ -389,6 +391,27 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
                 "VardictByInterval",
             ],
             doc="Unmerged variants from the GATK caller (by interval)",
+        )
+
+    def add_circos_plot(self):
+        self.step(
+            "circos_plot",
+            CircosPlot_0_1_2(
+                tumor_name=self.tumor_name,
+                normal_name=self.normal_name,
+                facets_file=self.vc_facets.out_hisens_rds,
+                sv_file=self.vc_strelka.tumor_sv,
+            ),
+        )
+        self.output(
+            "out_circos_plot",
+            source=self.circos_plot.out,
+            output_folder="circos_plot",
+            output_name=StringFormatter(
+                "{tumor_name}--{normal_name}_circos_plot.pdf",
+                tumor_name=self.tumor_name,
+                normal_name=self.normal_name,
+            ),
         )
 
     def add_combine_variants(self, normal_bam_source, tumor_bam_source):

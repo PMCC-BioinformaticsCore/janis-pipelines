@@ -1,6 +1,6 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
-cwlVersion: v1.0
+cwlVersion: v1.2
 label: 'GATK4: Mark Duplicates'
 doc: |-
   MarkDuplicates (Picard): Identifies duplicate reads.
@@ -63,6 +63,11 @@ inputs:
   inputBinding:
     prefix: -I
     position: 10
+- id: outputPrefix
+  label: outputPrefix
+  type:
+  - string
+  - 'null'
 - id: outputFilename
   label: outputFilename
   doc: File to write duplication metrics to
@@ -73,6 +78,8 @@ inputs:
   inputBinding:
     prefix: -O
     position: 10
+    valueFrom: |-
+      $([inputs.outputPrefix, "generated"].filter(function (inner) { return inner != null })[0]).markduped.bam
 - id: metricsFilename
   label: metricsFilename
   doc: The output file to write marked records to.
@@ -83,6 +90,8 @@ inputs:
   inputBinding:
     prefix: -M
     position: 10
+    valueFrom: |-
+      $([inputs.outputPrefix, "generated"].filter(function (inner) { return inner != null })[0]).metrics.txt
 - id: javaOptions
   label: javaOptions
   type:
@@ -250,13 +259,15 @@ outputs:
 
     }
   outputBinding:
-    glob: generated.markduped.bam
+    glob: |-
+      $([inputs.outputPrefix, "generated"].filter(function (inner) { return inner != null })[0]).markduped.bam
     loadContents: false
 - id: metrics
   label: metrics
   type: File
   outputBinding:
-    glob: generated.metrics.txt
+    glob: |-
+      $([inputs.outputPrefix, "generated"].filter(function (inner) { return inner != null })[0]).metrics.txt
     loadContents: false
 stdout: _stdout
 stderr: _stderr
@@ -269,4 +280,9 @@ arguments:
   position: -1
   valueFrom: |-
     $("-Xmx{memory}G {compression} {otherargs}".replace(/\{memory\}/g, (([inputs.runtime_memory, 8, 4].filter(function (inner) { return inner != null })[0] * 3) / 4)).replace(/\{compression\}/g, (inputs.compression_level != null) ? ("-Dsamjdk.compress_level=" + inputs.compression_level) : "").replace(/\{otherargs\}/g, [inputs.javaOptions, []].filter(function (inner) { return inner != null })[0].join(" ")))
+
+hints:
+- class: ToolTimeLimit
+  timelimit: |-
+    $([inputs.runtime_seconds, 86400].filter(function (inner) { return inner != null })[0])
 id: Gatk4MarkDuplicates
