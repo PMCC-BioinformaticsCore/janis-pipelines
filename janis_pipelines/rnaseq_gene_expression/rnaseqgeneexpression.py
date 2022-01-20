@@ -17,6 +17,7 @@ from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWork
 
 # Tools
 from janis_unix.tools.localisefolder import LocaliseFolder
+from janis_bioinformatics.tools.gatk4 import Gatk4SortSam_4_1_2
 from janis_bioinformatics.tools.htseq import HTSeqCount_1_99_2
 from janis_bioinformatics.tools.star import StarAlignReads_2_7_8
 
@@ -46,6 +47,7 @@ class RNASeqGeneExpression(BioinformaticsWorkflow):
 
         # Pipeline
         self.add_alignment_step()
+        self.add_sort_and_index_step()
         self.add_counts_step()
 
     # Steps
@@ -93,6 +95,27 @@ class RNASeqGeneExpression(BioinformaticsWorkflow):
                 runThreadN=self.star_threads,
                 twopassMode="Basic",
             ),
+        )
+
+    def add_sort_and_index_step(self):
+        self.step(
+            "sortsam",
+            Gatk4SortSam_4_1_2(
+                bam=self.star_alignment.out_unsorted_bam.assert_not_null(),
+                sortOrder="coordinate",
+                createIndex=True,
+                validationStringency="SILENT",
+                maxRecordsInRam=5000000,
+                tmpDir=".",
+            ),
+        )
+        self.output(
+            "bam",
+            source=self.sortsam.out,
+            output_folder=[
+                self.sample_name,
+            ],
+            output_name=self.sample_name,
         )
 
     def add_counts_step(self):
