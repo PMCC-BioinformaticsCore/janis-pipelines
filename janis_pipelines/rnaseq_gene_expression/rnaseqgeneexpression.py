@@ -101,7 +101,7 @@ class RNASeqGeneExpression(BioinformaticsWorkflow):
             HTSeqCount_1_99_2(
                 bams=[self.star_alignment.out_unsorted_bam.assert_not_null()],
                 gff_file=self.gtf,
-                format="gtf",
+                format="bam",
                 order="name",
                 stranded="no",
                 minaqual=10,
