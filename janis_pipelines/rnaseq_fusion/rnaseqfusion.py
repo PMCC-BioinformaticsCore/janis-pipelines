@@ -66,10 +66,10 @@ class RNASeqFusion(BioinformaticsWorkflow):
         # Pipeline
         self.add_alignment_step()
         self.add_fusion_step()
-        self.add_sort_and_index()
+        self.add_sort_and_index_step()
         self.add_rnaseq_qc_step()
-        self.add_fusion_plot()
-        self.add_fusion_tsv_to_vcf()
+        self.add_fusion_plot_step()
+        self.add_fusion_tsv_to_vcf_step()
 
     # Steps
     def add_alignment_step(self):
@@ -133,7 +133,7 @@ class RNASeqFusion(BioinformaticsWorkflow):
             ),
         )
 
-    def add_sort_and_index(self):
+    def add_sort_and_index_step(self):
         self.step(
             "sortsam",
             Gatk4SortSam_4_1_2(
@@ -244,7 +244,7 @@ class RNASeqFusion(BioinformaticsWorkflow):
             ),
         ),
 
-    def add_fusion_plot(self):
+    def add_fusion_plot_step(self):
         self.step(
             "fusion_plot",
             ArribaDrawFusions_2_1_0(
@@ -266,7 +266,7 @@ class RNASeqFusion(BioinformaticsWorkflow):
             ),
         )
 
-    def add_fusion_tsv_to_vcf(self):
+    def add_fusion_tsv_to_vcf_step(self):
         self.step(
             "megafusion",
             MegaFusion_0_1_2(
