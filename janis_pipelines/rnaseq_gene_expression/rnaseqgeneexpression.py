@@ -103,6 +103,11 @@ class RNASeqGeneExpression(BioinformaticsWorkflow):
                 gff_file=self.gtf,
                 format="gtf",
                 order="name",
+                stranded="no",
+                minaqual=10,
+                type="exon",
+                id="gene_id",
+                mode="intersection-nonempty",
             ),
         )
         self.output(
