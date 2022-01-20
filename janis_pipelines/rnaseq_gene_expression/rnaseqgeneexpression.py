@@ -38,7 +38,6 @@ class RNASeqGeneExpression(BioinformaticsWorkflow):
         self.input("sample", String)
 
         # References
-        self.input("reference", FastaWithDict)
         self.input("gtf", File)
         self.input("star_ref_genome", Directory)
 
@@ -78,7 +77,6 @@ class RNASeqGeneExpression(BioinformaticsWorkflow):
                 genomeDir=self.localise_star_genome.out,
                 genomeLoad="NoSharedMemory",
                 limitSjdbInsertNsj=1200000,
-                outFileNamePrefix=self.sample,
                 outFilterIntronMotifs="None",
                 outFilterMatchNminOverLread=0.33,
                 outFilterMismatchNmax=999,
@@ -101,7 +99,7 @@ class RNASeqGeneExpression(BioinformaticsWorkflow):
         self.step(
             "htseq_count",
             HTSeqCount_1_99_2(
-                bams=[self.star_alignment.out_unsorted_bam],
+                bams=[self.star_alignment.out_unsorted_bam.assert_not_null()],
                 gff_file=self.gtf,
                 format="gtf",
                 order="name",
