@@ -89,6 +89,34 @@ class RNASeqGeneExpressionQuantification(BioinformaticsWorkflow):
                 twopassMode="Basic",
             ),
         )
+        self.output(
+            "transcriptome_bam",
+            source=self.star_alignment.out_transcriptome_bam.assert_not_null(),
+            output_folder=[self.sample],
+            output_name=StringFormatter(
+                "{sample}.toTranscriptome.out", sample=self.sample
+            ),
+        )
+        self.output(
+            "chimeric_out_junction",
+            source=self.star_alignment.out_chimeric_out_junction.assert_not_null(),
+            output_folder=[self.sample],
+            output_name=StringFormatter("{sample}.Chimeric.out", sample=self.sample),
+        )
+        self.output(
+            "chimeric_out_sam",
+            source=self.star_alignment.out_chimeric_out_sam.assert_not_null(),
+            output_folder=[self.sample],
+            output_name=StringFormatter("{sample}.Chimeric.out", sample=self.sample),
+        )
+        self.output(
+            "gene_counts",
+            source=self.star_alignment.out_gene_counts.assert_not_null(),
+            output_folder=[self.sample],
+            output_name=StringFormatter(
+                "{sample}.STAR.ReadsPerGene.out", sample=self.sample
+            ),
+        )
 
     def add_sort_and_index_step(self):
         self.step(
@@ -105,9 +133,7 @@ class RNASeqGeneExpressionQuantification(BioinformaticsWorkflow):
         self.output(
             "bam",
             source=self.sortsam.out,
-            output_folder=[
-                self.sample,
-            ],
+            output_folder=[self.sample],
             output_name=self.sample,
         )
 
@@ -130,9 +156,7 @@ class RNASeqGeneExpressionQuantification(BioinformaticsWorkflow):
             "out_htseq_count",
             source=self.htseq_count.out,
             output_folder=[self.sample],
-            output_name=StringFormatter(
-                "{sample}.htseq.counts.txt", sample=self.sample
-            ),
+            output_name=StringFormatter("{sample}.htseq.counts", sample=self.sample),
         )
 
     def bind_metadata(self):
