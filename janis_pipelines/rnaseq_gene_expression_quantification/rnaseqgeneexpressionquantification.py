@@ -32,7 +32,7 @@ class RNASeqGeneExpressionQuantification(BioinformaticsWorkflow):
 
         # Inputs
         self.input("fastqs", FastqGzPair)
-        self.input("sample", String)
+        self.input("sample_name", String)
 
         # References
         self.input("gtf", File)
@@ -53,9 +53,9 @@ class RNASeqGeneExpressionQuantification(BioinformaticsWorkflow):
             StarAlignReads_2_7_8(
                 readFilesIn=self.fastqs,
                 outSAMattrRGline=[
-                    StringFormatter("ID:{sample}", sample=self.sample),
-                    StringFormatter("SM:{sample}", sample=self.sample),
-                    StringFormatter("LB:{sample}", sample=self.sample),
+                    StringFormatter("ID:{sample_name}", sample_name=self.sample_name),
+                    StringFormatter("SM:{sample_name}", sample_name=self.sample_name),
+                    StringFormatter("LB:{sample_name}", sample_name=self.sample_name),
                     StringFormatter("PL:ILLUMINA"),
                 ],
                 alignIntronMax=1000000,
@@ -92,29 +92,33 @@ class RNASeqGeneExpressionQuantification(BioinformaticsWorkflow):
         self.output(
             "transcriptome_bam",
             source=self.star_alignment.out_transcriptome_bam.assert_not_null(),
-            output_folder=[self.sample],
+            output_folder=[self.sample_name],
             output_name=StringFormatter(
-                "{sample}.toTranscriptome.out", sample=self.sample
+                "{sample_name}.toTranscriptome.out", sample_name=self.sample_name
             ),
         )
         self.output(
             "chimeric_out_junction",
             source=self.star_alignment.out_chimeric_out_junction.assert_not_null(),
-            output_folder=[self.sample],
-            output_name=StringFormatter("{sample}.Chimeric.out", sample=self.sample),
+            output_folder=[self.sample_name],
+            output_name=StringFormatter(
+                "{sample_name}.Chimeric.out", sample_name=self.sample_name
+            ),
         )
         self.output(
             "chimeric_out_sam",
             source=self.star_alignment.out_chimeric_out_sam.assert_not_null(),
-            output_folder=[self.sample],
-            output_name=StringFormatter("{sample}.Chimeric.out", sample=self.sample),
+            output_folder=[self.sample_name],
+            output_name=StringFormatter(
+                "{sample_name}.Chimeric.out", sample_name=self.sample_name
+            ),
         )
         self.output(
             "gene_counts",
             source=self.star_alignment.out_gene_counts.assert_not_null(),
-            output_folder=[self.sample],
+            output_folder=[self.sample_name],
             output_name=StringFormatter(
-                "{sample}.STAR.ReadsPerGene.out", sample=self.sample
+                "{sample_name}.STAR.ReadsPerGene.out", sample_name=self.sample_name
             ),
         )
 
@@ -133,8 +137,8 @@ class RNASeqGeneExpressionQuantification(BioinformaticsWorkflow):
         self.output(
             "bam",
             source=self.sortsam.out,
-            output_folder=[self.sample],
-            output_name=self.sample,
+            output_folder=[self.sample_name],
+            output_name=self.sample_name,
         )
 
     def add_counts_step(self):
@@ -155,8 +159,10 @@ class RNASeqGeneExpressionQuantification(BioinformaticsWorkflow):
         self.output(
             "out_htseq_count",
             source=self.htseq_count.out,
-            output_folder=[self.sample],
-            output_name=StringFormatter("{sample}.htseq.counts", sample=self.sample),
+            output_folder=[self.sample_name],
+            output_name=StringFormatter(
+                "{sample_name}.htseq.counts", sample_name=self.sample_name
+            ),
         )
 
     def bind_metadata(self):
