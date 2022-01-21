@@ -9,25 +9,21 @@ from janis_core import (
     WorkflowMetadata,
 )
 
-from janis_bioinformatics.data_types import (
-    FastaWithDict,
-    FastqGzPair,
-)
+from janis_bioinformatics.data_types import FastqGzPair
 from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
 
 # Tools
-from janis_unix.tools.localisefolder import LocaliseFolder
 from janis_bioinformatics.tools.gatk4 import Gatk4SortSam_4_1_2
 from janis_bioinformatics.tools.htseq import HTSeqCount_1_99_2
 from janis_bioinformatics.tools.star import StarAlignReads_2_7_8
 
 
-class RNASeqGeneExpression(BioinformaticsWorkflow):
+class RNASeqGeneExpressionQuantification(BioinformaticsWorkflow):
     def id(self):
-        return "RNASeqGeneExpression"
+        return "RNASeqGeneExpressionQuantification"
 
     def friendly_name(self):
-        return "RNASeq Gene Expression"
+        return "RNASeq Gene Expression and Quantification"
 
     def version(self):
         return "1.0.0"
@@ -53,10 +49,6 @@ class RNASeqGeneExpression(BioinformaticsWorkflow):
     # Steps
     def add_alignment_step(self):
         self.step(
-            "localise_star_genome",
-            LocaliseFolder(dir=self.star_ref_genome),
-        )
-        self.step(
             "star_alignment",
             StarAlignReads_2_7_8(
                 readFilesIn=self.fastqs,
@@ -74,9 +66,10 @@ class RNASeqGeneExpression(BioinformaticsWorkflow):
                 alignSoftClipAtReferenceEnds="Yes",
                 chimJunctionOverhangMin=15,
                 chimMainSegmentMultNmax=1,
+                # Some redundancy in output files, are they required?
                 chimOutType=["Junctions", "SeparateSAMold", "WithinBAM", "SoftClip"],
                 chimSegmentMin=15,
-                genomeDir=self.localise_star_genome.out,
+                genomeDir=self.star_ref_genome,
                 genomeLoad="NoSharedMemory",
                 limitSjdbInsertNsj=1200000,
                 outFilterIntronMotifs="None",
@@ -113,9 +106,9 @@ class RNASeqGeneExpression(BioinformaticsWorkflow):
             "bam",
             source=self.sortsam.out,
             output_folder=[
-                self.sample_name,
+                self.sample,
             ],
-            output_name=self.sample_name,
+            output_name=self.sample,
         )
 
     def add_counts_step(self):
@@ -148,7 +141,9 @@ class RNASeqGeneExpression(BioinformaticsWorkflow):
         meta.keywords = ["rna-seq", "star", "htseq-count", "expression"]
         meta.contributors = ["Jiaan Yu"]
 
-        meta.short_documentation = "mRNA Analysis Pipeline (GDC)"
+        meta.short_documentation = (
+            "mRNA Analysis Pipeline for Gene Expression and Quantification (GDC)"
+        )
         meta.documentation = """\
 This workflow is based on GDC. 
 - Alignment with STAR
@@ -159,4 +154,4 @@ https://docs.gdc.cancer.gov/Data/Bioinformatics_Pipelines/Expression_mRNA_Pipeli
 
 
 if __name__ == "__main__":
-    RNASeqGeneExpression().translate("wdl")
+    RNASeqGeneExpressionQuantification().translate("wdl")
