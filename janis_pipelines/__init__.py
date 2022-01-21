@@ -1,8 +1,8 @@
 from .__meta__ import __version__
 
 # from janis_pipelines.alignment.alignment import BwaAlignment
-from janis_pipelines.rnaseq_gene_expression.rnaseqgeneexpression import (
-    RNASeqGeneExpression,
+from janis_pipelines.rnaseq_gene_expression_quantification.rnaseqgeneexpressionquantification import (
+    RNASeqGeneExpressionQuantification,
 )
 from janis_pipelines.wgs_germline.wgsgermline import (
     WGSGermlineMultiCallers,
