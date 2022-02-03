@@ -1,6 +1,6 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
-cwlVersion: v1.0
+cwlVersion: v1.2
 label: 'GATK4: Haplotype Caller'
 doc: |-
   Call germline SNPs and indels via local re-assembly of haplotypes
@@ -405,13 +405,13 @@ inputs:
   doc: Reference sequence file
   type: File
   secondaryFiles:
-  - .fai
-  - .amb
-  - .ann
-  - .bwt
-  - .pac
-  - .sa
-  - ^.dict
+  - pattern: .fai
+  - pattern: .amb
+  - pattern: .ann
+  - pattern: .bwt
+  - pattern: .pac
+  - pattern: .sa
+  - pattern: ^.dict
   inputBinding:
     prefix: --reference
     position: 5
@@ -425,7 +425,7 @@ inputs:
   inputBinding:
     prefix: --output
     position: 8
-    valueFrom: $(inputs.inputRead.basename).vcf.gz
+    valueFrom: $(inputs.inputRead.basename.replace(/.bam$/, "")).vcf.gz
 - id: dbsnp
   label: dbsnp
   doc: '(Also: -D) A dbSNP VCF file.'
@@ -433,7 +433,7 @@ inputs:
   - File
   - 'null'
   secondaryFiles:
-  - .tbi
+  - pattern: .tbi
   inputBinding:
     prefix: --dbsnp
     position: 7
@@ -455,7 +455,7 @@ inputs:
   inputBinding:
     prefix: -bamout
     position: 8
-    valueFrom: $(inputs.inputRead.basename).bam
+    valueFrom: $(inputs.inputRead.basename.replace(/.bam$/, "")).bam
 
 outputs:
 - id: out
@@ -464,9 +464,9 @@ outputs:
     A raw, unfiltered, highly sensitive callset in VCF format. File to which variants should be written
   type: File
   secondaryFiles:
-  - .tbi
+  - pattern: .tbi
   outputBinding:
-    glob: $(inputs.inputRead.basename).vcf.gz
+    glob: $(inputs.inputRead.basename.replace(/.bam$/, "")).vcf.gz
     loadContents: false
 - id: bam
   label: bam
@@ -494,7 +494,7 @@ outputs:
 
     }
   outputBinding:
-    glob: $(inputs.inputRead.basename).bam
+    glob: $(inputs.inputRead.basename.replace(/.bam$/, "")).bam
     loadContents: false
 stdout: _stdout
 stderr: _stderr
@@ -507,4 +507,9 @@ arguments:
   position: -1
   valueFrom: |-
     $("-Xmx{memory}G {compression} {otherargs}".replace(/\{memory\}/g, (([inputs.runtime_memory, 8, 4].filter(function (inner) { return inner != null })[0] * 3) / 4)).replace(/\{compression\}/g, (inputs.compression_level != null) ? ("-Dsamjdk.compress_level=" + inputs.compression_level) : "").replace(/\{otherargs\}/g, [inputs.javaOptions, []].filter(function (inner) { return inner != null })[0].join(" ")))
+
+hints:
+- class: ToolTimeLimit
+  timelimit: |-
+    $([inputs.runtime_seconds, 86400].filter(function (inner) { return inner != null })[0])
 id: Gatk4HaplotypeCaller

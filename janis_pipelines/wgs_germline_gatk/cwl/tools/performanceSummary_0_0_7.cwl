@@ -1,6 +1,6 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
-cwlVersion: v1.0
+cwlVersion: v1.2
 label: Performance Summary
 doc: |-
   usage: performance_summary.py [-h] --flagstat FLAGSTAT
@@ -101,11 +101,15 @@ outputs:
   type: File
   outputBinding:
     glob: $((inputs.outputPrefix + ".csv"))
-    outputEval: $((inputs.outputPrefix.basename + ".csv"))
     loadContents: false
 stdout: _stdout
 stderr: _stderr
 
 baseCommand: performance_summary.py
 arguments: []
+
+hints:
+- class: ToolTimeLimit
+  timelimit: |-
+    $([inputs.runtime_seconds, 86400].filter(function (inner) { return inner != null })[0])
 id: performanceSummary

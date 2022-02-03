@@ -1,6 +1,6 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
-cwlVersion: v1.0
+cwlVersion: v1.2
 label: 'SamTools: View'
 doc: |-
   Ensure SAMTOOLS.SORT is inheriting from parent metadata
@@ -235,13 +235,13 @@ inputs:
   - File
   - 'null'
   secondaryFiles:
-  - .fai
-  - .amb
-  - .ann
-  - .bwt
-  - .pac
-  - .sa
-  - ^.dict
+  - pattern: .fai
+  - pattern: .amb
+  - pattern: .ann
+  - pattern: .bwt
+  - pattern: .pac
+  - pattern: .sa
+  - pattern: ^.dict
   inputBinding:
     prefix: -T
     position: 6
@@ -255,6 +255,8 @@ inputs:
   inputBinding:
     prefix: -o
     position: 5
+    valueFrom: |-
+      $(inputs.sam.basename.replace(/.sam$/, "").replace(/.bam$/, "").replace(/.cram$/, "")).bam
 - id: regions
   label: regions
   doc: |-
@@ -271,7 +273,8 @@ outputs:
   label: out
   type: File
   outputBinding:
-    glob: generated.bam
+    glob: |-
+      $(inputs.sam.basename.replace(/.sam$/, "").replace(/.bam$/, "").replace(/.cram$/, "")).bam
     loadContents: false
 stdout: _stdout
 stderr: _stderr
@@ -286,4 +289,9 @@ arguments:
   valueFrom: -h
 - position: 4
   valueFrom: -b
+
+hints:
+- class: ToolTimeLimit
+  timelimit: |-
+    $([inputs.runtime_seconds, 86400].filter(function (inner) { return inner != null })[0])
 id: SamToolsView

@@ -1,6 +1,6 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
-cwlVersion: v1.0
+cwlVersion: v1.2
 label: Bwa mem + Samtools View
 
 requirements:
@@ -14,13 +14,13 @@ inputs:
   label: reference
   type: File
   secondaryFiles:
-  - .fai
-  - .amb
-  - .ann
-  - .bwt
-  - .pac
-  - .sa
-  - ^.dict
+  - pattern: .fai
+  - pattern: .amb
+  - pattern: .ann
+  - pattern: .bwt
+  - pattern: .pac
+  - pattern: .sa
+  - pattern: ^.dict
   inputBinding:
     position: 2
     shellQuote: false
@@ -480,7 +480,7 @@ arguments:
   shellQuote: false
 - prefix: -T
   position: 8
-  valueFrom: $(inputs.reference)
+  valueFrom: $(inputs.reference.path)
   shellQuote: false
 - prefix: --threads
   position: 8
@@ -502,4 +502,9 @@ arguments:
   valueFrom: |-
     $([inputs.runtime_cpu, 16, 1].filter(function (inner) { return inner != null })[0])
   shellQuote: false
+
+hints:
+- class: ToolTimeLimit
+  timelimit: |-
+    $([inputs.runtime_seconds, 86400].filter(function (inner) { return inner != null })[0])
 id: BwaMemSamtoolsView

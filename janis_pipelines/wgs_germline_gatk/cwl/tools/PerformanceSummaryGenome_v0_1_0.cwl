@@ -1,6 +1,6 @@
 #!/usr/bin/env cwl-runner
 class: Workflow
-cwlVersion: v1.0
+cwlVersion: v1.2
 label: Performance summary workflow (whole genome)
 
 requirements:
@@ -11,7 +11,7 @@ inputs:
 - id: bam
   type: File
   secondaryFiles:
-  - .bai
+  - pattern: .bai
 - id: sample_name
   type: string
 - id: genome_file

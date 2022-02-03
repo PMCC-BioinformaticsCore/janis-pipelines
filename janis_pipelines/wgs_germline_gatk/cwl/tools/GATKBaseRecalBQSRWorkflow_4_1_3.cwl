@@ -1,7 +1,8 @@
 #!/usr/bin/env cwl-runner
 class: Workflow
-cwlVersion: v1.0
+cwlVersion: v1.2
 label: GATK Base Recalibration on Bam
+doc: ''
 
 requirements:
 - class: InlineJavascriptRequirement
@@ -12,7 +13,7 @@ inputs:
 - id: bam
   type: File
   secondaryFiles:
-  - .bai
+  - pattern: .bai
 - id: intervals
   doc: |-
     This optional interval supports processing by regions. If this input resolves to null, then GATK will process the whole genome per each tool's spec
@@ -22,35 +23,35 @@ inputs:
 - id: reference
   type: File
   secondaryFiles:
-  - .fai
-  - .amb
-  - .ann
-  - .bwt
-  - .pac
-  - .sa
-  - ^.dict
+  - pattern: .fai
+  - pattern: .amb
+  - pattern: .ann
+  - pattern: .bwt
+  - pattern: .pac
+  - pattern: .sa
+  - pattern: ^.dict
 - id: snps_dbsnp
   type: File
   secondaryFiles:
-  - .tbi
+  - pattern: .tbi
 - id: snps_1000gp
   type: File
   secondaryFiles:
-  - .tbi
+  - pattern: .tbi
 - id: known_indels
   type: File
   secondaryFiles:
-  - .tbi
+  - pattern: .tbi
 - id: mills_indels
   type: File
   secondaryFiles:
-  - .tbi
+  - pattern: .tbi
 
 outputs:
 - id: out
   type: File
   secondaryFiles:
-  - .bai
+  - pattern: .bai
   outputSource: apply_bqsr/out
 
 steps:

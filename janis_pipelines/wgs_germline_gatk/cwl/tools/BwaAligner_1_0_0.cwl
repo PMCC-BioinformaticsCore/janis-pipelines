@@ -1,6 +1,6 @@
 #!/usr/bin/env cwl-runner
 class: Workflow
-cwlVersion: v1.0
+cwlVersion: v1.2
 label: Align and sort reads
 doc: |-
   Align sorted bam with this subworkflow consisting of BWA Mem + SamTools + Gatk4SortSam
@@ -15,13 +15,13 @@ inputs:
 - id: reference
   type: File
   secondaryFiles:
-  - .fai
-  - .amb
-  - .ann
-  - .bwt
-  - .pac
-  - .sa
-  - ^.dict
+  - pattern: .fai
+  - pattern: .amb
+  - pattern: .ann
+  - pattern: .bwt
+  - pattern: .pac
+  - pattern: .sa
+  - pattern: ^.dict
 - id: fastq
   type:
     type: array
@@ -88,13 +88,15 @@ outputs:
 - id: out
   type: File
   secondaryFiles:
-  - .bai
+  - pattern: .bai
   outputSource: sortsam/out
 
 steps:
 - id: cutadapt
   label: Cutadapt
   in:
+  - id: outputPrefix
+    source: sample_name
   - id: fastq
     source: fastq
   - id: adapter

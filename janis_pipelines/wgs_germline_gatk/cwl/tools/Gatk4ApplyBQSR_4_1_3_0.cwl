@@ -1,6 +1,6 @@
 #!/usr/bin/env cwl-runner
 class: CommandLineTool
-cwlVersion: v1.0
+cwlVersion: v1.2
 label: 'GATK4: Apply base quality score recalibration'
 doc: |-
   Apply base quality score recalibration: This tool performs the second pass in a two-stage 
@@ -76,13 +76,13 @@ inputs:
   doc: Reference sequence
   type: File
   secondaryFiles:
-  - .fai
-  - .amb
-  - .ann
-  - .bwt
-  - .pac
-  - .sa
-  - ^.dict
+  - pattern: .fai
+  - pattern: .amb
+  - pattern: .ann
+  - pattern: .bwt
+  - pattern: .pac
+  - pattern: .sa
+  - pattern: ^.dict
   inputBinding:
     prefix: -R
 - id: outputFilename
@@ -94,7 +94,7 @@ inputs:
   default: generated.recalibrated.bam
   inputBinding:
     prefix: -O
-    valueFrom: $(inputs.bam.basename).recalibrated.bam
+    valueFrom: $(inputs.bam.basename.replace(/.bam$/, "")).recalibrated.bam
 - id: recalFile
   label: recalFile
   doc: Input recalibration table for BQSR
@@ -156,7 +156,7 @@ outputs:
 
     }
   outputBinding:
-    glob: $(inputs.bam.basename).recalibrated.bam
+    glob: $(inputs.bam.basename.replace(/.bam$/, "")).recalibrated.bam
     loadContents: false
 stdout: _stdout
 stderr: _stderr
@@ -169,4 +169,9 @@ arguments:
   position: -1
   valueFrom: |-
     $("-Xmx{memory}G {compression} {otherargs}".replace(/\{memory\}/g, (([inputs.runtime_memory, 8, 4].filter(function (inner) { return inner != null })[0] * 3) / 4)).replace(/\{compression\}/g, (inputs.compression_level != null) ? ("-Dsamjdk.compress_level=" + inputs.compression_level) : "").replace(/\{otherargs\}/g, [inputs.javaOptions, []].filter(function (inner) { return inner != null })[0].join(" ")))
+
+hints:
+- class: ToolTimeLimit
+  timelimit: |-
+    $([inputs.runtime_seconds, 86400].filter(function (inner) { return inner != null })[0])
 id: Gatk4ApplyBQSR
