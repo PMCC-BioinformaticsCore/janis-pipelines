@@ -98,10 +98,10 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
                 reference=self.reference,
                 sample_name=self.sample_name,
                 sortsam_tmpDir="./tmp",
-                three_prim_adapter_read1=self.getfastqc_adapters.out_R1_sequences,
-                three_prim_adapter_read2=self.getfastqc_adapters.out_R2_sequences,
+                three_prime_adapter_read1=self.getfastqc_adapters.out_R1_sequences,
+                three_prime_adapter_read2=self.getfastqc_adapters.out_R2_sequences,
             ),
-            scatter=["fastq", "three_prim_adapter_read1", "three_prim_adapter_read2"],
+            scatter=["fastq", "three_prime_adapter_read1", "three_prime_adapter_read2"],
         )
 
     def add_bam_process(self):
