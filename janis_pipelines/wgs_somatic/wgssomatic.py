@@ -1,5 +1,17 @@
-from janis_bioinformatics.data_types import FastqGzPair
-from janis_core import String, Array, InputDocumentation, InputQualityType
+from typing import Optional, List
+
+from janis_core import File, String, Array, InputDocumentation, InputQualityType
+from janis_core.tool.test_classes import TTestCase
+
+from janis_unix.data_types import TextFile, ZipFile
+from janis_bioinformatics.data_types import (
+    FastqGzPair,
+    Bam,
+    BamBai,
+    Vcf,
+    CompressedVcf,
+    VcfTabix,
+)
 
 from janis_pipelines.wgs_somatic.wgssomatic_variantsonly import (
     WGSSomaticMultiCallersVariantsOnly,
@@ -84,6 +96,91 @@ class WGSSomaticMultiCallers(WGSSomaticMultiCallersVariantsOnly, WGSSomaticGATK)
         self.add_inputs_for_adapter_trimming()
         self.add_inputs_for_intervals()
         self.add_inputs_for_configuration()
+
+    def tests(self) -> Optional[List[TTestCase]]:
+        parent_dir = "https://swift.rc.nectar.org.au/v1/AUTH_4df6e734a509497692be237549bbe9af/janis-test-data/bioinformatics"
+        germline_data = f"{parent_dir}/wgsgermline_data"
+        somatic_data = f"{parent_dir}/wgssomatic_data"
+
+        return [
+            TTestCase(
+                name="brca1",
+                input={
+                    "normal_inputs": [
+                        [
+                            f"{somatic_data}/NA24385-BRCA1_R1.fastq.gz",
+                            f"{somatic_data}/NA24385-BRCA1_R2.fastq.gz",
+                        ]
+                    ],
+                    "normal_name": "NA24385-BRCA1",
+                    "tumor_inputs": [
+                        [
+                            f"{somatic_data}/NA12878-NA24385-mixture-BRCA1_R1.fastq.gz",
+                            f"{somatic_data}/NA12878-NA24385-mixture-BRCA1_R2.fastq.gz",
+                        ]
+                    ],
+                    "tumor_name": "NA12878-NA24385-mixture",
+                    "reference": f"{germline_data}/Homo_sapiens_assembly38.chr17.fasta",
+                    "gridss_blacklist": f"{somatic_data}/consensusBlacklist.hg38.chr17.bed",
+                    "gnomad": f"{somatic_data}/af-only-gnomad.hg38.BRCA1.vcf.gz",
+                    "gatk_intervals": [f"{germline_data}/BRCA1.hg38.bed"],
+                    "strelka_intervals": f"",
+                    "vardict_intervals": [f""],
+                    "known_indels": f"{germline_data}/Homo_sapiens_assembly38.known_indels.BRCA1.vcf.gz",
+                    "mills_indels": f"{germline_data}/Mills_and_1000G_gold_standard.indels.hg38.BRCA1.vcf.gz",
+                    "snps_1000gp": f"{germline_data}/1000G_phase1.snps.high_confidence.hg38.BRCA1.vcf.gz",
+                    "snps_dbsnp": f"{germline_data}/Homo_sapiens_assembly38.dbsnp138.BRCA1.vcf.gz",
+                    "contamination_file": f"{germline_data}/contaminant_list.txt",
+                    "adapter_file": f"",
+                },
+                output=Array.array_wrapper(
+                    [ZipFile.basic_test("out_normal_R1_fastqc_reports", 430000)]
+                )
+                + Array.array_wrapper(
+                    [ZipFile.basic_test("out_tumor_R1_fastqc_reports", 430000)]
+                )
+                + Array.array_wrapper(
+                    [ZipFile.basic_test("out_normal_R2_fastqc_reports", 430000)]
+                )
+                + Array.array_wrapper(
+                    [ZipFile.basic_test("out_tumor_R2_fastqc_reports", 430000)]
+                )
+                + TextFile.basic_test(
+                    "out_normal_performance_summary",
+                    950,
+                    md5="e3205735e5fe8c900f05050f8ed73f19",
+                )
+                + TextFile.basic_test(
+                    "out_tumor_performance_summary",
+                    950,
+                    md5="122bfa2ece90c0f030015feba4ba7d84",
+                )
+                + BamBai.basic_test("out_normal_bam", 3260000, 49000)
+                + BamBai.basic_test("out_tumor_bam", 3340000, 49000)
+                + Bam.basic_test("out_gridss_assembly", 60000)
+                + Vcf.basic_test("out_variants_gridss", 90000)
+                + File.basic_test(
+                    "out_facets_summary", 500, "60ba08614ca28b9630e46331d1d22de3"
+                )
+                + File.basic_test("out_facets_purity_png", 40000)
+                + File.basic_test("out_facets_purity_seg", 100)
+                + File.basic_test("out_facets_purity_rds", 7000)
+                + File.basic_test("out_facets_hisens_png", 40000)
+                + File.basic_test("out_facets_hisens_seg", 100)
+                + File.basic_test("out_facets_hisens_rds", 7000)
+                + CompressedVcf.basic_test("out_variants_gatk", 9000, 149)
+                + Array.array_wrapper(
+                    [Vcf.basic_test("out_variants_gakt_split", 34000, 147)]
+                )
+                + CompressedVcf.basic_test("out_variants_vardict", 13000, 189)
+                + Array.array_wrapper(
+                    [Vcf.basic_test("out_variants_vardict_split", 58000, 187)]
+                )
+                + CompressedVcf.basic_test("out_variants_strelka", 7000, 159)
+                + VcfTabix.basic_test("out_variants_manta_somatic", 1400, 70, 35)
+                + Vcf.basic_test("out_variants", 91000, 245),
+            )
+        ]
 
 
 if __name__ == "__main__":
