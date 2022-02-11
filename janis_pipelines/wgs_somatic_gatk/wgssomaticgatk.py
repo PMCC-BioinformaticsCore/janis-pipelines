@@ -149,13 +149,13 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
         self.output(
             "out_normal_performance_summary",
             source=self.normal.out_performance_summary,
-            output_folder=["summary", self.normal_name],
+            output_folder=["performance_summary", self.normal_name],
             doc="A text file of performance summary of NORMAL bam",
         )
         self.output(
             "out_tumor_performance_summary",
             source=self.tumor.out_performance_summary,
-            output_folder=["summary", self.tumor_name],
+            output_folder=["performance_summary", self.tumor_name],
             doc="A text file of performance summary of TUMOR bam",
         )
 
