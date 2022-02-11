@@ -1,20 +1,19 @@
-import operator
-import os
 from datetime import date
 from typing import Optional, List
 
-from janis_bioinformatics.data_types import FastqGzPair, Bam, Vcf, CompressedVcf, BamBai
-from janis_bioinformatics.tools import BioinformaticsTool
-from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_8
-from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
-from janis_bioinformatics.tools.pmac import ParseFastqcAdapters
 from janis_core import String, Array, File, WorkflowMetadata
 from janis_core.tool.test_classes import (
     TTestCase,
     TTestExpectedOutput,
     TTestPreprocessor,
 )
+
 from janis_unix.data_types import TextFile, ZipFile
+
+from janis_bioinformatics.data_types import FastqGzPair, BamBai, Vcf, CompressedVcf
+from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_8
+from janis_bioinformatics.tools.common import BwaAligner, MergeAndMarkBams_4_1_3
+from janis_bioinformatics.tools.pmac import ParseFastqcAdapters
 
 from janis_pipelines.wgs_germline_gatk.wgsgermlinegatk_variantsonly import (
     WGSGermlineGATKVariantsOnly,

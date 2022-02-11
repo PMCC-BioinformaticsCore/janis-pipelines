@@ -179,7 +179,7 @@ class WGSSomaticMultiCallers(WGSSomaticMultiCallersVariantsOnly, WGSSomaticGATK)
                 )
                 + CompressedVcf.basic_test("out_variants_strelka", 7000, 159)
                 + VcfTabix.basic_test("out_variants_manta_somatic", 1400, 70, 35)
-                + Vcf.basic_test("out_variants", 91000, 245),
+                + Vcf.basic_test("out_variants_combined_bamstats", 91000, 245),
             )
         ]
 
