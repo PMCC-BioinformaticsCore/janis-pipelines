@@ -99,8 +99,7 @@ class WGSSomaticMultiCallers(WGSSomaticMultiCallersVariantsOnly, WGSSomaticGATK)
 
     def tests(self) -> Optional[List[TTestCase]]:
         parent_dir = "https://swift.rc.nectar.org.au/v1/AUTH_4df6e734a509497692be237549bbe9af/janis-test-data/bioinformatics"
-        germline_data = f"{parent_dir}/wgsgermline_data"
-        somatic_data = f"{parent_dir}/wgssomatic_data"
+        brca1_test_data = f"{parent_dir}/brca1_test/test_data"
 
         return [
             TTestCase(
@@ -108,30 +107,32 @@ class WGSSomaticMultiCallers(WGSSomaticMultiCallersVariantsOnly, WGSSomaticGATK)
                 input={
                     "normal_inputs": [
                         [
-                            f"{somatic_data}/NA24385-BRCA1_R1.fastq.gz",
-                            f"{somatic_data}/NA24385-BRCA1_R2.fastq.gz",
+                            f"{brca1_test_data}/NA24385-BRCA1_R1.fastq.gz",
+                            f"{brca1_test_data}/NA24385-BRCA1_R2.fastq.gz",
                         ]
                     ],
                     "normal_name": "NA24385-BRCA1",
                     "tumor_inputs": [
                         [
-                            f"{somatic_data}/NA12878-NA24385-mixture-BRCA1_R1.fastq.gz",
-                            f"{somatic_data}/NA12878-NA24385-mixture-BRCA1_R2.fastq.gz",
+                            f"{brca1_test_data}/NA12878-NA24385-mixture-BRCA1_R1.fastq.gz",
+                            f"{brca1_test_data}/NA12878-NA24385-mixture-BRCA1_R2.fastq.gz",
                         ]
                     ],
                     "tumor_name": "NA12878-NA24385-mixture",
-                    "reference": f"{germline_data}/Homo_sapiens_assembly38.chr17.fasta",
-                    "gridss_blacklist": f"{somatic_data}/consensusBlacklist.hg38.chr17.bed",
-                    "gnomad": f"{somatic_data}/af-only-gnomad.hg38.BRCA1.vcf.gz",
-                    "gatk_intervals": [f"{germline_data}/BRCA1.hg38.bed"],
-                    "strelka_intervals": f"",
-                    "vardict_intervals": [f""],
-                    "known_indels": f"{germline_data}/Homo_sapiens_assembly38.known_indels.BRCA1.vcf.gz",
-                    "mills_indels": f"{germline_data}/Mills_and_1000G_gold_standard.indels.hg38.BRCA1.vcf.gz",
-                    "snps_1000gp": f"{germline_data}/1000G_phase1.snps.high_confidence.hg38.BRCA1.vcf.gz",
-                    "snps_dbsnp": f"{germline_data}/Homo_sapiens_assembly38.dbsnp138.BRCA1.vcf.gz",
-                    "contamination_file": f"{germline_data}/contaminant_list.txt",
-                    "adapter_file": f"",
+                    "reference": f"{brca1_test_data}/Homo_sapiens_assembly38.chr17.fasta",
+                    "gridss_blacklist": f"{brca1_test_data}/consensusBlacklist.hg38.chr17.bed",
+                    "gnomad": f"{brca1_test_data}/af-only-gnomad.hg38.BRCA1.vcf.gz",
+                    "gatk_intervals": [f"{brca1_test_data}/BRCA1.hg38.bed"],
+                    "strelka_intervals": f"{brca1_test_data}/BRCA1.hg38.bed.gz",
+                    "vardict_intervals": [
+                        f"{brca1_test_data}/BRCA1.hg38.split-intervals.bed"
+                    ],
+                    "known_indels": f"{brca1_test_data}/Homo_sapiens_assembly38.known_indels.BRCA1.vcf.gz",
+                    "mills_indels": f"{brca1_test_data}/Mills_and_1000G_gold_standard.indels.hg38.BRCA1.vcf.gz",
+                    "snps_1000gp": f"{brca1_test_data}/1000G_phase1.snps.high_confidence.hg38.BRCA1.vcf.gz",
+                    "snps_dbsnp": f"{brca1_test_data}/Homo_sapiens_assembly38.dbsnp138.BRCA1.vcf.gz",
+                    "contamination_file": f"{brca1_test_data}/contaminant_list.txt",
+                    "adapter_file": f"{brca1_test_data}/adapter_list.txt",
                 },
                 output=Array.array_wrapper(
                     [ZipFile.basic_test("out_normal_R1_fastqc_reports", 430000)]
