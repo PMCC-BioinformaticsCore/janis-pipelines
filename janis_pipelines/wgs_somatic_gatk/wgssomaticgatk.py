@@ -88,7 +88,7 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
         sub_inputs = {
             "reference": self.reference,
             "adapter_file": self.adapter_file,
-            "contamination_file": self.contamination_file,
+            "contaminant_file": self.contaminant_file,
             "gatk_intervals": intervals,
             "snps_dbsnp": self.snps_dbsnp,
             "snps_1000gp": self.snps_1000gp,
@@ -187,7 +187,7 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
         w.input("known_indels", VcfTabix)
         w.input("mills_indels", VcfTabix)
         w.input("adapter_file", File)
-        w.input("contamination_file", File)
+        w.input("contaminant_file", File)
 
         # STEPS
         w.step("fastqc", FastQC_0_11_8(reads=w.reads), scatter="reads")
@@ -198,7 +198,7 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
                 read1_fastqc_datafile=w.fastqc.out_R1_datafile,
                 read2_fastqc_datafile=w.fastqc.out_R2_datafile,
                 adapters_lookup=w.adapter_file,
-                contamination_lookup=w.contamination_file,
+                contamination_lookup=w.contaminant_file,
             ),
             scatter=["read1_fastqc_datafile", "read2_fastqc_datafile"],
         )
@@ -293,7 +293,7 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
                     "mills_indels": f"{brca1_test_data}/Mills_and_1000G_gold_standard.indels.hg38.BRCA1.vcf.gz",
                     "snps_1000gp": f"{brca1_test_data}/1000G_phase1.snps.high_confidence.hg38.BRCA1.vcf.gz",
                     "snps_dbsnp": f"{brca1_test_data}/Homo_sapiens_assembly38.dbsnp138.BRCA1.vcf.gz",
-                    "contamination_file": f"{brca1_test_data}/contaminant_list.txt",
+                    "contaminant_file": f"{brca1_test_data}/contaminant_list.txt",
                     "adapter_file": f"{brca1_test_data}/adapter_list.txt",
                 },
                 output=Array.array_wrapper(

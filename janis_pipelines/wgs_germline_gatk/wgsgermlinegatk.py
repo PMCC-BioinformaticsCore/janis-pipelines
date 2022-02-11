@@ -85,7 +85,7 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
                 read1_fastqc_datafile=self.fastqc.out_R1_datafile,
                 read2_fastqc_datafile=self.fastqc.out_R2_datafile,
                 adapters_lookup=self.adapter_file,
-                contamination_lookup=self.contamination_file,
+                contamination_lookup=self.contaminant_file,
             ),
             scatter=["read1_fastqc_datafile", "read2_fastqc_datafile"],
         )
@@ -142,7 +142,7 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
                     "mills_indels": f"{brca1_test_data}/Mills_and_1000G_gold_standard.indels.hg38.BRCA1.vcf.gz",
                     "snps_1000gp": f"{brca1_test_data}/1000G_phase1.snps.high_confidence.hg38.BRCA1.vcf.gz",
                     "snps_dbsnp": f"{brca1_test_data}/Homo_sapiens_assembly38.dbsnp138.BRCA1.vcf.gz",
-                    "contamination_file": f"{brca1_test_data}/contaminant_list.txt",
+                    "contaminant_file": f"{brca1_test_data}/contaminant_list.txt",
                     "adapter_file": f"{brca1_test_data}/adapter_list.txt",
                 },
                 output=Array.array_wrapper(

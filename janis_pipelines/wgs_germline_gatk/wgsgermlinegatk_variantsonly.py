@@ -105,7 +105,7 @@ class WGSGermlineGATKVariantsOnly(BioinformaticsWorkflow):
 
     def add_inputs_for_adapter_trimming(self):
         self.input("adapter_file", File)
-        self.input("contamination_file", File)
+        self.input("contaminant_file", File)
 
     def add_bam_qc(self, bam_source):
         # Temporarily remove GATK4 DepthOfCoverage for performance reasons, see:

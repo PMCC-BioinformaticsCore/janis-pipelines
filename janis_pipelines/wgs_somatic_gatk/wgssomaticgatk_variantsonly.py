@@ -128,7 +128,7 @@ class WGSSomaticGATKVariantsOnly(BioinformaticsWorkflow):
 
     def add_inputs_for_adapter_trimming(self):
         self.input("adapter_file", File)
-        self.input("contamination_file", File)
+        self.input("contaminant_file", File)
 
     def add_gatk_variantcaller(self, normal_bam_source, tumor_bam_source):
         if "generate_gatk_intervals" in self.step_nodes:
