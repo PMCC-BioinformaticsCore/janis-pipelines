@@ -171,7 +171,7 @@ class WGSSomaticMultiCallers(WGSSomaticMultiCallersVariantsOnly, WGSSomaticGATK)
                 + File.basic_test("out_facets_hisens_rds", 7000)
                 + CompressedVcf.basic_test("out_variants_gatk", 9000, 149)
                 + Array.array_wrapper(
-                    [Vcf.basic_test("out_variants_gakt_split", 34000, 147)]
+                    [Vcf.basic_test("out_variants_gatk_split", 34000, 147)]
                 )
                 + CompressedVcf.basic_test("out_variants_vardict", 13000, 189)
                 + Array.array_wrapper(

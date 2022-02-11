@@ -322,7 +322,7 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
                 + BamBai.basic_test("out_tumor_bam", 3340000, 49000)
                 + CompressedVcf.basic_test("out_variants_gatk", 9000, 149)
                 + Array.array_wrapper(
-                    [Vcf.basic_test("out_variants_gakt_split", 34000, 147)]
+                    [Vcf.basic_test("out_variants_gatk_split", 34000, 147)]
                 )
                 + Vcf.basic_test("out_variants_bamstats", 44000, 158),
             )

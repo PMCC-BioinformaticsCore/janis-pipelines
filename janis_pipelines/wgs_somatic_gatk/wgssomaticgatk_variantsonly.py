@@ -202,7 +202,7 @@ class WGSSomaticGATKVariantsOnly(BioinformaticsWorkflow):
             doc="Merged variants from the GATK caller",
         )
         self.output(
-            "out_variants_gakt_split",
+            "out_variants_gatk_split",
             source=self.vc_gatk.out,
             output_folder=[
                 "variants",
