@@ -131,7 +131,7 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
                     "fastqs": [
                         [
                             f"{brca1_test_data}/NA12878-BRCA1_R1.fastq.gz",
-                            f"{brca1_test_data}/NA12878-BRCA1_R1.fastq.gz",
+                            f"{brca1_test_data}/NA12878-BRCA1_R2.fastq.gz",
                         ]
                     ],
                     "reference": f"{brca1_test_data}/Homo_sapiens_assembly38.chr17.fasta",
