@@ -135,8 +135,6 @@ class WGSGermlineGATK(WGSGermlineGATKVariantsOnly):
                         ]
                     ],
                     "reference": f"{brca1_test_data}/Homo_sapiens_assembly38.chr17.fasta",
-                    "gridss_blacklist": f"{brca1_test_data}/consensusBlacklist.hg38.chr17.bed",
-                    "gnomad": f"{brca1_test_data}/af-only-gnomad.hg38.BRCA1.vcf.gz",
                     "gatk_intervals": [f"{brca1_test_data}/BRCA1.hg38.bed"],
                     "known_indels": f"{brca1_test_data}/Homo_sapiens_assembly38.known_indels.BRCA1.vcf.gz",
                     "mills_indels": f"{brca1_test_data}/Mills_and_1000G_gold_standard.indels.hg38.BRCA1.vcf.gz",
