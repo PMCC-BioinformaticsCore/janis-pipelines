@@ -133,6 +133,10 @@ class WGSSomaticMultiCallers(WGSSomaticMultiCallersVariantsOnly, WGSSomaticGATK)
                     "snps_dbsnp": f"{brca1_test_data}/Homo_sapiens_assembly38.dbsnp138.BRCA1.vcf.gz",
                     "contaminant_file": f"{brca1_test_data}/contaminant_list.txt",
                     "adapter_file": f"{brca1_test_data}/adapter_list.txt",
+                    "vc_strelka_manta_runtime_cpu": 1,
+                    "vc_strelka_strelka_runtime_cpu": 1,
+                    "vc_strelka_manta_runtime_memory": 5,
+                    "vc_strelka_strelka_runtime_memory": 3,
                 },
                 output=Array.array_wrapper(
                     [ZipFile.basic_test("out_normal_R1_fastqc_reports", 430000)]
@@ -161,7 +165,7 @@ class WGSSomaticMultiCallers(WGSSomaticMultiCallersVariantsOnly, WGSSomaticGATK)
                 + Bam.basic_test("out_gridss_assembly", 60000)
                 + Vcf.basic_test("out_variants_gridss", 90000)
                 + File.basic_test(
-                    "out_facets_summary", 500, "60ba08614ca28b9630e46331d1d22de3"
+                    "out_facets_summary", 450, "5130be3607ca500cfa42be2ee9ebb42e"
                 )
                 + File.basic_test("out_facets_purity_png", 40000)
                 + File.basic_test("out_facets_purity_seg", 100)
@@ -175,7 +179,7 @@ class WGSSomaticMultiCallers(WGSSomaticMultiCallersVariantsOnly, WGSSomaticGATK)
                 )
                 + CompressedVcf.basic_test("out_variants_vardict", 13000, 189)
                 + Array.array_wrapper(
-                    [Vcf.basic_test("out_variants_vardict_split", 58000, 187)]
+                    [Vcf.basic_test("out_variants_vardict_split", 55000, 187)]
                 )
                 + CompressedVcf.basic_test("out_variants_strelka", 7000, 159)
                 + VcfTabix.basic_test("out_variants_manta_somatic", 1400, 70, 35)
