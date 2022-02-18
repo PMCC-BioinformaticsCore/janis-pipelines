@@ -123,14 +123,21 @@ The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be 
                     ],
                     "reference": f"{brca1_test_data}/Homo_sapiens_assembly38.chr17.fasta",
                     "gridss_blacklist": f"{brca1_test_data}/consensusBlacklist.hg38.chr17.bed",
-                    "gnomad": f"{brca1_test_data}/af-only-gnomad.hg38.BRCA1.vcf.gz",
                     "gatk_intervals": [f"{brca1_test_data}/BRCA1.hg38.bed"],
+                    "strelka_intervals": f"{brca1_test_data}/BRCA1.hg38.bed.gz",
+                    "vardict_intervals": [
+                        f"{brca1_test_data}/BRCA1.hg38.split-intervals.bed"
+                    ],
                     "known_indels": f"{brca1_test_data}/Homo_sapiens_assembly38.known_indels.BRCA1.vcf.gz",
                     "mills_indels": f"{brca1_test_data}/Mills_and_1000G_gold_standard.indels.hg38.BRCA1.vcf.gz",
                     "snps_1000gp": f"{brca1_test_data}/1000G_phase1.snps.high_confidence.hg38.BRCA1.vcf.gz",
                     "snps_dbsnp": f"{brca1_test_data}/Homo_sapiens_assembly38.dbsnp138.BRCA1.vcf.gz",
                     "contaminant_file": f"{brca1_test_data}/contaminant_list.txt",
                     "adapter_file": f"{brca1_test_data}/adapter_list.txt",
+                    "vc_strelka_manta_runtime_cpu": 1,
+                    "vc_strelka_strelka_runtime_cpu": 1,
+                    "vc_strelka_manta_runtime_memory": 5,
+                    "vc_strelka_strelka_runtime_memory": 3,
                 },
                 output=Array.array_wrapper(
                     [ZipFile.basic_test("out_fastqc_R1_reports", 408000)]
@@ -199,3 +206,4 @@ if __name__ == "__main__":
     }
     w.translate("cwl", **args)
     w.translate("wdl", **args)
+    # w.translate("wdl")
