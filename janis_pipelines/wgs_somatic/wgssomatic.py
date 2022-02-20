@@ -165,7 +165,7 @@ class WGSSomaticMultiCallers(WGSSomaticMultiCallersVariantsOnly, WGSSomaticGATK)
                 + Bam.basic_test("out_gridss_assembly", 60000)
                 + Vcf.basic_test("out_variants_gridss", 90000)
                 + File.basic_test(
-                    "out_facets_summary", 450, "5130be3607ca500cfa42be2ee9ebb42e"
+                    "out_facets_summary", 450, "99396b8a08c1a21a6638d91d0625b46d"
                 )
                 + File.basic_test("out_facets_purity_png", 40000)
                 + File.basic_test("out_facets_purity_seg", 100)
