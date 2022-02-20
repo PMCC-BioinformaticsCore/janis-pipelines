@@ -118,7 +118,7 @@ class WGSSomaticMultiCallers(WGSSomaticMultiCallersVariantsOnly, WGSSomaticGATK)
                             f"{brca1_test_data}/NA12878-NA24385-mixture-BRCA1_R2.fastq.gz",
                         ]
                     ],
-                    "tumor_name": "NA12878-NA24385-mixture",
+                    "tumor_name": "NA12878-NA24385-mixture-BRCA1",
                     "reference": f"{brca1_test_data}/Homo_sapiens_assembly38.chr17.fasta",
                     "gridss_blacklist": f"{brca1_test_data}/consensusBlacklist.hg38.chr17.bed",
                     "gnomad": f"{brca1_test_data}/af-only-gnomad.hg38.BRCA1.vcf.gz",
