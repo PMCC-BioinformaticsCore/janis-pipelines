@@ -93,10 +93,11 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
                 manta_config=self.generate_manta_config.out,
             ),
         )
+        self.step("vc_strelka_compress", BGZipLatest(file=self.vc_strelka.out))
 
         self.output(
             "out_variants_strelka",
-            source=self.vc_strelka.out,
+            source=self.vc_strelka_compress.out.as_type(CompressedVcf),
             output_folder=[
                 "variants",
             ],
@@ -204,10 +205,13 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineGATKVariantsOnly):
         )
 
         self.output(
-            "out_variants",
+            "out_variants_combined_bamstats",
             source=self.combined_addbamstats.out,
             output_folder="variants",
-            output_name="combined",
+            output_name=StringFormatter(
+                "{sample_name}_combined",
+                sample_name=self.sample_name,
+            ),
             doc="Combined variants from all 3 callers",
         )
 
