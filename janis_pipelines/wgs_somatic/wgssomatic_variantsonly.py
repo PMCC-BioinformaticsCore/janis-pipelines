@@ -400,7 +400,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
                 tumor_name=self.tumor_name,
                 normal_name=self.normal_name,
                 facets_file=self.vc_facets.out_hisens_rds,
-                sv_file=self.vc_strelka.tumor_sv,
+                sv_file=self.vc_strelka.tumor_sv.assert_not_null(),
             ),
         )
         self.output(

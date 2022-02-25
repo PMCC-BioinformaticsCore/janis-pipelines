@@ -49,6 +49,7 @@ class WGSSomaticMultiCallers(WGSSomaticMultiCallersVariantsOnly, WGSSomaticGATK)
         self.add_strelka_variantcaller(
             normal_bam_source=self.normal.out_bam, tumor_bam_source=self.tumor.out_bam
         )
+        self.add_circos_plot()
         self.add_combine_variants(
             normal_bam_source=self.normal.out_bam, tumor_bam_source=self.tumor.out_bam
         )
@@ -183,6 +184,7 @@ class WGSSomaticMultiCallers(WGSSomaticMultiCallersVariantsOnly, WGSSomaticGATK)
                 )
                 + CompressedVcf.basic_test("out_variants_strelka", 7000, 159)
                 + VcfTabix.basic_test("out_variants_manta_somatic", 1400, 70, 35)
+                + File.basic_test("out_circos_plot", 100000)
                 + Vcf.basic_test("out_variants_combined_bamstats", 91000, 245),
             )
         ]
