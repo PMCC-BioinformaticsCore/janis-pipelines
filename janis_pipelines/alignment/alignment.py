@@ -15,7 +15,7 @@ from janis_unix.data_types import TextFile, ZipFile
 
 class BwaAlignment(WGSGermlineMultiCallers):
     def id(self):
-        return "alignment"
+        return "BwaAlignment"
 
     def friendly_name(self):
         return "Alignment (BWA MEM) and MarkDuplicates"
