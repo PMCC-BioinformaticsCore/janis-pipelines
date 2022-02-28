@@ -72,7 +72,6 @@ BWA Mem + SamTools + Gatk4SortSam, mark duplicate reads using Gatk4MarkDuplicate
                         ]
                     ],
                     "reference": f"{brca1_test_data}/Homo_sapiens_assembly38.chr17.fasta",
-                    "gatk_intervals": [f"{brca1_test_data}/BRCA1.hg38.bed"],
                     "known_indels": f"{brca1_test_data}/Homo_sapiens_assembly38.known_indels.BRCA1.vcf.gz",
                     "mills_indels": f"{brca1_test_data}/Mills_and_1000G_gold_standard.indels.hg38.BRCA1.vcf.gz",
                     "snps_1000gp": f"{brca1_test_data}/1000G_phase1.snps.high_confidence.hg38.BRCA1.vcf.gz",
