@@ -1,6 +1,17 @@
 from datetime import date
 from typing import Optional, List
 
+from janis_core import (
+    String,
+    WorkflowBuilder,
+    Array,
+    WorkflowMetadata,
+)
+from janis_core.operators.standard import FirstOperator
+from janis_core.tool.test_classes import TTestCase
+
+from janis_unix.data_types import TextFile, ZipFile
+
 from janis_bioinformatics.data_types import (
     FastaWithDict,
     VcfTabix,
@@ -12,36 +23,16 @@ from janis_bioinformatics.data_types import (
     Vcf,
 )
 from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_8
-from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9
-from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
 from janis_bioinformatics.tools.common import (
     BwaAligner,
     MergeAndMarkBams_4_1_3,
-    GATKBaseRecalBQSRWorkflow_4_1_3,
 )
-from janis_bioinformatics.tools.gatk4 import Gatk4GatherVcfs_4_1_3
-from janis_bioinformatics.tools.htslib import BGZipLatest
-from janis_bioinformatics.tools.papenfuss import Gridss_2_6_2
 from janis_bioinformatics.tools.pmac import (
-    ParseFastqcAdaptors,
+    ParseFastqcAdapters,
     PerformanceSummaryGenome_0_1_0,
-    AddBamStatsSomatic_0_1_0,
     GenerateGenomeFileForBedtoolsCoverage,
     GenerateIntervalsByChromosome,
 )
-from janis_bioinformatics.tools.variantcallers import GatkSomaticVariantCaller_4_1_3
-from janis_core import (
-    String,
-    WorkflowBuilder,
-    Array,
-    WorkflowMetadata,
-    InputDocumentation,
-    InputQualityType,
-)
-from janis_core.operators.standard import FirstOperator
-from janis_core.tool.test_classes import TTestCase
-from janis_unix.tools import UncompressArchive
-from janis_unix.data_types import TextFile
 
 from janis_pipelines.wgs_somatic_gatk.wgssomaticgatk_variantsonly import (
     WGSSomaticGATKVariantsOnly,
@@ -63,6 +54,9 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
         self.add_gatk_variantcaller(
             normal_bam_source=self.normal.out_bam, tumor_bam_source=self.tumor.out_bam
         )
+        self.add_addbamstats(
+            normal_bam_source=self.normal.out_bam, tumor_bam_source=self.tumor.out_bam
+        )
 
     def add_inputs(self):
         # INPUTS
@@ -73,11 +67,11 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
 
         self.add_inputs_for_reference()
         self.add_inputs_for_intervals()
+        self.add_inputs_for_adapter_trimming()
         self.add_inputs_for_configuration()
 
     def add_inputs_for_configuration(self):
         super().add_inputs_for_configuration()
-        self.input("cutadapt_adapters", File, doc=INPUT_DOCS["cutadapt_adapters"])
 
     def add_preprocessing_steps(self):
         intervals = FirstOperator(
@@ -93,7 +87,8 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
 
         sub_inputs = {
             "reference": self.reference,
-            "cutadapt_adapters": self.cutadapt_adapters,
+            "adapter_file": self.adapter_file,
+            "contaminant_file": self.contaminant_file,
             "gatk_intervals": intervals,
             "snps_dbsnp": self.snps_dbsnp,
             "snps_1000gp": self.snps_1000gp,
@@ -117,13 +112,23 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
 
         # FASTQC
         self.output(
-            "out_normal_fastqc_reports",
-            source=self.normal.out_fastqc_reports,
+            "out_normal_R1_fastqc_reports",
+            source=self.normal.out_R1_fastqc_reports,
             output_folder="reports",
         )
         self.output(
-            "out_tumor_fastqc_reports",
-            source=self.tumor.out_fastqc_reports,
+            "out_tumor_R1_fastqc_reports",
+            source=self.tumor.out_R1_fastqc_reports,
+            output_folder="reports",
+        )
+        self.output(
+            "out_normal_R2_fastqc_reports",
+            source=self.normal.out_R2_fastqc_reports,
+            output_folder="reports",
+        )
+        self.output(
+            "out_tumor_R2_fastqc_reports",
+            source=self.tumor.out_R2_fastqc_reports,
             output_folder="reports",
         )
 
@@ -144,13 +149,13 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
         self.output(
             "out_normal_performance_summary",
             source=self.normal.out_performance_summary,
-            output_folder=["summary", self.normal_name],
+            output_folder=["performance_summary", self.normal_name],
             doc="A text file of performance summary of NORMAL bam",
         )
         self.output(
             "out_tumor_performance_summary",
             source=self.tumor.out_performance_summary,
-            output_folder=["summary", self.tumor_name],
+            output_folder=["performance_summary", self.tumor_name],
             doc="A text file of performance summary of TUMOR bam",
         )
 
@@ -176,23 +181,26 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
         w.input("reads", Array(FastqGzPair))
         w.input("sample_name", String)
         w.input("reference", FastaWithDict)
-        w.input("cutadapt_adapters", File(optional=True))
         w.input("gatk_intervals", Array(Bed))
         w.input("snps_dbsnp", VcfTabix)
         w.input("snps_1000gp", VcfTabix)
         w.input("known_indels", VcfTabix)
         w.input("mills_indels", VcfTabix)
+        w.input("adapter_file", File)
+        w.input("contaminant_file", File)
 
         # STEPS
         w.step("fastqc", FastQC_0_11_8(reads=w.reads), scatter="reads")
 
         w.step(
             "getfastqc_adapters",
-            ParseFastqcAdaptors(
-                fastqc_datafiles=w.fastqc.datafile,
-                cutadapt_adaptors_lookup=w.cutadapt_adapters,
+            ParseFastqcAdapters(
+                read1_fastqc_datafile=w.fastqc.out_R1_datafile,
+                read2_fastqc_datafile=w.fastqc.out_R2_datafile,
+                adapters_lookup=w.adapter_file,
+                contamination_lookup=w.contaminant_file,
             ),
-            scatter="fastqc_datafiles",
+            scatter=["read1_fastqc_datafile", "read2_fastqc_datafile"],
         )
 
         w.step(
@@ -201,11 +209,11 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
                 fastq=w.reads,
                 reference=w.reference,
                 sample_name=w.sample_name,
-                sortsam_tmpDir=None,
-                cutadapt_adapter=w.getfastqc_adapters,
-                cutadapt_removeMiddle3Adapter=w.getfastqc_adapters,
+                sortsam_tmpDir="./tmp",
+                three_prime_adapter_read1=w.getfastqc_adapters.out_R1_sequences,
+                three_prime_adapter_read2=w.getfastqc_adapters.out_R2_sequences,
             ),
-            scatter=["fastq", "cutadapt_adapter", "cutadapt_removeMiddle3Adapter"],
+            scatter=["fastq", "three_prime_adapter_read1", "three_prime_adapter_read2"],
         )
 
         w.step(
@@ -245,7 +253,8 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
 
         # OUTPUTS
         w.output("out_bam", source=w.merge_and_mark.out)
-        w.output("out_fastqc_reports", source=w.fastqc.out)
+        w.output("out_R1_fastqc_reports", source=w.fastqc.out_R1)
+        w.output("out_R2_fastqc_reports", source=w.fastqc.out_R2)
         # w.output("depth_of_coverage", source=w.coverage.out_sampleSummary)
         w.output(
             "out_performance_summary",
@@ -256,39 +265,49 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
 
     def tests(self) -> Optional[List[TTestCase]]:
         parent_dir = "https://swift.rc.nectar.org.au/v1/AUTH_4df6e734a509497692be237549bbe9af/janis-test-data/bioinformatics"
-        germline_data = f"{parent_dir}/wgsgermline_data"
-        somatic_data = f"{parent_dir}/wgssomatic_data"
+        brca1_test_data = f"{parent_dir}/brca1_test/test_data"
 
         return [
             TTestCase(
-                name="basic",
+                name="brca1",
                 input={
                     "normal_inputs": [
                         [
-                            f"{somatic_data}/NA24385-BRCA1_R1.fastq.gz",
-                            f"{somatic_data}/NA24385-BRCA1_R21.fastq.gz",
+                            f"{brca1_test_data}/NA24385-BRCA1_R1.fastq.gz",
+                            f"{brca1_test_data}/NA24385-BRCA1_R2.fastq.gz",
                         ]
                     ],
                     "normal_name": "NA24385-BRCA1",
                     "tumor_inputs": [
                         [
-                            f"{somatic_data}/NA12878-NA24385-mixture-BRCA1_R1.fastq.gz",
-                            f"{somatic_data}/NA12878-NA24385-mixture-BRCA1_R2.fastq.gz",
+                            f"{brca1_test_data}/NA12878-NA24385-mixture-BRCA1_R1.fastq.gz",
+                            f"{brca1_test_data}/NA12878-NA24385-mixture-BRCA1_R2.fastq.gz",
                         ]
                     ],
-                    "tumor_name": "NA12878-NA24385-mixture",
-                    "reference": f"{germline_data}/Homo_sapiens_assembly38.chr17.fasta",
-                    "gridss_blacklist": f"{somatic_data}/consensusBlacklist.hg38.chr17.bed",
-                    "gnomad": f"{somatic_data}/af-only-gnomad.hg38.BRCA1.vcf.gz",
-                    "gatk_intervals": [f"{germline_data}/BRCA1.hg38.bed"],
-                    "known_indels": f"{germline_data}/Homo_sapiens_assembly38.known_indels.BRCA1.vcf.gz",
-                    "mills_indels": f"{germline_data}/Mills_and_1000G_gold_standard.indels.hg38.BRCA1.vcf.gz",
-                    "snps_1000gp": f"{germline_data}/1000G_phase1.snps.high_confidence.hg38.BRCA1.vcf.gz",
-                    "snps_dbsnp": f"{germline_data}/Homo_sapiens_assembly38.dbsnp138.BRCA1.vcf.gz",
-                    "cutadapt_adapters": f"{germline_data}/contaminant_list.txt",
+                    "tumor_name": "NA12878-NA24385-mixture-BRCA1",
+                    "reference": f"{brca1_test_data}/Homo_sapiens_assembly38.chr17.fasta",
+                    "gridss_blacklist": f"{brca1_test_data}/consensusBlacklist.hg38.chr17.bed",
+                    "gnomad": f"{brca1_test_data}/af-only-gnomad.hg38.BRCA1.vcf.gz",
+                    "gatk_intervals": [f"{brca1_test_data}/BRCA1.hg38.bed"],
+                    "known_indels": f"{brca1_test_data}/Homo_sapiens_assembly38.known_indels.BRCA1.vcf.gz",
+                    "mills_indels": f"{brca1_test_data}/Mills_and_1000G_gold_standard.indels.hg38.BRCA1.vcf.gz",
+                    "snps_1000gp": f"{brca1_test_data}/1000G_phase1.snps.high_confidence.hg38.BRCA1.vcf.gz",
+                    "snps_dbsnp": f"{brca1_test_data}/Homo_sapiens_assembly38.dbsnp138.BRCA1.vcf.gz",
+                    "contaminant_file": f"{brca1_test_data}/contaminant_list.txt",
+                    "adapter_file": f"{brca1_test_data}/adapter_list.txt",
                 },
-                output=BamBai.basic_test("out_normal_bam", 3265300, 49500)
-                + BamBai.basic_test("out_tumor_bam", 3341700, 49000)
+                output=Array.array_wrapper(
+                    [ZipFile.basic_test("out_normal_R1_fastqc_reports", 430000)]
+                )
+                + Array.array_wrapper(
+                    [ZipFile.basic_test("out_tumor_R1_fastqc_reports", 430000)]
+                )
+                + Array.array_wrapper(
+                    [ZipFile.basic_test("out_normal_R2_fastqc_reports", 430000)]
+                )
+                + Array.array_wrapper(
+                    [ZipFile.basic_test("out_tumor_R2_fastqc_reports", 430000)]
+                )
                 + TextFile.basic_test(
                     "out_normal_performance_summary",
                     950,
@@ -299,8 +318,13 @@ class WGSSomaticGATK(WGSSomaticGATKVariantsOnly):
                     950,
                     md5="122bfa2ece90c0f030015feba4ba7d84",
                 )
-                + FastqGzPair.basic_test("out_normal_fastqc_reports", 881300)
-                + FastqGzPair.basic_test("out_tumor_fastqc_reports", 874900),
+                + BamBai.basic_test("out_normal_bam", 3260000, 49000)
+                + BamBai.basic_test("out_tumor_bam", 3340000, 49000)
+                + CompressedVcf.basic_test("out_variants_gatk", 9000, 149)
+                + Array.array_wrapper(
+                    [Vcf.basic_test("out_variants_gatk_split", 34000, 147)]
+                )
+                + Vcf.basic_test("out_variants_bamstats", 44000, 158),
             )
         ]
 
@@ -318,7 +342,7 @@ if __name__ == "__main__":
         ),
     }
     # w.translate("cwl", **args)
-    w.translate("wdl", **args)
+    w.translate("wdl")
 
     # from cwltool import main
     # import logging

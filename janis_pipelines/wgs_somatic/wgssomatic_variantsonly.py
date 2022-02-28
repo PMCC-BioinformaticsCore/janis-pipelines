@@ -450,7 +450,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         )
 
         self.output(
-            "out_variants",
+            "out_variants_combined_bamstats",
             source=self.combined_addbamstats.out,
             output_folder=[
                 "variants",
