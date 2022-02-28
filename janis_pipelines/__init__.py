@@ -4,6 +4,9 @@ from .__meta__ import __version__
 from janis_pipelines.rnaseq_gene_expression_quantification.rnaseqgeneexpressionquantification import (
     RNASeqGeneExpressionQuantification,
 )
+from janis_pipelines.rnaseq_gene_expression_quantification.rnaseqgeneexpressionquantification_inbatch import (
+    RNASeqGeneExpressionQuantificationInBatch,
+)
 from janis_pipelines.wgs_germline.wgsgermline import (
     WGSGermlineMultiCallers,
     WGSGermlineMultiCallersVariantsOnly,
