@@ -183,6 +183,22 @@ class WGSSomaticMultiCallers(BwaAlignment, WGSGermlineMultiCallers):
                 contaminant_file=self.contaminant_file,
             ),
         )
+        self.output(
+            "out_normal_R1_fastqc_reports",
+            source=self.alignment_normal.out_fastqc_R1_reports,
+            output_folder="reports",
+        )
+        self.output(
+            "out_normal_R2_fastqc_reports",
+            source=self.alignment_normal.out_fastqc_R2_reports,
+            output_folder="reports",
+        )
+        self.output(
+            "out_normal_bam",
+            source=self.alignment_normal.out_bam,
+            output_folder="bams",
+            output_name=self.normal_name,
+        )
 
     def add_alignment_tumor(self):
         self.step(
@@ -198,6 +214,22 @@ class WGSSomaticMultiCallers(BwaAlignment, WGSGermlineMultiCallers):
                 adapter_file=self.adapter_file,
                 contaminant_file=self.contaminant_file,
             ),
+        )
+        self.output(
+            "out_tumor_R1_fastqc_reports",
+            source=self.alignment_tumor.out_fastqc_R1_reports,
+            output_folder="reports",
+        )
+        self.output(
+            "out_tumor_R2_fastqc_reports",
+            source=self.alignment_tumor.out_fastqc_R2_reports,
+            output_folder="reports",
+        )
+        self.output(
+            "out_tumor_bam",
+            source=self.alignment_tumor.out_bam,
+            output_folder="bams",
+            output_name=self.tumor_name,
         )
 
     def add_bam_qc(self, normal_bam_source, tumor_bam_source):
@@ -238,13 +270,13 @@ class WGSSomaticMultiCallers(BwaAlignment, WGSGermlineMultiCallers):
             ),
         )
         self.output(
-            "out_performance_summary_normal",
+            "out_normal_performance_summary",
             source=self.performance_summary_normal.performanceSummaryOut,
             output_folder=["performance_summary", self.normal_name],
             doc="A text file of performance summary of bam",
         )
         self.output(
-            "out_performance_summary_tumor",
+            "out_tumor_performance_summary",
             source=self.performance_summary_tumor.performanceSummaryOut,
             output_folder=["performance_summary", self.tumor_name],
             doc="A text file of performance summary of bam",
