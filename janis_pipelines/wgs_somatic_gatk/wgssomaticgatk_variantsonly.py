@@ -25,19 +25,14 @@ class WGSSomaticGATKVariantsOnly(WGSSomaticGATK, WGSSomaticMultiCallersVariantsO
 
     def constructor(self):
         self.add_inputs()
-        self.add_localise_reference()
-        self.add_localise_bam()
         self.add_bam_qc(
-            normal_bam_source=self.localise_normal_bam.out,
-            tumor_bam_source=self.localise_tumor_bam.out,
+            normal_bam_source=self.normal_bam, tumor_bam_source=self.tumor_bam
         )
         self.add_gatk_variantcaller(
-            normal_bam_source=self.localise_normal_bam.out,
-            tumor_bam_source=self.localise_tumor_bam.out,
+            normal_bam_source=self.normal_bam, tumor_bam_source=self.tumor_bam
         )
         self.add_addbamstats(
-            normal_bam_source=self.localise_normal_bam.out,
-            tumor_bam_source=self.localise_tumor_bam.out,
+            normal_bam_source=self.normal_bam, tumor_bam_source=self.tumor_bam
         )
 
     def add_inputs(self):

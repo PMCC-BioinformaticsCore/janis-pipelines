@@ -4,7 +4,6 @@ from janis_core import (
     Array,
     Boolean,
     File,
-    InputDocumentation,
     InputQualityType,
     Int,
     String,
@@ -108,7 +107,6 @@ class WGSSomaticMultiCallers(BwaAlignment, WGSGermlineMultiCallers):
 
     def constructor(self):
         self.add_inputs()
-        self.add_localise_reference()
         self.add_alignment_normal()
         self.add_alignment_tumor()
         self.add_bam_qc(
@@ -176,7 +174,7 @@ class WGSSomaticMultiCallers(BwaAlignment, WGSGermlineMultiCallers):
             BwaAlignment(
                 sample_name=self.normal_name,
                 fastqs=self.normal_inputs,
-                reference=self.localise_reference.out,
+                reference=self.reference,
                 snps_dbsnp=self.snps_dbsnp,
                 snps_1000gp=self.snps_1000gp,
                 known_indels=self.known_indels,
@@ -192,7 +190,7 @@ class WGSSomaticMultiCallers(BwaAlignment, WGSGermlineMultiCallers):
             BwaAlignment(
                 sample_name=self.tumor_name,
                 fastqs=self.tumor_inputs,
-                reference=self.localise_reference.out,
+                reference=self.reference,
                 snps_dbsnp=self.snps_dbsnp,
                 snps_1000gp=self.snps_1000gp,
                 known_indels=self.known_indels,
@@ -210,7 +208,7 @@ class WGSSomaticMultiCallers(BwaAlignment, WGSGermlineMultiCallers):
         #     "coverage",
         #     Gatk4DepthOfCoverage_4_1_6(
         #         bam=bam_source,
-        #         reference=self.localise_reference.out,
+        #         reference=self.reference,
         #         outputPrefix=self.sample_name,
         #         intervals=intervals,
         #         # current version gatk 4.1.6.0 only support --count-type as COUNT_READS
@@ -221,9 +219,7 @@ class WGSSomaticMultiCallers(BwaAlignment, WGSGermlineMultiCallers):
         # )
         self.step(
             "calculate_performancesummary_genomefile",
-            GenerateGenomeFileForBedtoolsCoverage(
-                reference=self.localise_reference.out
-            ),
+            GenerateGenomeFileForBedtoolsCoverage(reference=self.reference),
         )
         self.step(
             "performance_summary_normal",
@@ -260,7 +256,7 @@ class WGSSomaticMultiCallers(BwaAlignment, WGSGermlineMultiCallers):
             "vc_gridss",
             Gridss_2_6_2(
                 bams=[normal_bam_source, tumor_bam_source],
-                reference=self.localise_reference.out,
+                reference=self.reference,
                 blacklist=self.gridss_blacklist,
             ),
         )
@@ -414,12 +410,12 @@ class WGSSomaticMultiCallers(BwaAlignment, WGSGermlineMultiCallers):
         else:
             generated_intervals = self.step(
                 "generate_gatk_intervals",
-                GenerateIntervalsByChromosome(reference=self.localise_reference.out),
+                GenerateIntervalsByChromosome(reference=self.reference),
                 when=self.gatk_intervals.is_null(),
             ).out_regions
         intervals = FirstOperator([self.gatk_intervals, generated_intervals])
         recal_ins = {
-            "reference": self.localise_reference.out,
+            "reference": self.reference,
             "intervals": intervals,
             "snps_dbsnp": self.snps_dbsnp,
             "snps_1000gp": self.snps_1000gp,
@@ -443,7 +439,7 @@ class WGSSomaticMultiCallers(BwaAlignment, WGSGermlineMultiCallers):
                 tumor_bam=self.bqsr_tumor.out,
                 normal_name=self.normal_name,
                 intervals=intervals,
-                reference=self.localise_reference.out,
+                reference=self.reference,
                 gnomad=self.gnomad,
                 panel_of_normals=self.panel_of_normals,
             ),
@@ -487,7 +483,7 @@ class WGSSomaticMultiCallers(BwaAlignment, WGSGermlineMultiCallers):
                 normal_bam=normal_bam_source,
                 tumor_bam=tumor_bam_source,
                 intervals=self.strelka_intervals,
-                reference=self.localise_reference.out,
+                reference=self.reference,
                 manta_config=self.generate_manta_config.out,
             ),
         )
@@ -518,7 +514,7 @@ class WGSSomaticMultiCallers(BwaAlignment, WGSGermlineMultiCallers):
     def add_vardict_variantcaller(self, normal_bam_source, tumor_bam_source):
         self.step(
             "generate_vardict_headerlines",
-            GenerateVardictHeaderLines(reference=self.localise_reference.out),
+            GenerateVardictHeaderLines(reference=self.reference),
         )
         self.step(
             "vc_vardict",
@@ -529,7 +525,7 @@ class WGSSomaticMultiCallers(BwaAlignment, WGSGermlineMultiCallers):
                 tumor_name=self.tumor_name,
                 header_lines=self.generate_vardict_headerlines.out,
                 intervals=self.vardict_intervals,
-                reference=self.localise_reference.out,
+                reference=self.reference,
                 allele_freq_threshold=self.allele_freq_threshold,
                 minMappingQual=self.minMappingQual,
                 filter=self.filter,
@@ -617,7 +613,7 @@ class WGSSomaticMultiCallers(BwaAlignment, WGSGermlineMultiCallers):
                 normal_bam=normal_bam_source,
                 tumor_bam=tumor_bam_source,
                 vcf=self.combined_uncompress.out.as_type(Vcf),
-                reference=self.localise_reference.out,
+                reference=self.reference,
             ),
         )
 

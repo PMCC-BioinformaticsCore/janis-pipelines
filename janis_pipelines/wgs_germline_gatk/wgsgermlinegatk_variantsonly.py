@@ -25,8 +25,6 @@ class WGSGermlineGATKVariantsOnly(WGSGermlineGATK, WGSGermlineMultiCallersVarian
     def constructor(self):
         self.add_inputs()
 
-        self.add_localise_reference()
-        self.add_localise_bam()
         self.add_bam_qc(bam_source=self.bam)
         self.add_gatk_variantcaller(bam_source=self.bam)
         self.add_addbamstats(bam_source=self.bam)

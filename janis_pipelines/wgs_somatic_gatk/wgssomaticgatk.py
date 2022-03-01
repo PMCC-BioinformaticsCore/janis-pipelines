@@ -29,7 +29,6 @@ class WGSSomaticGATK(WGSSomaticMultiCallers):
 
     def constructor(self):
         self.add_inputs()
-        self.add_localise_reference()
         self.add_alignment_normal()
         self.add_alignment_tumor()
         self.add_bam_qc(
@@ -72,7 +71,7 @@ class WGSSomaticGATK(WGSSomaticMultiCallers):
                 tumor_id=self.tumor_name,
                 normal_bam=normal_bam_source,
                 tumor_bam=tumor_bam_source,
-                reference=self.localise_reference.out,
+                reference=self.reference,
                 vcf=self.vc_gatk_uncompressvcf.out.as_type(Vcf),
             ),
         )

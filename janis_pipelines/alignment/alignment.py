@@ -32,8 +32,6 @@ class BwaAlignment(WGSGermlineMultiCallers):
     def constructor(self):
         self.add_inputs()
 
-        self.add_localise_reference()
-        self.add_localise_fastqs()
         self.add_fastqc()
         self.add_trim_and_align_fastq()
         self.add_merge_and_markdups_bam()

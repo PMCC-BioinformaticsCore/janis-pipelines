@@ -3,7 +3,6 @@ from datetime import date
 from janis_core import String, WorkflowMetadata
 
 from janis_bioinformatics.data_types import BamBai
-from janis_bioinformatics.tools.pmac import LocaliseBamBai
 from janis_pipelines.wgs_somatic.wgssomatic import WGSSomaticMultiCallers, INPUT_DOCS
 
 
@@ -19,36 +18,27 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticMultiCallers):
 
     def constructor(self):
         self.add_inputs()
-        self.add_localise_reference()
-        self.add_localise_bam()
         self.add_bam_qc(
-            normal_bam_source=self.localise_normal_bam.out,
-            tumor_bam_source=self.localise_tumor_bam.out,
+            normal_bam_source=self.normal_bam, tumor_bam_source=self.tumor_bam
         )
         self.add_gridss(
-            normal_bam_source=self.localise_normal_bam.out,
-            tumor_bam_source=self.localise_tumor_bam.out,
+            normal_bam_source=self.normal_bam, tumor_bam_source=self.tumor_bam
         )
         self.add_facets(
-            normal_bam_source=self.localise_normal_bam.out,
-            tumor_bam_source=self.localise_tumor_bam.out,
+            normal_bam_source=self.normal_bam, tumor_bam_source=self.tumor_bam
         )
         self.add_gatk_variantcaller(
-            normal_bam_source=self.localise_normal_bam.out,
-            tumor_bam_source=self.localise_tumor_bam.out,
+            normal_bam_source=self.normal_bam, tumor_bam_source=self.tumor_bam
         )
         self.add_vardict_variantcaller(
-            normal_bam_source=self.localise_normal_bam.out,
-            tumor_bam_source=self.localise_tumor_bam.out,
+            normal_bam_source=self.normal_bam, tumor_bam_source=self.tumor_bam
         )
         self.add_strelka_variantcaller(
-            normal_bam_source=self.localise_normal_bam.out,
-            tumor_bam_source=self.localise_tumor_bam.out,
+            normal_bam_source=self.normal_bam, tumor_bam_source=self.tumor_bam
         )
         self.add_circos_plot()
         self.add_combine_variants(
-            normal_bam_source=self.localise_normal_bam.out,
-            tumor_bam_source=self.localise_tumor_bam.out,
+            normal_bam_source=self.normal_bam, tumor_bam_source=self.tumor_bam
         )
 
     def add_inputs(self):
@@ -62,16 +52,6 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticMultiCallers):
         self.add_inputs_for_adapter_trimming()
         self.add_inputs_for_intervals()
         self.add_inputs_for_configuration()
-
-    def add_localise_bam(self):
-        self.step(
-            "localise_normal_bam",
-            LocaliseBamBai(bam=self.normal_bam),
-        )
-        self.step(
-            "localise_tumor_bam",
-            LocaliseBamBai(bam=self.tumor_bam),
-        )
 
     def bind_metadata(self):
         meta: WorkflowMetadata = super().bind_metadata() or self.metadata

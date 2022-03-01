@@ -47,8 +47,6 @@ from janis_bioinformatics.tools.pmac import (
     GenerateIntervalsByChromosome,
     GenerateMantaConfig,
     GenerateVardictHeaderLines,
-    LocaliseFastaWithDict,
-    LocaliseFastqGzPair,
     ParseFastqcAdapters,
     PerformanceSummaryGenome_0_1_0,
 )
@@ -98,8 +96,6 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
     def constructor(self):
         self.add_inputs()
 
-        self.add_localise_reference()
-        self.add_localise_fastqs()
         self.add_fastqc()
         self.add_trim_and_align_fastq()
         self.add_merge_and_markdups_bam()
@@ -156,21 +152,10 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
         self.input("filter", String(optional=True))
 
     ### PIPELINE STEPS
-    def add_localise_reference(self):
-        self.step(
-            "localise_reference",
-            LocaliseFastaWithDict(reference=self.reference),
-        )
-
-    def add_localise_fastqs(self):
-        self.step(
-            "localise_fastqs", LocaliseFastqGzPair(fastqs=self.fastqs), scatter="fastqs"
-        )
-
     def add_fastqc(self):
         self.step(
             "fastqc",
-            FastQC_0_11_8(reads=self.localise_fastqs.out),
+            FastQC_0_11_8(reads=self.fastqs),
             scatter="reads",
         )
         self.output(
@@ -200,8 +185,8 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
         self.step(
             "align_and_sort",
             BwaAligner(
-                fastq=self.localise_fastqs.out,
-                reference=self.localise_reference.out,
+                fastq=self.fastqs,
+                reference=self.reference,
                 sample_name=self.sample_name,
                 sortsam_tmpDir="./tmp",
                 three_prime_adapter_read1=self.getfastqc_adapters.out_R1_sequences,
@@ -233,7 +218,7 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
         #     "coverage",
         #     Gatk4DepthOfCoverage_4_1_6(
         #         bam=bam_source,
-        #         reference=self.localise_reference.out,
+        #         reference=self.reference,
         #         outputPrefix=self.sample_name,
         #         intervals=intervals,
         #         # current version gatk 4.1.6.0 only support --count-type as COUNT_READS
@@ -244,9 +229,7 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
         # )
         self.step(
             "calculate_performancesummary_genomefile",
-            GenerateGenomeFileForBedtoolsCoverage(
-                reference=self.localise_reference.out
-            ),
+            GenerateGenomeFileForBedtoolsCoverage(reference=self.reference),
         )
         self.step(
             "performance_summary",
@@ -277,7 +260,7 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
             "vc_gridss",
             Gridss_2_6_2(
                 bams=[bam_source],
-                reference=self.localise_reference.out,
+                reference=self.reference,
                 blacklist=self.gridss_blacklist,
             ),
         )
@@ -301,9 +284,7 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
                 self.gatk_intervals,
                 self.step(
                     "generate_gatk_intervals",
-                    GenerateIntervalsByChromosome(
-                        reference=self.localise_reference.out
-                    ),
+                    GenerateIntervalsByChromosome(reference=self.reference),
                     when=self.gatk_intervals.is_null(),
                 ).out_regions,
             ]
@@ -312,7 +293,7 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
             "bqsr",
             GATKBaseRecalBQSRWorkflow_4_1_3(
                 bam=bam_source,
-                reference=self.localise_reference.out,
+                reference=self.reference,
                 snps_dbsnp=self.snps_dbsnp,
                 snps_1000gp=self.snps_1000gp,
                 known_indels=self.known_indels,
@@ -327,7 +308,7 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
             GatkGermlineVariantCaller_4_1_3(
                 bam=self.bqsr.out,
                 intervals=intervals,
-                reference=self.localise_reference.out,
+                reference=self.reference,
                 snps_dbsnp=self.snps_dbsnp,
             ),
             scatter=["intervals", "bam"],
@@ -375,7 +356,7 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
             "vc_strelka",
             IlluminaGermlineVariantCaller(
                 bam=bam_source,
-                reference=self.localise_reference.out,
+                reference=self.reference,
                 intervals=self.strelka_intervals,
                 manta_config=self.generate_manta_config.out,
             ),
@@ -399,13 +380,13 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
         # VARDICT
         self.step(
             "generate_vardict_headerlines",
-            GenerateVardictHeaderLines(reference=self.localise_reference.out),
+            GenerateVardictHeaderLines(reference=self.reference),
         )
         self.step(
             "vc_vardict",
             VardictGermlineVariantCaller(
                 bam=bam_source,
-                reference=self.localise_reference.out,
+                reference=self.reference,
                 intervals=self.vardict_intervals,
                 sample_name=self.sample_name,
                 allele_freq_threshold=self.allele_freq_threshold,
@@ -477,7 +458,7 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
             AddBamStatsGermline_0_1_0(
                 bam=bam_source,
                 vcf=self.combined_uncompress.out.as_type(Vcf),
-                reference=self.localise_reference.out,
+                reference=self.reference,
             ),
         )
         self.output(

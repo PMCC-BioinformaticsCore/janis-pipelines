@@ -2,7 +2,6 @@ from datetime import date
 
 from janis_core import String, WorkflowMetadata
 from janis_bioinformatics.data_types import BamBai
-from janis_bioinformatics.tools.pmac import LocaliseBamBai
 from janis_pipelines.wgs_germline.wgsgermline import WGSGermlineMultiCallers, INPUT_DOCS
 
 
@@ -20,14 +19,12 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineMultiCallers):
     def constructor(self):
         self.add_inputs()
 
-        self.add_localise_reference()
-        self.add_localise_bam()
-        self.add_bam_qc(bam_source=self.localise_bam.out)
-        self.add_gridss(bam_source=self.localise_bam.out)
-        self.add_gatk_variantcaller(bam_source=self.localise_bam.out)
-        self.add_strelka_variantcaller(bam_source=self.localise_bam.out)
-        self.add_vardict_variantcaller(bam_source=self.localise_bam.out)
-        self.add_combine_variants(bam_source=self.localise_bam.out)
+        self.add_bam_qc(bam_source=self.bam)
+        self.add_gridss(bam_source=self.bam)
+        self.add_gatk_variantcaller(bam_source=self.bam)
+        self.add_strelka_variantcaller(bam_source=self.bam)
+        self.add_vardict_variantcaller(bam_source=self.bam)
+        self.add_combine_variants(bam_source=self.bam)
 
     ### INPUTS
     def add_inputs(self):
@@ -40,12 +37,6 @@ class WGSGermlineMultiCallersVariantsOnly(WGSGermlineMultiCallers):
         self.add_inputs_for_configuration()
 
     ### PIPELINE STEPS
-    def add_localise_bam(self):
-        self.step(
-            "localise_bam",
-            LocaliseBamBai(bam=self.bam),
-        )
-
     def bind_metadata(self):
         meta: WorkflowMetadata = self.metadata
 
