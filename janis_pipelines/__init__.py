@@ -1,6 +1,6 @@
 from .__meta__ import __version__
 
-from janis_pipelines.alignment.alignment import BwaAlignment
+from janis_pipelines.alignment.alignment_qc import BwaAlignmentAndQC
 
 from janis_pipelines.wgs_germline.wgsgermline import WGSGermlineMultiCallers
 from janis_pipelines.wgs_germline.wgsgermline_variantsonly import (
