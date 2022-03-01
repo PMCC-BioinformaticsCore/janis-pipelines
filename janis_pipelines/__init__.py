@@ -10,7 +10,7 @@ from janis_pipelines.wgs_germline_gatk.wgsgermlinegatk import WGSGermlineGATK
 from janis_pipelines.wgs_germline_gatk.wgsgermlinegatk_variantsonly import (
     WGSGermlineGATKVariantsOnly,
 )
-from janis_pipelines.wgs_somatic.wgssomatic import WGSGermlineMultiCallers
+from janis_pipelines.wgs_somatic.wgssomatic import WGSSomaticMultiCallers
 from janis_pipelines.wgs_somatic.wgssomatic_variantsonly import (
     WGSSomaticMultiCallersVariantsOnly,
 )
