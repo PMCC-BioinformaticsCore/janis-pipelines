@@ -10,6 +10,7 @@ from janis_core import (
     String,
     StringFormatter,
     WorkflowMetadata,
+    InputDocumentation,
 )
 from janis_core.tool.test_classes import (
     TTestCase,
@@ -146,6 +147,10 @@ class WGSGermlineMultiCallers(BioinformaticsWorkflow):
             "allele_freq_threshold",
             Float,
             0.05,
+            doc=InputDocumentation(
+                "The threshold for VarDict's allele frequency, default: 0.05 or 5%",
+                quality=InputQualityType.configuration,
+            ),
         ),
         self.input("minMappingQual", Int(optional=True))
         self.input("filter", String(optional=True))
@@ -586,7 +591,8 @@ The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be 
 
 if __name__ == "__main__":
     # import os.path
-    # w=WGSGermlineMultiCallers()
+
+    # w = WGSGermlineMultiCallers()
     # args = {
     #     "to_console": False,
     #     "to_disk": False,
