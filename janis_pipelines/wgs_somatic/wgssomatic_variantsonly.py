@@ -4,7 +4,7 @@ from janis_core import String, WorkflowMetadata
 
 from janis_bioinformatics.data_types import BamBai
 from janis_bioinformatics.tools.pmac import LocaliseBamBai
-from janis_pipelines.wgs_somatic.wgssomatic import WGSSomaticMultiCallers
+from janis_pipelines.wgs_somatic.wgssomatic import WGSSomaticMultiCallers, INPUT_DOCS
 
 
 class WGSSomaticMultiCallersVariantsOnly(WGSSomaticMultiCallers):
@@ -53,14 +53,10 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticMultiCallers):
 
     def add_inputs(self):
         # INPUTS
-        self.input("normal_bam", BamBai, doc="normal_bam")
-        self.input("tumor_bam", BamBai, doc="tumor_bam")
-        self.input("normal_name", String, doc="normal_name")
-        self.input("tumor_name", String, doc="tumor_name")
-        # self.input("normal_bam", BamBai, doc=INPUT_DOCS["normal_bam"])
-        # self.input("tumor_bam", BamBai, doc=INPUT_DOCS["tumor_bam"])
-        # self.input("normal_name", String, doc=INPUT_DOCS["normal_name"])
-        # self.input("tumor_name", String, doc=INPUT_DOCS["tumor_name"])
+        self.input("normal_bam", BamBai, doc=INPUT_DOCS["normal_bam"])
+        self.input("tumor_bam", BamBai, doc=INPUT_DOCS["tumor_bam"])
+        self.input("normal_name", String, doc=INPUT_DOCS["normal_name"])
+        self.input("tumor_name", String, doc=INPUT_DOCS["tumor_name"])
 
         self.add_inputs_for_reference()
         self.add_inputs_for_adapter_trimming()

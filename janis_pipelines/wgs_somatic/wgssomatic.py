@@ -143,42 +143,10 @@ class WGSSomaticMultiCallers(BwaAlignment, WGSGermlineMultiCallers):
 
     def add_inputs(self):
         # INPUTS
-        self.input(
-            "normal_inputs",
-            Array(FastqGzPair),
-            doc=InputDocumentation(
-                "An array of NORMAL FastqGz pairs. These are aligned separately and merged to create higher depth coverages from multiple sets of reads",
-                quality=InputQualityType.user,
-                example='["normal_R1.fastq.gz", "normal_R2.fastq.gz"]',
-            ),
-        )
-        self.input(
-            "tumor_inputs",
-            Array(FastqGzPair),
-            doc=InputDocumentation(
-                "An array of TUMOR FastqGz pairs. These are aligned separately and merged to create higher depth coverages from multiple sets of reads",
-                quality=InputQualityType.user,
-                example='["tumor_R1.fastq.gz", "tumor_R2.fastq.gz"]',
-            ),
-        )
-        self.input(
-            "normal_name",
-            String(),
-            doc=InputDocumentation(
-                "Sample name for the NORMAL sample from which to generate the readGroupHeaderLine for BwaMem",
-                quality=InputQualityType.user,
-                example="NA24385_normal",
-            ),
-        )
-        self.input(
-            "tumor_name",
-            String(),
-            doc=InputDocumentation(
-                "Sample name for the TUMOR sample from which to generate the readGroupHeaderLine for BwaMem",
-                quality=InputQualityType.user,
-                example="NA24385_tumor",
-            ),
-        )
+        self.input("normal_inputs", Array(FastqGzPair), doc=INPUT_DOCS["normal_inputs"])
+        self.input("tumor_inputs", Array(FastqGzPair), doc=INPUT_DOCS["tumor_inputs"])
+        self.input("normal_name", String(), doc=INPUT_DOCS["normal_name"])
+        self.input("tumor_name", String(), doc=INPUT_DOCS["tumor_name"])
         self.add_inputs_for_reference()
         self.add_inputs_for_adapter_trimming()
         self.add_inputs_for_intervals()

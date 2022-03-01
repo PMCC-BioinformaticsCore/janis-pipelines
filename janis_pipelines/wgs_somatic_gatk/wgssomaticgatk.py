@@ -3,8 +3,6 @@ from typing import Optional, List
 
 from janis_core import (
     Array,
-    InputDocumentation,
-    InputQualityType,
     String,
     StringFormatter,
 )
@@ -19,7 +17,7 @@ from janis_bioinformatics.data_types import (
     Vcf,
 )
 from janis_bioinformatics.tools.pmac import AddBamStatsSomatic_0_1_0
-from janis_pipelines.wgs_somatic.wgssomatic import WGSSomaticMultiCallers
+from janis_pipelines.wgs_somatic.wgssomatic import WGSSomaticMultiCallers, INPUT_DOCS
 
 
 class WGSSomaticGATK(WGSSomaticMultiCallers):
@@ -49,42 +47,11 @@ class WGSSomaticGATK(WGSSomaticMultiCallers):
 
     def add_inputs(self):
         # INPUTS
-        self.input(
-            "normal_inputs",
-            Array(FastqGzPair),
-            doc=InputDocumentation(
-                "An array of NORMAL FastqGz pairs. These are aligned separately and merged to create higher depth coverages from multiple sets of reads",
-                quality=InputQualityType.user,
-                example='["normal_R1.fastq.gz", "normal_R2.fastq.gz"]',
-            ),
-        )
-        self.input(
-            "tumor_inputs",
-            Array(FastqGzPair),
-            doc=InputDocumentation(
-                "An array of TUMOR FastqGz pairs. These are aligned separately and merged to create higher depth coverages from multiple sets of reads",
-                quality=InputQualityType.user,
-                example='["tumor_R1.fastq.gz", "tumor_R2.fastq.gz"]',
-            ),
-        )
-        self.input(
-            "normal_name",
-            String(),
-            doc=InputDocumentation(
-                "Sample name for the NORMAL sample from which to generate the readGroupHeaderLine for BwaMem",
-                quality=InputQualityType.user,
-                example="NA24385_normal",
-            ),
-        )
-        self.input(
-            "tumor_name",
-            String(),
-            doc=InputDocumentation(
-                "Sample name for the TUMOR sample from which to generate the readGroupHeaderLine for BwaMem",
-                quality=InputQualityType.user,
-                example="NA24385_tumor",
-            ),
-        )
+        self.input("normal_inputs", Array(FastqGzPair), doc=INPUT_DOCS["normal_inputs"])
+        self.input("tumor_inputs", Array(FastqGzPair), doc=INPUT_DOCS["tumor_inputs"])
+        self.input("normal_name", String(), doc=INPUT_DOCS["normal_name"])
+        self.input("tumor_name", String(), doc=INPUT_DOCS["tumor_name"])
+
         self.add_inputs_for_reference()
         self.add_inputs_for_adapter_trimming()
         self.add_inputs_for_intervals()
@@ -94,8 +61,7 @@ class WGSSomaticGATK(WGSSomaticMultiCallers):
         self.input(
             "gatk_intervals",
             Array(Bed, optional=True),
-            doc="gatk_intervals",
-            # doc=INPUT_DOCS["gatk_intervals"],
+            doc=INPUT_DOCS["gatk_intervals"],
         )
 
     def add_addbamstats(self, normal_bam_source, tumor_bam_source):

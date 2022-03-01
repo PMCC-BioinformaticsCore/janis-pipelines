@@ -1,25 +1,13 @@
 from datetime import date
 
-from janis_unix.tools import UncompressArchive
 from janis_core import (
     String,
-    Array,
     WorkflowMetadata,
-    InputQualityType,
-    StringFormatter,
-    File,
 )
-from janis_core.operators.standard import FirstOperator
 
-from janis_bioinformatics.data_types import (
-    FastaWithDict,
-    VcfTabix,
-    Bed,
-    BamBai,
-    CompressedVcf,
-    Vcf,
-)
+from janis_bioinformatics.data_types import BamBai
 from janis_pipelines.wgs_somatic_gatk.wgssomaticgatk import WGSSomaticGATK
+from janis_pipelines.wgs_somatic.wgssomatic import INPUT_DOCS
 from janis_pipelines.wgs_somatic.wgssomatic_variantsonly import (
     WGSSomaticMultiCallersVariantsOnly,
 )
@@ -54,14 +42,10 @@ class WGSSomaticGATKVariantsOnly(WGSSomaticGATK, WGSSomaticMultiCallersVariantsO
 
     def add_inputs(self):
         # INPUTS
-        self.input("normal_bam", BamBai, doc="normal_bam")
-        self.input("tumor_bam", BamBai, doc="tumor_bam")
-        self.input("normal_name", String, doc="normal_name")
-        self.input("tumor_name", String, doc="tumor_name")
-        # self.input("normal_bam", BamBai, doc=INPUT_DOCS["normal_bam"])
-        # self.input("tumor_bam", BamBai, doc=INPUT_DOCS["tumor_bam"])
-        # self.input("normal_name", String, doc=INPUT_DOCS["normal_name"])
-        # self.input("tumor_name", String, doc=INPUT_DOCS["tumor_name"])
+        self.input("normal_bam", BamBai, doc=INPUT_DOCS["normal_bam"])
+        self.input("tumor_bam", BamBai, doc=INPUT_DOCS["tumor_bam"])
+        self.input("normal_name", String, doc=INPUT_DOCS["normal_name"])
+        self.input("tumor_name", String, doc=INPUT_DOCS["tumor_name"])
 
         self.add_inputs_for_reference()
         self.add_inputs_for_adapter_trimming()
