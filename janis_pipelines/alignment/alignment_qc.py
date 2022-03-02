@@ -37,6 +37,15 @@ class BwaAlignmentAndQC(WGSGermlineMultiCallers):
         self.add_merge_and_markdups_bam()
         self.add_bam_qc(bam_source=self.merge_and_markdups.out)
 
+    ### INPUTS
+    def add_inputs(self):
+        self.input("sample_name", String, doc=INPUT_DOCS["sample_name"])
+        self.input("fastqs", Array(FastqGzPair), doc=INPUT_DOCS["fastqs"])
+
+        self.add_inputs_for_reference()
+        self.add_inputs_for_adapter_trimming()
+        self.add_inputs_for_configuration()
+
     def tests(self) -> Optional[List[TTestCase]]:
         parent_dir = "https://swift.rc.nectar.org.au/v1/AUTH_4df6e734a509497692be237549bbe9af/janis-test-data/bioinformatics"
         brca1_test_data = f"{parent_dir}/brca1_test/test_data"

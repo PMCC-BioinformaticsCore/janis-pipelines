@@ -3,7 +3,7 @@ from typing import Optional, List
 
 from janis_core import Array, String
 from janis_bioinformatics.data_types import FastqGzPair, BamBai
-from janis_pipelines.wgs_germline.wgsgermline import WGSGermlineMultiCallers, INPUT_DOCS
+from janis_pipelines.alignment.alignment_qc import BwaAlignmentAndQC
 from janis_core.tool.test_classes import (
     TTestCase,
     TTestExpectedOutput,
@@ -13,7 +13,7 @@ from janis_core.tool.test_classes import (
 from janis_unix.data_types import TextFile, ZipFile
 
 
-class BwaAlignment(WGSGermlineMultiCallers):
+class BwaAlignment(BwaAlignmentAndQC):
     def id(self):
         return "BwaAlignment"
 
@@ -35,15 +35,6 @@ class BwaAlignment(WGSGermlineMultiCallers):
         self.add_fastqc()
         self.add_trim_and_align_fastq()
         self.add_merge_and_markdups_bam()
-
-    ### INPUTS
-    def add_inputs(self):
-        self.input("sample_name", String, doc=INPUT_DOCS["sample_name"])
-        self.input("fastqs", Array(FastqGzPair), doc=INPUT_DOCS["fastqs"])
-
-        self.add_inputs_for_reference()
-        self.add_inputs_for_adapter_trimming()
-        self.add_inputs_for_configuration()
 
     def bind_metadata(self):
         self.metadata.documentation = "Alignment and sort of reads using \
