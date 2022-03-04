@@ -163,7 +163,7 @@ class WGSSomaticMultiCallers(BwaAlignment, WGSGermlineMultiCallers):
         self.input("pseudo_snps", Int(optional=True))
         self.input("max_depth", Int(optional=True))
         self.input("everything", Boolean(optional=True))
-        self.input("genome", String(optional=True))  # Shared with CIRCOS PLOT
+        self.input("genome", String)  # Shared with CIRCOS PLOT
         self.input("cval", Int(optional=True))
         self.input("purity_cval", Int(optional=True))
         self.input("normal_depth", Int(optional=True))
@@ -610,7 +610,7 @@ class WGSSomaticMultiCallers(BwaAlignment, WGSGermlineMultiCallers):
             source=self.circos_plot.out,
             output_folder="circos_plot",
             output_name=StringFormatter(
-                "{tumor_name}--{normal_name}_circos_plot.pdf",
+                "{tumor_name}--{normal_name}_circos_plot",
                 tumor_name=self.tumor_name,
                 normal_name=self.normal_name,
             ),
@@ -769,7 +769,7 @@ The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be 
                 + Bam.basic_test("out_gridss_assembly", 60000)
                 + Vcf.basic_test("out_variants_gridss", 90000)
                 + File.basic_test(
-                    "out_facets_summary", 450, "99396b8a08c1a21a6638d91d0625b46d"
+                    "out_facets_summary", 450, "c9b543b6e62003b8b6409db1a4e78248"
                 )
                 + File.basic_test("out_facets_purity_png", 40000)
                 + File.basic_test("out_facets_purity_seg", 100)
@@ -787,7 +787,7 @@ The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be 
                 )
                 + CompressedVcf.basic_test("out_variants_strelka", 7000, 159)
                 + VcfTabix.basic_test("out_variants_manta_somatic", 1400, 70, 35)
-                + File.basic_test("out_circos_plot", 100000)
+                + File.basic_test("out_circos_plot", 60000)
                 + Vcf.basic_test("out_variants_combined_bamstats", 91000, 245),
             )
         ]
