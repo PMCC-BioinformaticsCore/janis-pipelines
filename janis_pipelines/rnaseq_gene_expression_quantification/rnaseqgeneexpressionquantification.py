@@ -13,9 +13,11 @@ from janis_bioinformatics.data_types import FastqGzPair
 from janis_bioinformatics.tools.bioinformaticstoolbase import BioinformaticsWorkflow
 
 # Tools
+from janis_bioinformatics.tools.babrahambioinformatics import FastQC_0_11_8
 from janis_bioinformatics.tools.gatk4 import Gatk4SortSam_4_1_2
 from janis_bioinformatics.tools.htseq import HTSeqCount_1_99_2
 from janis_bioinformatics.tools.star import StarAlignReads_2_7_8
+from janis_bioinformatics.tools.rnaseqqc import RNASeqQC_2_3_5
 
 
 class RNASeqGeneExpressionQuantification(BioinformaticsWorkflow):
@@ -42,11 +44,28 @@ class RNASeqGeneExpressionQuantification(BioinformaticsWorkflow):
         self.input("star_threads", Int, default=8)
 
         # Pipeline
+        self.add_fastqc_step()
         self.add_alignment_step()
         self.add_sort_and_index_step()
+        self.add_rnaseq_qc_step()
         self.add_counts_step()
 
     # Steps
+    def add_fastqc_step(self):
+        self.step("fastqc", FastQC_0_11_8(reads=self.fastqs))
+        self.output(
+            "out_fastqc_R1_reports",
+            source=self.fastqc.out_R1,
+            output_folder=[self.sample_name, "QC", "FASTQC"],
+            doc="A zip file of the FastQC quality report.",
+        )
+        self.output(
+            "out_fastqc_R2_reports",
+            source=self.fastqc.out_R2,
+            output_folder=[self.sample_name, "QC", "FASTQC"],
+            doc="A zip file of the FastQC quality report.",
+        )
+
     def add_alignment_step(self):
         self.step(
             "star_alignment",
@@ -140,6 +159,72 @@ class RNASeqGeneExpressionQuantification(BioinformaticsWorkflow):
             output_folder=[self.sample_name],
             output_name=self.sample_name,
         )
+
+    def add_rnaseq_qc_step(self):
+        self.step(
+            "rnaseq_qc",
+            RNASeqQC_2_3_5(
+                gtf=self.gtf,
+                bam=self.sortsam.out,
+                sample=self.sample_name,
+                coverage=True,
+                coverage_mask=0,
+            ),
+        )
+        self.output(
+            "out_gene_fragments",
+            source=self.rnaseq_qc.out_gene_fragments,
+            output_folder=[self.sample_name, "QC", "RNASeqQC"],
+            output_name=StringFormatter(
+                "{sample}.gene_fragments",
+                sample=self.sample_name,
+            ),
+        ),
+        self.output(
+            "out_gene_reads",
+            source=self.rnaseq_qc.out_gene_reads,
+            output_folder=[self.sample_name, "QC", "RNASeqQC"],
+            output_name=StringFormatter(
+                "{sample}.gene_reads",
+                sample=self.sample_name,
+            ),
+        ),
+        self.output(
+            "out_gene_tpm",
+            source=self.rnaseq_qc.out_gene_tpm,
+            output_folder=[self.sample_name, "QC", "RNASeqQC"],
+            output_name=StringFormatter(
+                "{sample}.gene_tpm",
+                sample=self.sample_name,
+            ),
+        ),
+        self.output(
+            "out_metrics",
+            source=self.rnaseq_qc.out_metrics_tsv,
+            output_folder=[self.sample_name, "QC", "RNASeqQC"],
+            output_name=StringFormatter(
+                "{sample}_QC_metrics",
+                sample=self.sample_name,
+            ),
+        )
+        self.output(
+            "out_coverage",
+            source=self.rnaseq_qc.out_coverage_tsv,
+            output_folder=[self.sample_name, "QC", "RNASeqQC"],
+            output_name=StringFormatter(
+                "{sample}_gene_coverage",
+                sample=self.sample_name,
+            ),
+        ),
+        self.output(
+            "out_exon_reads",
+            source=self.rnaseq_qc.out_exon_reads,
+            output_folder=[self.sample_name, "QC", "RNASeqQC"],
+            output_name=StringFormatter(
+                "{sample}.exon_reads",
+                sample=self.sample_name,
+            ),
+        ),
 
     def add_counts_step(self):
         self.step(
