@@ -95,7 +95,7 @@ INPUT_DOCS = {
 }
 
 
-class WGSSomaticMultiCallers(BwaAlignment, WGSGermlineMultiCallers):
+class WGSSomaticMultiCallers(WGSGermlineMultiCallers):
     def id(self):
         return "WGSSomaticMultiCallers"
 
