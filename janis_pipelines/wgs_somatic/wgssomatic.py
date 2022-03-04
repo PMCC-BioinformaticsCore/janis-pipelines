@@ -163,7 +163,7 @@ class WGSSomaticMultiCallers(BwaAlignment, WGSGermlineMultiCallers):
         self.input("pseudo_snps", Int(optional=True))
         self.input("max_depth", Int(optional=True))
         self.input("everything", Boolean(optional=True))
-        self.input("genome", String(optional=True))
+        self.input("genome", String(optional=True))  # Shared with CIRCOS PLOT
         self.input("cval", Int(optional=True))
         self.input("purity_cval", Int(optional=True))
         self.input("normal_depth", Int(optional=True))
@@ -736,6 +736,7 @@ The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be 
                     "snps_dbsnp": f"{brca1_test_data}/Homo_sapiens_assembly38.dbsnp138.BRCA1.vcf.gz",
                     "contaminant_file": f"{brca1_test_data}/contaminant_list.txt",
                     "adapter_file": f"{brca1_test_data}/adapter_list.txt",
+                    "genome": f"hg38",
                     "vc_strelka_manta_runtime_cpu": 1,
                     "vc_strelka_strelka_runtime_cpu": 1,
                     "vc_strelka_manta_runtime_memory": 5,
