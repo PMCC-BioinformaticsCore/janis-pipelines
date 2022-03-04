@@ -27,7 +27,7 @@ from janis_unix.tools import UncompressArchive
 from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9, BcfToolsConcat_1_9
 from janis_bioinformatics.tools.common import (
     GATKBaseRecalBQSRWorkflow_4_1_3,
-    FacestWorkflow,
+    FacetsWorkflow,
 )
 from janis_bioinformatics.tools.htslib import BGZipLatest
 from janis_bioinformatics.tools.papenfuss import Gridss_2_6_2
@@ -319,7 +319,7 @@ class WGSSomaticMultiCallers(WGSGermlineMultiCallers):
         # FACETS
         self.step(
             "vc_facets",
-            FacestWorkflow(
+            FacetsWorkflow(
                 normal_bam=normal_bam_source,
                 tumor_bam=tumor_bam_source,
                 tumor_name=self.tumor_name,
