@@ -1,44 +1,12 @@
 from datetime import date
 
-from janis_core import (
-    Array,
-    Float,
-    Int,
-    Boolean,
-    String,
-    WorkflowMetadata,
-    InputDocumentation,
-    InputQualityType,
-    StringFormatter,
-)
-from janis_unix.tools import UncompressArchive
+from janis_core import String, WorkflowMetadata
 
-from janis_bioinformatics.data_types import Bed, BedTabix, Vcf, CompressedVcf
-from janis_bioinformatics.tools.bcftools import BcfToolsSort_1_9, BcfToolsConcat_1_9
-from janis_bioinformatics.tools.htslib import BGZipLatest
-from janis_bioinformatics.tools.papenfuss import Gridss_2_6_2
-from janis_bioinformatics.tools.pmac import (
-    CombineVariants_0_0_8,
-    GenerateVardictHeaderLines,
-    AddBamStatsSomatic_0_1_0,
-    GenerateMantaConfig,
-    CircosPlot_0_1_2,
-)
-from janis_bioinformatics.tools.variantcallers.illuminasomatic_strelka import (
-    IlluminaSomaticVariantCaller,
-)
-from janis_bioinformatics.tools.variantcallers.vardictsomatic_variants import (
-    VardictSomaticVariantCaller,
-)
-from janis_bioinformatics.tools.common.facetsWorkflow import FacestWorkflow
-
-from janis_pipelines.wgs_somatic_gatk.wgssomaticgatk_variantsonly import (
-    WGSSomaticGATKVariantsOnly,
-    INPUT_DOCS,
-)
+from janis_bioinformatics.data_types import BamBai
+from janis_pipelines.wgs_somatic.wgssomatic import WGSSomaticMultiCallers, INPUT_DOCS
 
 
-class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
+class WGSSomaticMultiCallersVariantsOnly(WGSSomaticMultiCallers):
     def id(self):
         return "WGSSomaticMultiCallersVariantsOnly"
 
@@ -49,9 +17,10 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         return "1.4.0"
 
     def constructor(self):
-        # don't call super()
-
         self.add_inputs()
+        self.add_bam_qc(
+            normal_bam_source=self.normal_bam, tumor_bam_source=self.tumor_bam
+        )
         self.add_gridss(
             normal_bam_source=self.normal_bam, tumor_bam_source=self.tumor_bam
         )
@@ -72,396 +41,17 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
             normal_bam_source=self.normal_bam, tumor_bam_source=self.tumor_bam
         )
 
-    def add_inputs_for_intervals(self):
-        super().add_inputs_for_intervals()
+    def add_inputs(self):
+        # INPUTS
+        self.input("normal_bam", BamBai, doc=INPUT_DOCS["normal_bam"])
+        self.input("tumor_bam", BamBai, doc=INPUT_DOCS["tumor_bam"])
+        self.input("normal_name", String, doc=INPUT_DOCS["normal_name"])
+        self.input("tumor_name", String, doc=INPUT_DOCS["tumor_name"])
 
-        self.input("vardict_intervals", Array(Bed), doc=INPUT_DOCS["vardict_intervals"])
-        self.input("strelka_intervals", BedTabix, doc=INPUT_DOCS["strelka_intervals"])
-
-    def add_inputs_for_configuration(self):
-        super().add_inputs_for_configuration()
-        # facets
-        self.input("pseudo_snps", Int(optional=True))
-        self.input("max_depth", Int(optional=True))
-        self.input("everything", Boolean(optional=True))
-        self.input("genome", String(optional=True))
-        self.input("cval", Int(optional=True))
-        self.input("purity_cval", Int(optional=True))
-        self.input("normal_depth", Int(optional=True))
-        # vardict
-        self.input(
-            "allele_freq_threshold",
-            Float,
-            default=0.05,
-            doc=InputDocumentation(
-                "The threshold for VarDict's allele frequency, default: 0.05 or 5%",
-                quality=InputQualityType.configuration,
-            ),
-        )
-        self.input("minMappingQual", Int(optional=True))
-        self.input("filter", String(optional=True))
-
-    def add_gridss(self, normal_bam_source, tumor_bam_source):
-
-        # GRIDSS
-        self.step(
-            "vc_gridss",
-            Gridss_2_6_2(
-                bams=[normal_bam_source, tumor_bam_source],
-                reference=self.reference,
-                blacklist=self.gridss_blacklist,
-            ),
-        )
-
-        # GRIDSS
-        self.output(
-            "out_gridss_assembly",
-            source=self.vc_gridss.assembly,
-            output_folder=[
-                "sv",
-                "gridss",
-            ],
-            output_name=StringFormatter(
-                "{tumor_name}--{normal_name}_gridss",
-                tumor_name=self.tumor_name,
-                normal_name=self.normal_name,
-            ),
-            doc="Assembly returned by GRIDSS",
-        )
-        self.output(
-            "out_variants_gridss",
-            source=self.vc_gridss.out,
-            output_folder=[
-                "sv",
-                "gridss",
-            ],
-            output_name=StringFormatter(
-                "{tumor_name}--{normal_name}_gridss",
-                tumor_name=self.tumor_name,
-                normal_name=self.normal_name,
-            ),
-            doc="Variants from the GRIDSS variant caller",
-        )
-
-    def add_facets(self, normal_bam_source, tumor_bam_source):
-
-        self.step(
-            "vc_facets",
-            FacestWorkflow(
-                normal_bam=normal_bam_source,
-                tumor_bam=tumor_bam_source,
-                tumor_name=self.tumor_name,
-                normal_name=self.normal_name,
-                snps_dbsnp=self.snps_dbsnp,
-                pseudo_snps=self.pseudo_snps,
-                max_depth=self.max_depth,
-                everything=self.everything,
-                genome=self.genome,
-                cval=self.cval,
-                purity_cval=self.purity_cval,
-                normal_depth=self.normal_depth,
-            ),
-        )
-        self.output(
-            "out_facets_summary",
-            source=self.vc_facets.out_summary,
-            output_folder=[
-                "cnv",
-                "facets",
-            ],
-            output_name=StringFormatter(
-                "{tumour}--{normal}",
-                tumour=self.tumor_name,
-                normal=self.normal_name,
-            ),
-        )
-        self.output(
-            "out_facets_purity_png",
-            source=self.vc_facets.out_purity_png,
-            output_folder=[
-                "cnv",
-                "facets",
-            ],
-            output_name=StringFormatter(
-                "{tumour}--{normal}_purity",
-                tumour=self.tumor_name,
-                normal=self.normal_name,
-            ),
-        ),
-        self.output(
-            "out_facets_purity_seg",
-            source=self.vc_facets.out_purity_seg,
-            output_folder=[
-                "cnv",
-                "facets",
-            ],
-            output_name=StringFormatter(
-                "{tumour}--{normal}_purity",
-                tumour=self.tumor_name,
-                normal=self.normal_name,
-            ),
-        ),
-        self.output(
-            "out_facets_purity_rds",
-            source=self.vc_facets.out_purity_rds,
-            output_folder=[
-                "cnv",
-                "facets",
-            ],
-            output_name=StringFormatter(
-                "{tumour}--{normal}_purity",
-                tumour=self.tumor_name,
-                normal=self.normal_name,
-            ),
-        ),
-        self.output(
-            "out_facets_hisens_png",
-            source=self.vc_facets.out_hisens_png,
-            output_folder=[
-                "cnv",
-                "facets",
-            ],
-            output_name=StringFormatter(
-                "{tumour}--{normal}_hisens",
-                tumour=self.tumor_name,
-                normal=self.normal_name,
-            ),
-        ),
-        self.output(
-            "out_facets_hisens_seg",
-            source=self.vc_facets.out_hisens_seg,
-            output_folder=[
-                "cnv",
-                "facets",
-            ],
-            output_name=StringFormatter(
-                "{tumour}--{normal}_hisens",
-                tumour=self.tumor_name,
-                normal=self.normal_name,
-            ),
-        ),
-        self.output(
-            "out_facets_hisens_rds",
-            source=self.vc_facets.out_hisens_rds,
-            output_folder=[
-                "cnv",
-                "facets",
-            ],
-            output_name=StringFormatter(
-                "{tumour}--{normal}_hisens",
-                tumour=self.tumor_name,
-                normal=self.normal_name,
-            ),
-        ),
-        self.output(
-            "out_facets_arm_level",
-            source=self.vc_facets.out_arm_level,
-            output_folder=[
-                "cnv",
-                "facets",
-            ],
-            output_name=StringFormatter(
-                "{tumour}--{normal}.arm_level",
-                tumour=self.tumor_name,
-                normal=self.normal_name,
-            ),
-        ),
-        self.output(
-            "out_facets_gene_level",
-            source=self.vc_facets.out_gene_level,
-            output_folder=[
-                "cnv",
-                "facets",
-            ],
-            output_name=StringFormatter(
-                "{tumour}--{normal}.gene_level",
-                tumour=self.tumor_name,
-                normal=self.normal_name,
-            ),
-        ),
-        self.output(
-            "out_facets_qc",
-            source=self.vc_facets.out_qc,
-            output_folder=[
-                "cnv",
-                "facets",
-            ],
-            output_name=StringFormatter(
-                "{tumour}--{normal}.qc",
-                tumour=self.tumor_name,
-                normal=self.normal_name,
-            ),
-        ),
-
-    def add_strelka_variantcaller(self, normal_bam_source, tumor_bam_source):
-        self.step("generate_manta_config", GenerateMantaConfig())
-
-        self.step(
-            "vc_strelka",
-            IlluminaSomaticVariantCaller(
-                normal_bam=normal_bam_source,
-                tumor_bam=tumor_bam_source,
-                intervals=self.strelka_intervals,
-                reference=self.reference,
-                manta_config=self.generate_manta_config.out,
-            ),
-        )
-        self.step("vc_strelka_compress", BGZipLatest(file=self.vc_strelka.out))
-
-        self.output(
-            "out_variants_strelka",
-            source=self.vc_strelka_compress.out.as_type(CompressedVcf),
-            output_folder=[
-                "variants",
-            ],
-            output_name=StringFormatter(
-                "{tumor_name}--{normal_name}_strelka",
-                tumor_name=self.tumor_name,
-                normal_name=self.normal_name,
-            ),
-            doc="Variants from the Strelka variant caller",
-        )
-        self.output(
-            "out_variants_manta_somatic",
-            source=self.vc_strelka.tumor_sv,
-            output_folder=[
-                "sv",
-                "manta",
-            ],
-            output_name=StringFormatter(
-                "{tumor_name}--{normal_name}_manta",
-                tumor_name=self.tumor_name,
-                normal_name=self.normal_name,
-            ),
-            doc="SV variants from the Manta caller",
-        )
-
-    def add_vardict_variantcaller(self, normal_bam_source, tumor_bam_source):
-        self.step(
-            "generate_vardict_headerlines",
-            GenerateVardictHeaderLines(reference=self.reference),
-        )
-        self.step(
-            "vc_vardict",
-            VardictSomaticVariantCaller(
-                normal_bam=normal_bam_source,
-                tumor_bam=tumor_bam_source,
-                normal_name=self.normal_name,
-                tumor_name=self.tumor_name,
-                header_lines=self.generate_vardict_headerlines.out,
-                intervals=self.vardict_intervals,
-                reference=self.reference,
-                allele_freq_threshold=self.allele_freq_threshold,
-                minMappingQual=self.minMappingQual,
-                filter=self.filter,
-            ),
-            scatter="intervals",
-        )
-        self.step(
-            "vc_vardict_merge",
-            BcfToolsConcat_1_9(vcf=self.vc_vardict.out.as_type(Array(Vcf))),
-        )
-        self.step(
-            "vc_vardict_sort_combined",
-            BcfToolsSort_1_9(vcf=self.vc_vardict_merge.out.as_type(CompressedVcf)),
-        )
-        self.step(
-            "vc_vardict_uncompress_for_combine",
-            UncompressArchive(file=self.vc_vardict_sort_combined.out),
-        )
-
-        self.output(
-            "out_variants_vardict",
-            source=self.vc_vardict_sort_combined.out,
-            output_folder=[
-                "variants",
-            ],
-            output_name=StringFormatter(
-                "{tumor_name}--{normal_name}_vardict",
-                tumor_name=self.tumor_name,
-                normal_name=self.normal_name,
-            ),
-            doc="Merged variants from the VarDict caller",
-        )
-        self.output(
-            "out_variants_vardict_split",
-            source=self.vc_vardict.out,
-            output_folder=[
-                "variants",
-                "VardictByInterval",
-            ],
-            doc="Unmerged variants from the GATK caller (by interval)",
-        )
-
-    def add_circos_plot(self):
-        self.step(
-            "circos_plot",
-            CircosPlot_0_1_2(
-                tumor_name=self.tumor_name,
-                normal_name=self.normal_name,
-                facets_file=self.vc_facets.out_hisens_rds,
-                sv_file=self.vc_strelka.tumor_sv,
-            ),
-        )
-        self.output(
-            "out_circos_plot",
-            source=self.circos_plot.out,
-            output_folder="circos_plot",
-            output_name=StringFormatter(
-                "{tumor_name}--{normal_name}_circos_plot.pdf",
-                tumor_name=self.tumor_name,
-                normal_name=self.normal_name,
-            ),
-        )
-
-    def add_combine_variants(self, normal_bam_source, tumor_bam_source):
-        self.step(
-            "combine_variants",
-            CombineVariants_0_0_8(
-                normal=self.normal_name,
-                tumor=self.tumor_name,
-                vcfs=[
-                    self.vc_gatk_uncompressvcf.out.as_type(Vcf),
-                    self.vc_strelka.out,
-                    self.vc_vardict_uncompress_for_combine.out.as_type(Vcf),
-                ],
-                type="somatic",
-                columns=["AD", "DP", "GT"],
-            ),
-        )
-
-        self.step("combined_compress", BGZipLatest(file=self.combine_variants.out))
-        self.step(
-            "combined_sort",
-            BcfToolsSort_1_9(vcf=self.combined_compress.out.as_type(CompressedVcf)),
-        )
-        self.step("combined_uncompress", UncompressArchive(file=self.combined_sort.out))
-
-        self.step(
-            "combined_addbamstats",
-            AddBamStatsSomatic_0_1_0(
-                normal_id=self.normal_name,
-                tumor_id=self.tumor_name,
-                normal_bam=normal_bam_source,
-                tumor_bam=tumor_bam_source,
-                vcf=self.combined_uncompress.out.as_type(Vcf),
-                reference=self.reference,
-            ),
-        )
-
-        self.output(
-            "out_variants_combined_bamstats",
-            source=self.combined_addbamstats.out,
-            output_folder=[
-                "variants",
-            ],
-            output_name=StringFormatter(
-                "{tumor_name}--{normal_name}_combined",
-                tumor_name=self.tumor_name,
-                normal_name=self.normal_name,
-            ),
-            doc="Combined variants from GATK, VarDict and Strelka callers",
-        )
+        self.add_inputs_for_reference()
+        self.add_inputs_for_adapter_trimming()
+        self.add_inputs_for_intervals()
+        self.add_inputs_for_configuration()
 
     def bind_metadata(self):
         meta: WorkflowMetadata = super().bind_metadata() or self.metadata
@@ -478,7 +68,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticGATKVariantsOnly):
         ]
         meta.contributors = ["Michael Franklin", "Richard Lupat", "Jiaan Yu"]
         meta.dateCreated = date(2018, 12, 24)
-        meta.dateUpdated = date(2021, 9, 3)
+        meta.dateUpdated = date(2022, 3, 1)
         meta.short_documentation = "A somatic tumor-normal variant-calling WGS pipeline using GATK, VarDict and Strelka2."
         meta.documentation = """\
 This is a genomics pipeline to align sequencing data (Fastq pairs) into BAMs:
@@ -502,17 +92,17 @@ The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be 
 
 
 if __name__ == "__main__":
-    import os.path
+    # import os.path
 
-    w = WGSSomaticMultiCallersVariantsOnly()
-    args = {
-        "to_console": False,
-        "to_disk": False,
-        "validate": True,
-        "export_path": os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), "{language}"
-        ),
-    }
+    # w = WGSSomaticMultiCallersVariantsOnly()
+    # args = {
+    #     "to_console": False,
+    #     "to_disk": True,
+    #     "validate": True,
+    #     "export_path": os.path.join(
+    #         os.path.dirname(os.path.realpath(__file__)), "{language}"
+    #     ),
+    # }
     # w.translate("cwl", **args)
     # w.translate("wdl", **args)
     WGSSomaticMultiCallersVariantsOnly().translate("wdl")
