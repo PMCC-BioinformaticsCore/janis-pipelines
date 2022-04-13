@@ -32,7 +32,7 @@ class RNASeqGeneExpressionQuantificationInBatch(RNASeqGeneExpressionQuantificati
 
         # Inputs
         self.input("fastqs_list", Array(FastqGzPair))
-        self.input("sample_name_list", Array(String))
+        self.input("sample_name", Array(String))
 
         # References
         self.input("gtf", File)
@@ -50,7 +50,7 @@ class RNASeqGeneExpressionQuantificationInBatch(RNASeqGeneExpressionQuantificati
             "single_sample_workflow",
             RNASeqGeneExpressionQuantification(
                 fastqs=self.fastqs_list,
-                sample_name=self.sample_name_list,
+                sample_name=self.sample_name,
                 gtf=self.gtf,
                 star_ref_genome=self.localise_star_genome.out,
                 star_threads=self.star_threads,
@@ -58,7 +58,7 @@ class RNASeqGeneExpressionQuantificationInBatch(RNASeqGeneExpressionQuantificati
             scatter=ScatterDescription(
                 ["fastqs", "sample_name"],
                 method=ScatterMethod.dot,
-                labels=self.sample_name_list,
+                labels=self.sample_name,
             ),
         )
 
