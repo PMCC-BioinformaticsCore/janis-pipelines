@@ -12,7 +12,6 @@ from janis_core import (
 from janis_bioinformatics.data_types import FastqGzPair
 
 # Tools
-from janis_unix.tools.localisefolder import LocaliseFolder
 from janis_pipelines.rnaseq_gene_expression_quantification.rnaseqgeneexpressionquantification import (
     RNASeqGeneExpressionQuantification,
 )
@@ -43,16 +42,12 @@ class RNASeqGeneExpressionQuantificationInBatch(RNASeqGeneExpressionQuantificati
 
         # Steps
         self.step(
-            "localise_star_genome",
-            LocaliseFolder(dir=self.star_ref_genome),
-        )
-        self.step(
             "single_sample_workflow",
             RNASeqGeneExpressionQuantification(
                 fastqs=self.fastqs_list,
                 sample_name=self.sample_name,
                 gtf=self.gtf,
-                star_ref_genome=self.localise_star_genome.out,
+                star_ref_genome=self.star_ref_genome,
                 star_threads=self.star_threads,
             ),
             scatter=ScatterDescription(
@@ -61,6 +56,7 @@ class RNASeqGeneExpressionQuantificationInBatch(RNASeqGeneExpressionQuantificati
                 labels=self.sample_name,
             ),
         )
+        self.capture_outputs_from_step(self.single_sample_workflow)
 
 
 if __name__ == "__main__":
