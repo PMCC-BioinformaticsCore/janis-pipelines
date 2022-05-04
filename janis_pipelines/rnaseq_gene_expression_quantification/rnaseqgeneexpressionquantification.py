@@ -39,6 +39,7 @@ class RNASeqGeneExpressionQuantification(BioinformaticsWorkflow):
         # References
         self.input("gtf", File)
         self.input("star_ref_genome", Directory)
+        # self.input("qc_gtf", File)
 
         # Configuration
         self.input("star_threads", Int, default=8)
@@ -47,7 +48,7 @@ class RNASeqGeneExpressionQuantification(BioinformaticsWorkflow):
         self.add_fastqc_step()
         self.add_alignment_step()
         self.add_sort_and_index_step()
-        self.add_rnaseq_qc_step()
+        # self.add_rnaseq_qc_step()
         self.add_counts_step()
 
     # Steps
