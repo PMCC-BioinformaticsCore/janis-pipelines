@@ -707,6 +707,7 @@ The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be 
         parent_dir = "https://swift.rc.nectar.org.au/v1/AUTH_4df6e734a509497692be237549bbe9af/janis-test-data/bioinformatics"
         brca1_test_data = f"{parent_dir}/brca1_test/test_data"
 
+        # To do: Vcf.basic_test to remove headers and md5
         return [
             TTestCase(
                 name="brca1",
@@ -788,10 +789,10 @@ The known sites (snps_dbsnp, snps_1000gp, known_indels, mills_indels) should be 
                 + Array.array_wrapper(
                     [Vcf.basic_test("out_variants_vardict_split", 55000, 187)]
                 )
-                + CompressedVcf.basic_test("out_variants_strelka", 7000, 159)
+                + CompressedVcf.basic_test("out_variants_strelka", 7000)
                 + VcfTabix.basic_test("out_variants_manta_somatic", 1400, 70, 35)
                 + File.basic_test("out_circos_plot", 60000)
-                + Vcf.basic_test("out_variants_combined_bamstats", 91000, 245),
+                + Vcf.basic_test("out_variants_combined_bamstats", 91000),
             )
         ]
 
