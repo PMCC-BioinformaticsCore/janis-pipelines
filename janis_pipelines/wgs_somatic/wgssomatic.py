@@ -149,6 +149,7 @@ class WGSSomaticMultiCallers(WGSGermlineMultiCallers):
         self.add_inputs_for_adapter_trimming()
         self.add_inputs_for_intervals()
         self.add_inputs_for_configuration()
+        self.add_inputs_facets()
 
     def add_inputs_for_configuration(self):
         super().add_inputs_for_configuration()
@@ -159,6 +160,8 @@ class WGSSomaticMultiCallers(WGSGermlineMultiCallers):
             VcfTabix(optional=True),
             doc=INPUT_DOCS["panel_of_normals"],
         )
+
+    def add_inputs_facets(self):
         # FACETS
         self.input("pseudo_snps", Int(optional=True))
         self.input("max_depth", Int(optional=True))
