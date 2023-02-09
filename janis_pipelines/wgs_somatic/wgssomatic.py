@@ -490,7 +490,10 @@ class WGSSomaticMultiCallers(WGSGermlineMultiCallers):
         )
         self.step(
             "vc_gatk_uncompressvcf",
-            UncompressArchive(file=self.vc_gatk_sort_combined.out),
+            UncompressArchive(
+                file=self.vc_gatk_sort_combined.out,
+                force=True
+            ),
         )
         self.output(
             "out_variants_gatk",
@@ -577,7 +580,10 @@ class WGSSomaticMultiCallers(WGSGermlineMultiCallers):
         )
         self.step(
             "vc_vardict_uncompress_for_combine",
-            UncompressArchive(file=self.vc_vardict_sort_combined.out),
+            UncompressArchive(
+                file=self.vc_vardict_sort_combined.out,
+                force=True
+            ),
         )
         self.output(
             "out_variants_vardict",
@@ -639,7 +645,13 @@ class WGSSomaticMultiCallers(WGSGermlineMultiCallers):
             "combined_sort",
             BcfToolsSort_1_9(vcf=self.combined_compress.out.as_type(CompressedVcf)),
         )
-        self.step("combined_uncompress", UncompressArchive(file=self.combined_sort.out))
+        self.step(
+            "combined_uncompress", 
+            UncompressArchive(
+                file=self.combined_sort.out,
+                force=True
+            )
+        )
 
         self.step(
             "combined_addbamstats",
