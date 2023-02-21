@@ -27,8 +27,8 @@ setup(
         "janis.pipelines": ["bioinformatics=janis_pipelines"],
     },
     install_requires=[
-        "git+https://github.com/GraceAHall/janis-core.git@release-v0.12.0",
-        "janis-pipelines.bioinformatics>=0.10.0",
+        # "janis-pipelines.core>=0.10.0",
+        # "janis-pipelines.bioinformatics>=0.10.0",
         "janis-pipelines.unix>=0.10.0",
     ],
     extras_require={
