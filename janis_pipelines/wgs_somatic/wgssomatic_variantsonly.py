@@ -52,6 +52,7 @@ class WGSSomaticMultiCallersVariantsOnly(WGSSomaticMultiCallers):
         self.add_inputs_for_adapter_trimming()
         self.add_inputs_for_intervals()
         self.add_inputs_for_configuration()
+        self.add_inputs_facets()
 
     def bind_metadata(self):
         meta: WorkflowMetadata = super().bind_metadata() or self.metadata
